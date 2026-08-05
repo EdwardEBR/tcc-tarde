@@ -605,7 +605,7 @@ Transform:
   m_GameObject: {fileID: 864000140}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 3.31, y: 0, z: -0.72}
+  m_LocalPosition: {x: 3.31, y: -0.1, z: -0.72}
   m_LocalScale: {x: 4.594943, y: 0.9506244, z: 2.5123901}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -704,7 +704,9 @@ MonoBehaviour:
     currentIndex: -1
   texturePaintData:
   - {fileID: 0}
-  paintBundles: []
+  paintBundles:
+  - materialAsset: {fileID: 0}
+    entries: []
   isRiggingEnabled: 0
   isPaintingEnabled: 0
   currentEditor: 
