@@ -1748,7 +1748,7 @@ Transform:
   m_GameObject: {fileID: 1403053065}
   serializedVersion: 2
   m_LocalRotation: {x: 1, y: 0, z: -0, w: 0}
-  m_LocalPosition: {x: 0.096264884, y: 0.7003271, z: -0.1304834}
+  m_LocalPosition: {x: 0.096264884, y: 0.656, z: -0.1304834}
   m_LocalScale: {x: 0.3808296, y: 0.12033111, z: 0.2309154}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2720,6 +2720,8 @@ GameObject:
   - component: {fileID: 543450652756989864}
   - component: {fileID: 3469287836539672589}
   - component: {fileID: 1711813856035548359}
+  - component: {fileID: 3469287836539672590}
+  - component: {fileID: 3469287836539672591}
   m_Layer: 0
   m_Name: Casa3pontozero
   m_TagString: Untagged
@@ -2784,6 +2786,49 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 919132149024066834}
+  m_Mesh: {fileID: -462981019419857548, guid: cb1b3aff9dd38e642a8ea62f0dc6731d, type: 3}
+--- !u!65 &3469287836539672590
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 919132149024066834}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 0
+  serializedVersion: 3
+  m_Size: {x: 269.0986, y: 173.0225, z: 47.543423}
+  m_Center: {x: -133.54932, y: 19.291492, z: 23.77171}
+--- !u!64 &3469287836539672591
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 919132149024066834}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
   m_Mesh: {fileID: -462981019419857548, guid: cb1b3aff9dd38e642a8ea62f0dc6731d, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
