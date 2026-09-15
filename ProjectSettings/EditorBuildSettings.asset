@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Scenes/SlimUI/Modern Menu 1/Scenes/Demos/Demo1.unity
+    guid: 829a86ba161cdd840842063447f41aab
+  - enabled: 0
     path: "Assets/versaoter\xE7amanha.unity"
     guid: 25cd6b77300ba633eb92220701bfe270
   - enabled: 1
