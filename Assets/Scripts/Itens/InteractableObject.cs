@@ -2,34 +2,28 @@ using UnityEngine;
 
 public class InteractableObject : MonoBehaviour
 {
-    public string taskNameName; // Nome da tarefa correspondente na lista (ex: "Fazer café")
-    private Renderer objRenderer;
-    private Color originalColor;
-    public Color highlightColor = new Color(1.0f, 0.5f, 0.0f); // Laranja
+    public string taskNameName; // Nome da tarefa correspondente (ex: "Cafetera")
+    private Outline outlineScript; // Referência ao script de contorno
     private bool isDone = false;
 
     void Start()
     {
-        objRenderer = GetComponent<Renderer>();
-        if (objRenderer != null)
+        // Pega o componente QuickOutline que está no mesmo objeto
+        outlineScript = GetComponent<Outline>();
+        
+        if (outlineScript != null)
         {
-            originalColor = objRenderer.material.color;
+            outlineScript.enabled = false; // Começa desligado
         }
     }
 
-    // Chamado quando o jogador olha para o objeto (via Raycast da câmera)
+    // Chamado pelo PlayerMovement quando o player olha para o objeto
     public void Highlight(bool state)
     {
-        if (isDone || objRenderer == null) return;
+        if (isDone || outlineScript == null) return;
 
-        if (state)
-        {
-            objRenderer.material.color = highlightColor; // Fica laranja
-        }
-        else
-        {
-            objRenderer.material.color = originalColor; // Volta ao normal
-        }
+        // Liga ou desliga o contorno laranja
+        outlineScript.enabled = state;
     }
 
     // Chamado quando o jogador clica no objeto
@@ -39,17 +33,21 @@ public class InteractableObject : MonoBehaviour
 
         isDone = true;
         
-        // 1. Toca a animação do objeto (se tiver um Animator anexado)
+        // 1. Toca a animação (se houver Animator)
         Animator anim = GetComponent<Animator>();
         if (anim != null)
         {
             anim.SetTrigger("DoAction");
         }
 
-        // 2. Avisa o gerenciador de tarefas para marcar o "X"
-        FindObjectOfType<TaskManager>().CompleteTask(taskNameName);
+        // 2. Avisa o gerenciador para marcar a tarefa
+        TaskManager taskMgr = FindObjectOfType<TaskManager>();
+        if (taskMgr != null)
+        {
+            taskMgr.CompleteTask(taskNameName);
+        }
 
-        // 3. Remove o destaque laranja definitivo após concluir
+        // 3. Desliga o contorno definitivamente após concluir
         Highlight(false);
     }
 }
