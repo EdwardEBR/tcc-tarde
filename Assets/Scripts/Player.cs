@@ -88,7 +88,7 @@ public class PlayerMovement : MonoBehaviour
         );
 
         // Olhar para cima/baixo
-        rotacaoCamera -= mouse.y * sensibilidade;
+    rotacaoCamera -= mouse.y * sensibilidade;
 
         rotacaoCamera = Mathf.Clamp(
             rotacaoCamera,
@@ -107,28 +107,40 @@ public class PlayerMovement : MonoBehaviour
         Ray ray = new Ray(cameraPlayer.position, cameraPlayer.forward);
         RaycastHit hit;
 
-        // Limpa o destaque do objeto anterior se o jogador desviou o olhar
-        if (objetoAtual != null)
-        {
-            objetoAtual.Highlight(false);
-            objetoAtual = null;
-        }
+        InteractableObject interativelDetectado = null;
 
-        // Dispara o raio a partir da câmera
+        // Dispara o raio a partir da câmera dentro da distância permitida
         if (Physics.Raycast(ray, out hit, distanciaInteracao, camadaInterativel))
         {
-            InteractableObject interativel = hit.collider.GetComponent<InteractableObject>();
-            
-            if (interativel != null)
-            {
-                objetoAtual = interativel;
-                objetoAtual.Highlight(true); // Deixa laranja
+            interativelDetectado = hit.collider.GetComponent<InteractableObject>();
+        }
 
-                // Se o jogador clicar com o botão esquerdo do mouse usando o Input System novo
-                if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
-                {
-                    objetoAtual.Interact();
-                }
+        // Se o objeto focado mudou
+        if (objetoAtual != interativelDetectado)
+        {
+            // Desliga o contorno do objeto anterior (apenas se ele não estiver travado/concluído)
+            if (objetoAtual != null)
+            {
+                objetoAtual.SetHighlight(false);
+            }
+
+            // Atualiza para o novo objeto
+            objetoAtual = interativelDetectado;
+
+            // Liga o contorno do novo objeto
+            if (objetoAtual != null)
+            {
+                objetoAtual.SetHighlight(true);
+            }
+        }
+
+        // Se estiver olhando para um objeto válido e clicar com o botão esquerdo
+        if (objetoAtual != null)
+        {
+            if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
+            {
+                objetoAtual.Interact();
+                // Removido o desligamento do highlight para continuar visível durante os testes
             }
         }
     }
