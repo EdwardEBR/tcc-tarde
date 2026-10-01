@@ -1,5 +1,4 @@
 using UnityEngine;
-using System.Collections;
 
 public class InteractableObject : MonoBehaviour
 {
@@ -20,6 +19,9 @@ public class InteractableObject : MonoBehaviour
 
     public void SetHighlight(bool state)
     {
+        // Se a tarefa já foi feita, impede que o contorno seja ligado novamente ao passar o mouse
+        if (isDone) return;
+
         if (outlineScript == null) return;
         outlineScript.enabled = state;
     }
@@ -27,34 +29,19 @@ public class InteractableObject : MonoBehaviour
     public void Interact()
     {
         if (isDone) return; // Se já foi feito, não faz nada
-
-        // Inicia a rotina de interação com animação e espera
-        StartCoroutine(ExecutarInteracaoAnimada());
-    }
-
-    IEnumerator ExecutarInteracaoAnimada()
-    {
         isDone = true;
 
-        // 1. Encontra o script de movimento do player e TRAVA ele
-        PlayerMovement movimentoPlayer = FindObjectOfType<PlayerMovement>();
-        if (movimentoPlayer != null)
+        // 1. Desliga o contorno laranja IMEDIATAMENTE ao interagir
+        if (outlineScript != null)
         {
-            movimentoPlayer.enabled = false; // Player para de andar e olhar em volta
+            outlineScript.enabled = false;
         }
 
-        // 2. Toca a animação da planta (se houver Animator)
-        Animator animPlanta = GetComponent<Animator>();
-        float tempoAnimacao = 2f; // Tempo padrão de segurança caso não ache a animação
-
-        if (animPlanta != null)
+        // 2. Toca a animação (se o objeto tiver um Animator)
+        Animator animObjeto = GetComponentInChildren<Animator>();
+        if (animObjeto != null)
         {
-            animPlanta.SetTrigger("DoAction"); // Dispara a animação
-
-            // Descobre o tempo exato da animação atual para esperar ela acabar
-            yield return null; // Espera 1 frame para o Animator processar
-            AnimatorStateInfo stateInfo = animPlanta.GetCurrentAnimatorStateInfo(0);
-            tempoAnimacao = stateInfo.length;
+            animObjeto.SetTrigger("DoAction");
         }
 
         // 3. Marca a tarefa como concluída no TaskManager (faz aparecer o X no quadro)
@@ -64,23 +51,6 @@ public class InteractableObject : MonoBehaviour
             taskMgr.CompleteTask(taskNameName);
         }
 
-        Debug.Log("Assistindo animação de: " + taskNameName);
-
-        // 4. ESPERA a animação da planta terminar por completo
-        yield return new WaitForSeconds(tempoAnimacao);
-
-        // 5. DEVOLVE o controle para o jogador voltar a andar
-        if (movimentoPlayer != null)
-        {
-            movimentoPlayer.enabled = true;
-        }
-
-        // Desliga o contorno laranja após interagir
-        if (outlineScript != null)
-        {
-            outlineScript.enabled = false;
-        }
-
-        Debug.Log("Animação concluída. Jogador liberado!");
+        Debug.Log("Interagiu com: " + taskNameName);
     }
 }

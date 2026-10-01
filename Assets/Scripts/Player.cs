@@ -13,26 +13,70 @@ public class PlayerMovement : MonoBehaviour
 
     [Header("Interação")]
     public float distanciaInteracao = 3f;
-    public LayerMask camadaInterativel; // Defina uma Layer para os objetos interativos
+    public LayerMask camadaInterativel;
     private InteractableObject objetoAtual;
 
     private CharacterController controller;
     private Vector3 velocidadeVertical;
     private float rotacaoCamera = 0f;
 
+    private bool mouseLivre = false;
+
     void Start()
     {
         controller = GetComponent<CharacterController>();
-
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        TravarMouse();
     }
 
     void Update()
     {
+        // Alterna entre soltar e prender o mouse com ESC
+        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+        {
+            AlternarCursor();
+        }
+
+        // A gravidade e o chão continuam a funcionar mesmo se o mouse estiver livre, evitando cair pelo mapa
+        AplicarGravidade();
+
+        // Se o mouse estiver livre (mexendo no Inspetor), não anda nem mexe a câmara
+        if (mouseLivre) return;
+
         Movimento();
         Camera();
         GerenciarInteracao();
+    }
+
+    void TravarMouse()
+    {
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+        mouseLivre = false;
+    }
+
+    void LiberarMouse()
+    {
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+        mouseLivre = true;
+
+        if (objetoAtual != null)
+        {
+            objetoAtual.SetHighlight(false);
+            objetoAtual = null;
+        }
+    }
+
+    void AlternarCursor()
+    {
+        if (mouseLivre)
+        {
+            TravarMouse();
+        }
+        else
+        {
+            LiberarMouse();
+        }
     }
 
     void Movimento()
@@ -61,8 +105,11 @@ public class PlayerMovement : MonoBehaviour
         movimento.Normalize();
 
         controller.Move(movimento * velocidade * Time.deltaTime);
+    }
 
-        // Gravidade
+    void AplicarGravidade()
+    {
+        // Mantém o player grudado no chão consistentemente
         if (controller.isGrounded)
         {
             velocidadeVertical.y = -2f;
@@ -82,22 +129,14 @@ public class PlayerMovement : MonoBehaviour
 
         Vector2 mouse = Mouse.current.delta.ReadValue();
 
-        // Olhar para os lados
         transform.Rotate(
             Vector3.up * mouse.x * sensibilidade
         );
 
-        // Olhar para cima/baixo
-    rotacaoCamera -= mouse.y * sensibilidade;
+        rotacaoCamera -= mouse.y * sensibilidade;
+        rotacaoCamera = Mathf.Clamp(rotacaoCamera, -80f, 80f);
 
-        rotacaoCamera = Mathf.Clamp(
-            rotacaoCamera,
-            -80f,
-            80f
-        );
-
-        cameraPlayer.localRotation =
-            Quaternion.Euler(rotacaoCamera, 0f, 0f);
+        cameraPlayer.localRotation = Quaternion.Euler(rotacaoCamera, 0f, 0f);
     }
 
     void GerenciarInteracao()
@@ -109,38 +148,31 @@ public class PlayerMovement : MonoBehaviour
 
         InteractableObject interativelDetectado = null;
 
-        // Dispara o raio a partir da câmera dentro da distância permitida
         if (Physics.Raycast(ray, out hit, distanciaInteracao, camadaInterativel))
         {
             interativelDetectado = hit.collider.GetComponent<InteractableObject>();
         }
 
-        // Se o objeto focado mudou
         if (objetoAtual != interativelDetectado)
         {
-            // Desliga o contorno do objeto anterior (apenas se ele não estiver travado/concluído)
             if (objetoAtual != null)
             {
                 objetoAtual.SetHighlight(false);
             }
 
-            // Atualiza para o novo objeto
             objetoAtual = interativelDetectado;
 
-            // Liga o contorno do novo objeto
             if (objetoAtual != null)
             {
                 objetoAtual.SetHighlight(true);
             }
         }
 
-        // Se estiver olhando para um objeto válido e clicar com o botão esquerdo
         if (objetoAtual != null)
         {
             if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
             {
                 objetoAtual.Interact();
-                // Removido o desligamento do highlight para continuar visível durante os testes
             }
         }
     }
