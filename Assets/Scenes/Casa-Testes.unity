@@ -6835,6 +6835,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ContornoLaranja
   taskNameName: TarefaPlantasss
+  animadoresParaDisparar: []
   isDone: 0
 --- !u!114 &580724820
 MonoBehaviour:
@@ -14055,6 +14056,7 @@ GameObject:
   - component: {fileID: 1119836083}
   - component: {fileID: 1119836085}
   - component: {fileID: 1119836084}
+  - component: {fileID: 1119836086}
   m_Layer: 0
   m_Name: Remedio1 (4)
   m_TagString: Untagged
@@ -14134,6 +14136,28 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1119836082}
   m_Mesh: {fileID: 8769268392601398891, guid: e5c8ecc981345d9ff802e7b372dc9626, type: 3}
+--- !u!95 &1119836086
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1119836082}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: dd4fc1b3c7d7e1c42b134f6ac6f3e2b4, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &1143559874
 GameObject:
   m_ObjectHideFlags: 0
@@ -18307,6 +18331,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ContornoLaranja
   taskNameName: TarefaRemedio
+  animadoresParaDisparar:
+  - {fileID: 1246589396}
+  - {fileID: 420391764}
   isDone: 0
 --- !u!114 &1364130077
 MonoBehaviour:
@@ -20575,6 +20602,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InteractableObject
   taskNameName: TarefaCafe
+  animadoresParaDisparar: []
   isDone: 0
 --- !u!64 &1472097223
 MeshCollider:
@@ -24657,7 +24685,7 @@ PrefabInstance:
       addedObject: {fileID: 1802615398}
     - targetCorrespondingSourceObject: {fileID: 6053821762019268373, guid: 5e8de423f87321cee8c61649afadd2b4, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1802615404}
+      addedObject: {fileID: 1802615408}
   m_SourcePrefab: {fileID: 100100000, guid: 5e8de423f87321cee8c61649afadd2b4, type: 3}
 --- !u!4 &1802615396 stripped
 Transform:
@@ -25488,8 +25516,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InteractableObject
   taskNameName: TarefaPlanta
+  animadoresParaDisparar:
+  - {fileID: 1802615408}
   isDone: 0
---- !u!95 &1802615404
+--- !u!95 &1802615408
 Animator:
   serializedVersion: 7
   m_ObjectHideFlags: 0

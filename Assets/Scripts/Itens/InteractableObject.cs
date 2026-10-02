@@ -3,7 +3,10 @@ using UnityEngine;
 public class InteractableObject : MonoBehaviour
 {
     [Header("Configuração da Tarefa")]
-    public string taskNameName; // Ex: TarefaPlanta
+    public string taskNameName; // Ex: TarefaRemedio
+
+    [Header("Animações Simultâneas")]
+    public Animator[] animadoresParaDisparar; // Lista de animadores que vão tocar juntos
     
     private Outline outlineScript;
     public bool isDone = false;
@@ -19,32 +22,30 @@ public class InteractableObject : MonoBehaviour
 
     public void SetHighlight(bool state)
     {
-        // Se a tarefa já foi feita, impede que o contorno seja ligado novamente ao passar o mouse
         if (isDone) return;
-
         if (outlineScript == null) return;
         outlineScript.enabled = state;
     }
 
     public void Interact()
     {
-        if (isDone) return; // Se já foi feito, não faz nada
+        if (isDone) return; 
         isDone = true;
 
-        // 1. Desliga o contorno laranja IMEDIATAMENTE ao interagir
         if (outlineScript != null)
         {
             outlineScript.enabled = false;
         }
 
-        // 2. Toca a animação (se o objeto tiver um Animator)
-        Animator animObjeto = GetComponentInChildren<Animator>();
-        if (animObjeto != null)
+        // Dispara TODOS os animadores da lista ao mesmo tempo
+        foreach (Animator anim in animadoresParaDisparar)
         {
-            animObjeto.SetTrigger("DoAction");
+            if (anim != null)
+            {
+                anim.SetTrigger("DoAction");
+            }
         }
 
-        // 3. Marca a tarefa como concluída no TaskManager (faz aparecer o X no quadro)
         TaskManager taskMgr = FindObjectOfType<TaskManager>();
         if (taskMgr != null)
         {
