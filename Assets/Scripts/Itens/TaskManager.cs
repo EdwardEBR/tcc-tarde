@@ -52,6 +52,18 @@ public class TaskManager : MonoBehaviour
                 task.isCompleted = true;
                 AtivarXNoQuadro(task.taskName);
                 Debug.Log("Tarefa concluída: " + task.taskName);
+
+                // --- Verifica se a tarefa concluída é a do Café ---
+                if (task.taskName.ToLower().Contains("cafe") || task.taskName.ToLower().Contains("coffee"))
+                {
+                    TrocarXicaraAoDesviarOlhar xicara = Object.FindFirstObjectByType<TrocarXicaraAoDesviarOlhar>();
+                    if (xicara != null)
+                    {
+                        xicara.ConcluirTarefaCafe();
+                    }
+                }
+                // -------------------------------------------------------------
+
                 break;
             }
         }
