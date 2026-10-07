@@ -3,37 +3,53 @@ using UnityEngine;
 public class TrocarXicaraAoDesviarOlhar : MonoBehaviour
 {
     [Header("Configuração das Xícaras")]
-    public GameObject xicaraOriginal;     // Arraste a própria xícara da mesa aqui
-    public GameObject xicaraNovoLocal;    // Arraste a xícara que está no outro canto (começa desativada)
+    public GameObject xicaraOriginal;     
+    public GameObject xicaraNovoLocal;    
 
     [Header("Estado da Tarefa")]
-    public bool tarefaCafeConcluida = false; // Fica a true quando o TaskManager avisa
+    public bool tarefaCafeConcluida = false; 
 
     private Camera camPrincipal;
     private bool jaTrocou = false;
-    private bool estavaNaTelaNoFrameAnterior = false;
+    private bool estavaNaTelaNoFrameAnterior = true;
+    private float tempoDeEsperaAteVigiar = 0f;
 
     void Start()
     {
         camPrincipal = Camera.main;
 
-        // Garante que a xícara do novo local começa desativada no início do jogo
         if (xicaraNovoLocal != null)
             xicaraNovoLocal.SetActive(false);
+            
+        if (xicaraOriginal == null)
+            xicaraOriginal = this.gameObject;
     }
 
     void Update()
     {
+        // Atalho de teste opcional com a tecla 'C'
+        if (Input.GetKeyDown(KeyCode.C))
+        {
+            ConcluirTarefaCafe();
+        }
+
         if (jaTrocou || camPrincipal == null || !tarefaCafeConcluida) return;
 
-        // Verifica se a xícara original está visível na tela da câmara
-        Vector3 viewportPos = camPrincipal.WorldToViewportPoint(transform.position);
+        // Pequeno atraso em segundos para evitar que suma no mesmo frame do clique
+        if (tempoDeEsperaAteVigiar > 0)
+        {
+            tempoDeEsperaAteVigiar -= Time.deltaTime;
+            return; // Enquanto o tempo não passar, não faz contas de visão
+        }
 
-        bool estaNaTela = viewportPos.z > 0 && 
-                          viewportPos.x >= 0f && viewportPos.x <= 1f && 
-                          viewportPos.y >= 0f && viewportPos.y <= 1f;
+        // Calcula o ângulo em relação à câmara
+        Vector3 direcaoParaXicara = transform.position - camPrincipal.transform.position;
+        float angulo = Vector3.Angle(camPrincipal.transform.forward, direcaoParaXicara);
+        
+        // Se o ângulo for menor que 85°, a xícara está dentro do campo de visão
+        bool estaNaTela = angulo < 85f; 
 
-        // Estava a ser vista e AGORA deixou de ser (o jogador desviou o olhar)
+        // Se estava visível no frame anterior e agora deixou de estar (desviou o olhar)
         if (estavaNaTelaNoFrameAnterior && !estaNaTela)
         {
             FazerTroca();
@@ -46,16 +62,18 @@ public class TrocarXicaraAoDesviarOlhar : MonoBehaviour
     {
         jaTrocou = true;
 
-        // Desativa a xícara da mesa e ativa a do novo local
         if (xicaraOriginal != null) xicaraOriginal.SetActive(false);
         if (xicaraNovoLocal != null) xicaraNovoLocal.SetActive(true);
 
-        Debug.Log("Truque de mágica: a xícara trocou de lugar!");
+        Debug.Log("SUCESSO ABSOLUTO: A xícara trocou de lugar ao desviar o olhar!");
     }
 
-    // Chamado pelo TaskManager quando a TarefaCafe for concluída
     public void ConcluirTarefaCafe()
     {
         tarefaCafeConcluida = true;
+        tempoDeEsperaAteVigiar = 0.5f; // Dá 0.5 segundos de margem antes de começar a vigiar
+        estavaNaTelaNoFrameAnterior = true; 
+        
+        Debug.Log("O café está pronto! A xícara vai começar a vigiar o olhar em instantes...");
     }
 }
