@@ -9172,7 +9172,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 334}
+  m_AnchoredPosition: {x: 0, y: 322}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!95 &714579451
@@ -23821,7 +23821,7 @@ GameObject:
   - component: {fileID: 1543547378}
   - component: {fileID: 1543547377}
   m_Layer: 0
-  m_Name: CanecaOri (1)
+  m_Name: CanecaTeleporte
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -23835,13 +23835,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1543547375}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0.42683974, z: -0, w: 0.90432733}
-  m_LocalPosition: {x: 3.351, y: -1.321, z: -2.802}
+  m_LocalRotation: {x: -0, y: -0.82313955, z: -0, w: -0.56783915}
+  m_LocalPosition: {x: 13.686, y: -0.765, z: -0.009}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 591089727}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: -249.199, z: 0}
 --- !u!114 &1543547377
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -23855,8 +23855,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TesteSimples
   xicaraOriginal: {fileID: 1543547375}
-  xicaraNovoLocal: {fileID: 0}
+  xicaraNovoLocal: {fileID: 1543547375}
   tarefaCafeConcluida: 0
+  camPrincipal: {fileID: 0}
+  atrasoAntesDeVigiar: 1
+  tempoForaDaTelaParaTrocar: 0.3
 --- !u!64 &1543547378
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -24990,6 +24993,9 @@ MonoBehaviour:
   xicaraOriginal: {fileID: 1656719768}
   xicaraNovoLocal: {fileID: 1543547375}
   tarefaCafeConcluida: 0
+  camPrincipal: {fileID: 330585545}
+  atrasoAntesDeVigiar: 1
+  tempoForaDaTelaParaTrocar: 0.3
 --- !u!4 &1668132398 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 6f942856e442060e588981a25bf1fb7d, type: 3}

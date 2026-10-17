@@ -7,55 +7,134 @@ public class TrocarXicaraAoDesviarOlhar : MonoBehaviour
     public GameObject xicaraNovoLocal;    
 
     [Header("Estado da Tarefa")]
-    public bool tarefaCafeConcluida = false; 
+    public bool tarefaCafeConcluida = false;
 
-    private Camera camPrincipal;
+    [Header("Câmera do jogador")]
+    public Camera camPrincipal;
+
+    [Header("Tempo antes de vigiar")]
+    [Min(0f)] public float atrasoAntesDeVigiar = 1f;
+
+    [Header("Confirmação de saída da tela")]
+    [Min(0f)] public float tempoForaDaTelaParaTrocar = 0.3f;
+
     private bool jaTrocou = false;
-    private bool estavaNaTelaNoFrameAnterior = true;
-    private float tempoDeEsperaAteVigiar = 0f;
+    private bool xicaraJaFoiVista;
+    private bool vigilanciaIniciada;
+    private float iniciarVigilanciaEm;
+    private float tempoForaDaTela;
+    private Renderer[] renderizadoresDaXicara;
 
     void Start()
     {
-        camPrincipal = Camera.main;
+        EncontrarCameraDoJogador();
 
         if (xicaraNovoLocal != null)
             xicaraNovoLocal.SetActive(false);
             
         if (xicaraOriginal == null)
             xicaraOriginal = this.gameObject;
+
+        renderizadoresDaXicara = xicaraOriginal.GetComponentsInChildren<Renderer>(true);
     }
 
     void Update()
     {
-        // Atalho de teste opcional com a tecla 'C'
-        if (Input.GetKeyDown(KeyCode.C))
+        if (jaTrocou || !tarefaCafeConcluida) return;
+
+        if (camPrincipal == null)
+            EncontrarCameraDoJogador();
+
+        if (camPrincipal == null) return;
+
+        if (!vigilanciaIniciada)
         {
-            ConcluirTarefaCafe();
+            if (Time.time < iniciarVigilanciaEm) return;
+
+            // Começa a acompanhar a partir do estado atual, depois da animação estabilizar.
+            xicaraJaFoiVista = EstaNaVisaoDaCamera();
+            vigilanciaIniciada = true;
+            return;
         }
 
-        if (jaTrocou || camPrincipal == null || !tarefaCafeConcluida) return;
-
-        // Pequeno atraso em segundos para evitar que suma no mesmo frame do clique
-        if (tempoDeEsperaAteVigiar > 0)
+        bool xicaraEstaNaVisao = EstaNaVisaoDaCamera();
+        if (xicaraEstaNaVisao)
         {
-            tempoDeEsperaAteVigiar -= Time.deltaTime;
-            return; // Enquanto o tempo não passar, não faz contas de visão
+            xicaraJaFoiVista = true;
+            tempoForaDaTela = 0f;
+        }
+        else if (xicaraJaFoiVista)
+        {
+            tempoForaDaTela += Time.deltaTime;
+            if (tempoForaDaTela >= tempoForaDaTelaParaTrocar)
+                FazerTroca();
+        }
+    }
+
+    bool EstaNaVisaoDaCamera()
+    {
+        if (renderizadoresDaXicara == null || renderizadoresDaXicara.Length == 0)
+        {
+            Vector3 ponto = camPrincipal.WorldToViewportPoint(xicaraOriginal.transform.position);
+            return ponto.z > 0f && ponto.x >= 0f && ponto.x <= 1f
+                && ponto.y >= 0f && ponto.y <= 1f;
         }
 
-        // Calcula o ângulo em relação à câmara
-        Vector3 direcaoParaXicara = transform.position - camPrincipal.transform.position;
-        float angulo = Vector3.Angle(camPrincipal.transform.forward, direcaoParaXicara);
-        
-        // Se o ângulo for menor que 85°, a xícara está dentro do campo de visão
-        bool estaNaTela = angulo < 85f; 
-
-        // Se estava visível no frame anterior e agora deixou de estar (desviou o olhar)
-        if (estavaNaTelaNoFrameAnterior && !estaNaTela)
+        foreach (Renderer renderizador in renderizadoresDaXicara)
         {
-            FazerTroca();
+            if (renderizador != null && renderizador.enabled
+                && renderizador.gameObject.activeInHierarchy
+                && LimitesEstaoNaTela(renderizador.bounds))
+            {
+                return true;
+            }
         }
 
-        estavaNaTelaNoFrameAnterior = estaNaTela;
+        return false;
+    }
+
+    bool LimitesEstaoNaTela(Bounds limites)
+    {
+        Vector3 centro = limites.center;
+        Vector3 extents = limites.extents;
+        float minimoX = float.PositiveInfinity;
+        float minimoY = float.PositiveInfinity;
+        float maximoX = float.NegativeInfinity;
+        float maximoY = float.NegativeInfinity;
+        bool temPontoNaFrente = false;
+
+        for (int x = -1; x <= 1; x += 2)
+        for (int y = -1; y <= 1; y += 2)
+        for (int z = -1; z <= 1; z += 2)
+        {
+            Vector3 canto = centro + Vector3.Scale(extents, new Vector3(x, y, z));
+            Vector3 ponto = camPrincipal.WorldToViewportPoint(canto);
+            if (ponto.z <= camPrincipal.nearClipPlane) continue;
+
+            temPontoNaFrente = true;
+            minimoX = Mathf.Min(minimoX, ponto.x);
+            maximoX = Mathf.Max(maximoX, ponto.x);
+            minimoY = Mathf.Min(minimoY, ponto.y);
+            maximoY = Mathf.Max(maximoY, ponto.y);
+        }
+
+        return temPontoNaFrente
+            && maximoX >= 0f && minimoX <= 1f
+            && maximoY >= 0f && minimoY <= 1f;
+    }
+
+    void EncontrarCameraDoJogador()
+    {
+        // Preserve a câmera arrastada no Inspector; procure automaticamente só se estiver vazia.
+        if (camPrincipal != null) return;
+
+        // A cena tem mais de uma câmera com a tag MainCamera; use a que controla o jogador.
+        PlayerMovement jogador = Object.FindFirstObjectByType<PlayerMovement>();
+        if (jogador != null && jogador.cameraPlayer != null)
+            camPrincipal = jogador.cameraPlayer.GetComponent<Camera>();
+
+        if (camPrincipal == null)
+            camPrincipal = Camera.main;
     }
 
     void FazerTroca()
@@ -70,10 +149,22 @@ public class TrocarXicaraAoDesviarOlhar : MonoBehaviour
 
     public void ConcluirTarefaCafe()
     {
+        if (jaTrocou || tarefaCafeConcluida) return;
+
+        if (camPrincipal == null)
+            EncontrarCameraDoJogador();
+
+        if (camPrincipal == null)
+        {
+            Debug.LogWarning("Não foi possível iniciar a troca da xícara: nenhuma câmera com a tag MainCamera foi encontrada.");
+            return;
+        }
+
         tarefaCafeConcluida = true;
-        tempoDeEsperaAteVigiar = 0.5f; // Dá 0.5 segundos de margem antes de começar a vigiar
-        estavaNaTelaNoFrameAnterior = true; 
-        
-        Debug.Log("O café está pronto! A xícara vai começar a vigiar o olhar em instantes...");
+        iniciarVigilanciaEm = Time.time + atrasoAntesDeVigiar;
+        vigilanciaIniciada = false;
+        xicaraJaFoiVista = false;
+
+        Debug.Log("Preparo do café iniciado. A xícara será vigiada após " + atrasoAntesDeVigiar + " segundos.");
     }
 }
