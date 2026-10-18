@@ -15,6 +15,12 @@ public class PlayerMovement : MonoBehaviour
     public float distanciaInteracao = 3f;
     public LayerMask camadaInterativel;
     private InteractableObject objetoAtual;
+    private ItemSeguravel itemDestacadoAtual = null; // Item segurável que o jogador está a olhar
+
+    [Header("Sistema de Inventário/Mão (Segurar Itens)")]
+    public Transform maoDoJogador;          // Ponto de fixação do item, acompanhado pela câmera
+    public Vector3 posicaoMaoNaCamera = new Vector3(0.3f, -0.25f, 0.6f);
+    private ItemSeguravel itemNaMao = null; // Guarda o item que o player está a segurar no momento
 
     private CharacterController controller;
     private Vector3 velocidadeVertical;
@@ -25,7 +31,41 @@ public class PlayerMovement : MonoBehaviour
     void Start()
     {
         controller = GetComponent<CharacterController>();
+        ConfigurarPontoDaMao();
         TravarMouse();
+    }
+
+    void ConfigurarPontoDaMao()
+    {
+        if (cameraPlayer == null) return;
+
+        if (maoDoJogador == null)
+        {
+            GameObject pontoDaMao = new GameObject("MaoDoJogador");
+            maoDoJogador = pontoDaMao.transform;
+        }
+
+        // Mantém o suporte fora da hierarquia escalada do Player/câmera para evitar deformação.
+        maoDoJogador.SetParent(null, false);
+        maoDoJogador.localScale = Vector3.one;
+        AtualizarPontoDaMao();
+    }
+
+    void LateUpdate()
+    {
+        AtualizarPontoDaMao();
+    }
+
+    void AtualizarPontoDaMao()
+    {
+        if (cameraPlayer == null || maoDoJogador == null) return;
+
+        // Recalcula a posição relativa à câmera sem herdar a escala dos pais dela.
+        maoDoJogador.position = cameraPlayer.position
+            + cameraPlayer.right * posicaoMaoNaCamera.x
+            + cameraPlayer.up * posicaoMaoNaCamera.y
+            + cameraPlayer.forward * posicaoMaoNaCamera.z;
+        maoDoJogador.rotation = cameraPlayer.rotation;
     }
 
     void Update()
@@ -64,6 +104,12 @@ public class PlayerMovement : MonoBehaviour
         {
             objetoAtual.SetHighlight(false);
             objetoAtual = null;
+        }
+
+        if (itemDestacadoAtual != null)
+        {
+            itemDestacadoAtual.SetHighlight(false);
+            itemDestacadoAtual = null;
         }
     }
 
@@ -129,10 +175,12 @@ public class PlayerMovement : MonoBehaviour
 
         Vector2 mouse = Mouse.current.delta.ReadValue();
 
+        // Rotação horizontal do corpo do jogador
         transform.Rotate(
             Vector3.up * mouse.x * sensibilidade
         );
 
+        // Rotação vertical da câmara
         rotacaoCamera -= mouse.y * sensibilidade;
         rotacaoCamera = Mathf.Clamp(rotacaoCamera, -80f, 80f);
 
@@ -147,30 +195,58 @@ public class PlayerMovement : MonoBehaviour
         RaycastHit hit;
 
         InteractableObject interativelDetectado = null;
+        ItemSeguravel itemSeguravelDetectado = null;
 
         if (Physics.Raycast(ray, out hit, distanciaInteracao, camadaInterativel))
         {
             interativelDetectado = hit.collider.GetComponent<InteractableObject>();
+
+            // Só permite destacar e apanhar itens seguráveis quando a mão está livre.
+            if (itemNaMao == null)
+                itemSeguravelDetectado = hit.collider.GetComponent<ItemSeguravel>();
         }
 
+        // Atualiza o destaque das interações normais.
         if (objetoAtual != interativelDetectado)
         {
-            if (objetoAtual != null)
-            {
-                objetoAtual.SetHighlight(false);
-            }
-
+            if (objetoAtual != null) objetoAtual.SetHighlight(false);
             objetoAtual = interativelDetectado;
-
-            if (objetoAtual != null)
-            {
-                objetoAtual.SetHighlight(true);
-            }
+            if (objetoAtual != null) objetoAtual.SetHighlight(true);
         }
 
-        if (objetoAtual != null)
+        // Atualiza o destaque dos itens que podem ser apanhados.
+        if (itemDestacadoAtual != itemSeguravelDetectado)
         {
-            if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
+            if (itemDestacadoAtual != null) itemDestacadoAtual.SetHighlight(false);
+            itemDestacadoAtual = itemSeguravelDetectado;
+            if (itemDestacadoAtual != null) itemDestacadoAtual.SetHighlight(true);
+        }
+
+        // Executa as ações do clique.
+        if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
+        {
+            // Devolve o item ao slot da cafeteira.
+            if (itemNaMao != null && hit.collider != null && hit.collider.CompareTag("SlotCafeteira"))
+            {
+                Transform slotDestino = hit.collider.transform;
+                itemNaMao.SoltarItem(slotDestino);
+                itemNaMao = null;
+                Debug.Log("Xícara devolvida à origem!");
+                return;
+            }
+
+            // Apanha um item segurável, como a xícara sobre a TV.
+            if (itemNaMao == null && itemSeguravelDetectado != null)
+            {
+                itemDestacadoAtual.SetHighlight(false);
+                itemDestacadoAtual = null;
+                itemNaMao = itemSeguravelDetectado;
+                itemNaMao.PegarItem(maoDoJogador);
+                return;
+            }
+
+            // Mantém as interações normais, como portas e tarefas.
+            if (objetoAtual != null)
             {
                 objetoAtual.Interact();
             }
