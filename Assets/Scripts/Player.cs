@@ -16,6 +16,7 @@ public class PlayerMovement : MonoBehaviour
     public LayerMask camadaInterativel;
     private InteractableObject objetoAtual;
     private ItemSeguravel itemDestacadoAtual = null; // Item segurável que o jogador está a olhar
+    private PortaItemSlot slotDestacadoAtual = null; // Slot azul que o jogador está a olhar
 
     [Header("Sistema de Inventário/Mão (Segurar Itens)")]
     public Transform maoDoJogador;          // Ponto de fixação do item, acompanhado pela câmera
@@ -111,6 +112,12 @@ public class PlayerMovement : MonoBehaviour
             itemDestacadoAtual.SetHighlight(false);
             itemDestacadoAtual = null;
         }
+
+        if (slotDestacadoAtual != null)
+        {
+            slotDestacadoAtual.SetHighlight(false);
+            slotDestacadoAtual = null;
+        }
     }
 
     void AlternarCursor()
@@ -196,14 +203,30 @@ public class PlayerMovement : MonoBehaviour
 
         InteractableObject interativelDetectado = null;
         ItemSeguravel itemSeguravelDetectado = null;
+        PortaItemSlot slotDetectado = null;
 
         if (Physics.Raycast(ray, out hit, distanciaInteracao, camadaInterativel))
         {
             interativelDetectado = hit.collider.GetComponent<InteractableObject>();
+            PortaItemSlot slot = hit.collider.GetComponentInParent<PortaItemSlot>();
 
-            // Só permite destacar e apanhar itens seguráveis quando a mão está livre.
+            // Com a mão vazia, permite pegar itens soltos ou retirar o item de um slot ocupado.
             if (itemNaMao == null)
+            {
                 itemSeguravelDetectado = hit.collider.GetComponent<ItemSeguravel>();
+                if (slot != null && slot.slotOcupado)
+                {
+                    slotDetectado = slot;
+                }
+            }
+            else
+            {
+                // Se o jogador TEM um item na mão, procura por slots vagos (quadrado azul)
+                if (slot != null && !slot.slotOcupado)
+                {
+                    slotDetectado = slot;
+                }
+            }
         }
 
         // Atualiza o destaque das interações normais.
@@ -222,30 +245,70 @@ public class PlayerMovement : MonoBehaviour
             if (itemDestacadoAtual != null) itemDestacadoAtual.SetHighlight(true);
         }
 
+        // Destaca o slot disponível para colocar ou ocupado para retirar o item.
+        if (slotDestacadoAtual != slotDetectado)
+        {
+            if (slotDestacadoAtual != null) slotDestacadoAtual.SetHighlight(false);
+            slotDestacadoAtual = slotDetectado;
+            if (slotDestacadoAtual != null) slotDestacadoAtual.SetHighlight(true);
+        }
+
         // Executa as ações do clique.
         if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
         {
-            // Devolve o item ao slot da cafeteira.
-            if (itemNaMao != null && hit.collider != null && hit.collider.CompareTag("SlotCafeteira"))
+            // Retira o item real do slot; a representação visual do cenário é desativada pelo slot.
+            if (itemNaMao == null && slotDetectado != null && slotDetectado.slotOcupado)
             {
-                Transform slotDestino = hit.collider.transform;
-                itemNaMao.SoltarItem(slotDestino);
-                itemNaMao = null;
-                Debug.Log("Xícara devolvida à origem!");
-                return;
+                ItemSeguravel itemRetirado = slotDetectado.RetirarItem();
+                if (itemRetirado != null)
+                {
+                    itemNaMao = itemRetirado;
+                    itemNaMao.PegarItem(maoDoJogador);
+
+                    if (slotDestacadoAtual != null)
+                    {
+                        slotDestacadoAtual.SetHighlight(false);
+                        slotDestacadoAtual = null;
+                    }
+
+                    return;
+                }
             }
 
-            // Apanha um item segurável, como a xícara sobre a TV.
+            // 1. Devolve o item ao PortaItemSlot (quadrado azul) se tiver o item correto na mão.
+            if (itemNaMao != null && slotDetectado != null && !slotDetectado.slotOcupado)
+            {
+                if (slotDetectado.nomeDoItemAceito == itemNaMao.nomeDoItem)
+                {
+                    slotDetectado.OcuparSlot(itemNaMao); // Guarda o item e alterna a representação visível.
+                    itemNaMao = null;
+
+                    if (slotDestacadoAtual != null)
+                    {
+                        slotDestacadoAtual.SetHighlight(false);
+                        slotDestacadoAtual = null;
+                    }
+
+                    Debug.Log("Item devolvido ao slot de origem com sucesso!");
+                    return;
+                }
+            }
+
+            // 2. Apanha um item segurável, como a xícara sobre a TV.
             if (itemNaMao == null && itemSeguravelDetectado != null)
             {
-                itemDestacadoAtual.SetHighlight(false);
-                itemDestacadoAtual = null;
+                if (itemDestacadoAtual != null)
+                {
+                    itemDestacadoAtual.SetHighlight(false);
+                    itemDestacadoAtual = null;
+                }
+
                 itemNaMao = itemSeguravelDetectado;
                 itemNaMao.PegarItem(maoDoJogador);
                 return;
             }
 
-            // Mantém as interações normais, como portas e tarefas.
+            // 3. Mantém as interações normais, como portas e tarefas.
             if (objetoAtual != null)
             {
                 objetoAtual.Interact();

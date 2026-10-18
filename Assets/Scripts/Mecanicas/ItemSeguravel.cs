@@ -4,6 +4,7 @@ public class ItemSeguravel : MonoBehaviour
 {
     [Header("Configurações do Item")]
     public string nomeDoItem = "Objeto";
+    public PortaItemSlot slotDeOrigem; // Arraste o PortaItemSlot correspondente aqui no Inspector
     
     private Rigidbody rb;
     private Collider col;
@@ -59,11 +60,17 @@ public class ItemSeguravel : MonoBehaviour
             col.enabled = false;
         }
 
+        // Avisa o slot de origem que o item foi retirado (ativa o indicador do quadrado azul)
+        if (slotDeOrigem != null)
+        {
+            slotDeOrigem.DesocuparSlot();
+        }
+
         // Usa o suporte da câmera sem herdar escalas da hierarquia original do item.
         transform.SetParent(pontoDaMao, false);
         transform.localPosition = Vector3.zero;
         transform.localRotation = Quaternion.identity;
-        transform.localScale = escalaNoMundo;
+        transform.localScale = EscalaLocalParaManterEscalaMundial(escalaNoMundo, pontoDaMao);
 
         Debug.Log("Item apanhado: " + nomeDoItem);
     }
@@ -75,9 +82,11 @@ public class ItemSeguravel : MonoBehaviour
 
         if (novoPonto != null)
         {
-            transform.SetParent(novoPonto);
+            Vector3 escalaNoMundo = transform.lossyScale;
+            transform.SetParent(novoPonto, false);
             transform.localPosition = Vector3.zero;
-            transform.localRotation = novoPonto.rotation;
+            transform.localRotation = Quaternion.identity;
+            transform.localScale = EscalaLocalParaManterEscalaMundial(escalaNoMundo, novoPonto);
         }
         else
         {
@@ -96,5 +105,19 @@ public class ItemSeguravel : MonoBehaviour
         }
 
         Debug.Log("Item posicionado: " + nomeDoItem);
+    }
+
+    private static Vector3 EscalaLocalParaManterEscalaMundial(Vector3 escalaMundial, Transform pai)
+    {
+        Vector3 escalaPai = pai != null ? pai.lossyScale : Vector3.one;
+        return new Vector3(
+            DividirEscala(escalaMundial.x, escalaPai.x),
+            DividirEscala(escalaMundial.y, escalaPai.y),
+            DividirEscala(escalaMundial.z, escalaPai.z));
+    }
+
+    private static float DividirEscala(float escala, float escalaPai)
+    {
+        return Mathf.Abs(escalaPai) > 0.0001f ? escala / escalaPai : escala;
     }
 }
