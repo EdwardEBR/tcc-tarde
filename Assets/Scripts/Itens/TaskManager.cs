@@ -56,7 +56,7 @@ public class TaskManager : MonoBehaviour
                 // --- Verifica se a tarefa concluída é a do Café ---
                 if (task.taskName.ToLower().Contains("cafe") || task.taskName.ToLower().Contains("coffee"))
                 {
-                    TrocarXicaraAoDesviarOlhar xicara = Object.FindFirstObjectByType<TrocarXicaraAoDesviarOlhar>();
+                    TrocarXicaraAoDesviarOlhar xicara = Object.FindAnyObjectByType<TrocarXicaraAoDesviarOlhar>();
                     if (xicara != null)
                     {
                         xicara.ConcluirTarefaCafe();

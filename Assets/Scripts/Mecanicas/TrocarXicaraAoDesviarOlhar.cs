@@ -129,7 +129,7 @@ public class TrocarXicaraAoDesviarOlhar : MonoBehaviour
         if (camPrincipal != null) return;
 
         // A cena tem mais de uma câmera com a tag MainCamera; use a que controla o jogador.
-        PlayerMovement jogador = Object.FindFirstObjectByType<PlayerMovement>();
+        PlayerMovement jogador = Object.FindAnyObjectByType<PlayerMovement>();
         if (jogador != null && jogador.cameraPlayer != null)
             camPrincipal = jogador.cameraPlayer.GetComponent<Camera>();
 
@@ -141,7 +141,7 @@ public class TrocarXicaraAoDesviarOlhar : MonoBehaviour
     {
         jaTrocou = true;
 
-        if (xicaraOriginal != null) xicaraOriginal.SetActive(false);
+        OcultarOriginalSemEsconderSlot();
         if (xicaraNovoLocal != null) xicaraNovoLocal.SetActive(true);
 
         Debug.Log("SUCESSO ABSOLUTO: A xícara trocou de lugar ao desviar o olhar!");
@@ -166,5 +166,92 @@ public class TrocarXicaraAoDesviarOlhar : MonoBehaviour
         xicaraJaFoiVista = false;
 
         Debug.Log("Preparo do café iniciado. A xícara será vigiada após " + atrasoAntesDeVigiar + " segundos.");
+    }
+
+    // Chamado quando a cafeteira começa ou quando a xícara volta ao slot.
+    // Impede que a troca por perda de visão esconda a xícara/representação do slot.
+    public void CancelarTrocaERecolocarNoLocalOriginal()
+    {
+        jaTrocou = true;
+        tarefaCafeConcluida = false;
+        vigilanciaIniciada = false;
+        tempoForaDaTela = 0f;
+
+        if (xicaraOriginal == null) xicaraOriginal = gameObject;
+        if (xicaraNovoLocal != null && xicaraNovoLocal != xicaraOriginal)
+        {
+            ItemSeguravel itemNoNovoLocal = xicaraNovoLocal.GetComponent<ItemSeguravel>();
+            bool estaNaMao = itemNoNovoLocal != null && itemNoNovoLocal.estaSendoSegurado;
+            if (!estaNaMao)
+                xicaraNovoLocal.SetActive(false);
+        }
+        if (xicaraOriginal != null)
+        {
+            xicaraOriginal.SetActive(true);
+            MostrarOriginalSemAlterarSlot();
+        }
+
+        enabled = false;
+    }
+
+    // Libera a vigilância ao fim da animação, mantendo o resultado que já ocorreu.
+    public void EncerrarVigilanciaAposAnimacao()
+    {
+        jaTrocou = true;
+        tarefaCafeConcluida = false;
+        vigilanciaIniciada = false;
+        enabled = false;
+    }
+
+    public void PrepararTrocaDuranteAnimacao()
+    {
+        jaTrocou = false;
+        tarefaCafeConcluida = false;
+        vigilanciaIniciada = false;
+        xicaraJaFoiVista = false;
+        tempoForaDaTela = 0f;
+        enabled = true;
+    }
+
+    private void OcultarOriginalSemEsconderSlot()
+    {
+        if (xicaraOriginal == null) return;
+
+        PortaItemSlot[] slots = xicaraOriginal.GetComponentsInChildren<PortaItemSlot>(true);
+        if (slots.Length == 0)
+        {
+            xicaraOriginal.SetActive(false);
+            return;
+        }
+
+        foreach (Renderer renderer in xicaraOriginal.GetComponentsInChildren<Renderer>(true))
+        {
+            if (!EstaDentroDeSlot(renderer.transform, slots)) renderer.enabled = false;
+        }
+
+        foreach (Collider collider in xicaraOriginal.GetComponentsInChildren<Collider>(true))
+        {
+            if (!EstaDentroDeSlot(collider.transform, slots)) collider.enabled = false;
+        }
+    }
+
+    private void MostrarOriginalSemAlterarSlot()
+    {
+        PortaItemSlot[] slots = xicaraOriginal.GetComponentsInChildren<PortaItemSlot>(true);
+        foreach (Renderer renderer in xicaraOriginal.GetComponentsInChildren<Renderer>(true))
+        {
+            if (!EstaDentroDeSlot(renderer.transform, slots)) renderer.enabled = true;
+        }
+    }
+
+    private static bool EstaDentroDeSlot(Transform objeto, PortaItemSlot[] slots)
+    {
+        foreach (PortaItemSlot slot in slots)
+        {
+            if (slot != null && (objeto == slot.transform || objeto.IsChildOf(slot.transform)))
+                return true;
+        }
+
+        return false;
     }
 }

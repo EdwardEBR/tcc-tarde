@@ -7,14 +7,15 @@ public class ItemSeguravel : MonoBehaviour
     public PortaItemSlot slotDeOrigem; // Arraste o PortaItemSlot correspondente aqui no Inspector
     
     private Rigidbody rb;
-    private Collider col;
+    private Collider[] colliders;
+    private bool[] collidersEstavamAtivos;
     private Outline outlineScript; // Referência para o Outline do objeto
     [HideInInspector] public bool estaSendoSegurado = false;
 
-    void Start()
+    void Awake()
     {
         rb = GetComponent<Rigidbody>();
-        col = GetComponent<Collider>();
+        colliders = GetComponentsInChildren<Collider>(true);
         
         // Procura o componente Outline no próprio objeto
         outlineScript = GetComponent<Outline>();
@@ -54,10 +55,17 @@ public class ItemSeguravel : MonoBehaviour
             rb.detectCollisions = false;
         }
 
-        // Desativa o collider temporariamente
-        if (col != null)
+        // Desativa todos os colliders do item enquanto ele está na mão. Colliders
+        // em filhos (por exemplo, no líquido da xícara) também poderiam empurrar o jogador.
+        if (colliders == null || colliders.Length == 0)
         {
-            col.enabled = false;
+            colliders = GetComponentsInChildren<Collider>(true);
+        }
+        collidersEstavamAtivos = new bool[colliders.Length];
+        for (int i = 0; i < colliders.Length; i++)
+        {
+            collidersEstavamAtivos[i] = colliders[i] != null && colliders[i].enabled;
+            if (colliders[i] != null) colliders[i].enabled = false;
         }
 
         // Avisa o slot de origem que o item foi retirado (ativa o indicador do quadrado azul)
@@ -99,9 +107,17 @@ public class ItemSeguravel : MonoBehaviour
             rb.detectCollisions = true;
         }
 
-        if (col != null)
+        if (colliders != null)
         {
-            col.enabled = true;
+            for (int i = 0; i < colliders.Length; i++)
+            {
+                if (colliders[i] != null)
+                {
+                    colliders[i].enabled = collidersEstavamAtivos != null
+                        && i < collidersEstavamAtivos.Length
+                        && collidersEstavamAtivos[i];
+                }
+            }
         }
 
         Debug.Log("Item posicionado: " + nomeDoItem);

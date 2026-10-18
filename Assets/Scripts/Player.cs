@@ -15,6 +15,7 @@ public class PlayerMovement : MonoBehaviour
     public float distanciaInteracao = 3f;
     public LayerMask camadaInterativel;
     private InteractableObject objetoAtual;
+    private CafeteiraInteractable cafeteiraAtual;
     private ItemSeguravel itemDestacadoAtual = null; // Item segurável que o jogador está a olhar
     private PortaItemSlot slotDestacadoAtual = null; // Slot azul que o jogador está a olhar
 
@@ -105,6 +106,12 @@ public class PlayerMovement : MonoBehaviour
         {
             objetoAtual.SetHighlight(false);
             objetoAtual = null;
+        }
+
+        if (cafeteiraAtual != null)
+        {
+            cafeteiraAtual.SetHighlight(false);
+            cafeteiraAtual = null;
         }
 
         if (itemDestacadoAtual != null)
@@ -202,19 +209,40 @@ public class PlayerMovement : MonoBehaviour
         RaycastHit hit;
 
         InteractableObject interativelDetectado = null;
+        CafeteiraInteractable cafeteiraDetectada = null;
         ItemSeguravel itemSeguravelDetectado = null;
         PortaItemSlot slotDetectado = null;
 
-        if (Physics.Raycast(ray, out hit, distanciaInteracao, camadaInterativel))
+        // A representação da xícara usa colliders trigger para não empurrar o jogador.
+        // Colide com triggers para que ela continue clicável mesmo quando o jogador olha para ela.
+        if (Physics.Raycast(ray, out hit, distanciaInteracao, camadaInterativel, QueryTriggerInteraction.Collide))
         {
-            interativelDetectado = hit.collider.GetComponent<InteractableObject>();
+            cafeteiraDetectada = hit.collider.GetComponentInParent<CafeteiraInteractable>();
+            if (cafeteiraDetectada == null)
+            {
+                interativelDetectado = hit.collider.GetComponentInParent<InteractableObject>();
+            }
+
             PortaItemSlot slot = hit.collider.GetComponentInParent<PortaItemSlot>();
+            if (slot == null)
+            {
+                slot = PortaItemSlot.EncontrarSlotDaRepresentacao(hit.collider.transform);
+            }
 
             // Com a mão vazia, permite pegar itens soltos ou retirar o item de um slot ocupado.
             if (itemNaMao == null)
             {
-                itemSeguravelDetectado = hit.collider.GetComponent<ItemSeguravel>();
-                if (slot != null && slot.slotOcupado)
+                itemSeguravelDetectado = hit.collider.GetComponentInParent<ItemSeguravel>();
+
+                // CanecaOri é a representação visual e também tem ItemSeguravel na cena.
+                // O item que deve ir para a mão é o filho real mantido pelo slot.
+                if (slot != null && slot.objetoAoOcupar != null
+                    && itemSeguravelDetectado == slot.objetoAoOcupar.GetComponent<ItemSeguravel>())
+                {
+                    itemSeguravelDetectado = null;
+                }
+
+                if (slot != null && slot.TemItemVisivelNoSlot)
                 {
                     slotDetectado = slot;
                 }
@@ -236,6 +264,14 @@ public class PlayerMovement : MonoBehaviour
             objetoAtual = interativelDetectado;
             if (objetoAtual != null) objetoAtual.SetHighlight(true);
         }
+
+        if (cafeteiraAtual != cafeteiraDetectada)
+        {
+            if (cafeteiraAtual != null) cafeteiraAtual.SetHighlight(false);
+            cafeteiraAtual = cafeteiraDetectada;
+        }
+        // Reaplica o highlight para ele poder voltar quando a animação marcar o café como pronto.
+        if (cafeteiraAtual != null) cafeteiraAtual.SetHighlight(true);
 
         // Atualiza o destaque dos itens que podem ser apanhados.
         if (itemDestacadoAtual != itemSeguravelDetectado)
@@ -278,9 +314,15 @@ public class PlayerMovement : MonoBehaviour
             // 1. Devolve o item ao PortaItemSlot (quadrado azul) se tiver o item correto na mão.
             if (itemNaMao != null && slotDetectado != null && !slotDetectado.slotOcupado)
             {
-                if (slotDetectado.nomeDoItemAceito == itemNaMao.nomeDoItem)
+                bool veioDesteSlot = itemNaMao.slotDeOrigem == slotDetectado;
+                bool nomeAceito = string.Equals(slotDetectado.nomeDoItemAceito, itemNaMao.nomeDoItem, System.StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(slotDetectado.nomeDoItemAceito, itemNaMao.gameObject.name, System.StringComparison.OrdinalIgnoreCase);
+
+                // O slot de origem sempre pode receber seu próprio item, mesmo que outra mecânica
+                // tenha mudado o nome exibido (por exemplo, para "Xícara com Café").
+                if (veioDesteSlot || nomeAceito)
                 {
-                    slotDetectado.OcuparSlot(itemNaMao); // Guarda o item e alterna a representação visível.
+                    if (!slotDetectado.OcuparSlot(itemNaMao)) return;
                     itemNaMao = null;
 
                     if (slotDestacadoAtual != null)
@@ -308,7 +350,14 @@ public class PlayerMovement : MonoBehaviour
                 return;
             }
 
-            // 3. Mantém as interações normais, como portas e tarefas.
+            // 3. Aciona a lógica própria da cafeteira quando ela estiver no foco.
+            if (cafeteiraAtual != null)
+            {
+                cafeteiraAtual.Interact();
+                return;
+            }
+
+            // 4. Mantém as interações normais, como portas e tarefas.
             if (objetoAtual != null)
             {
                 objetoAtual.Interact();

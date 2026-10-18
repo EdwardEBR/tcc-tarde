@@ -46,7 +46,7 @@ public class InteractableObject : MonoBehaviour
             }
         }
 
-        TaskManager taskMgr = FindObjectOfType<TaskManager>();
+        TaskManager taskMgr = FindAnyObjectByType<TaskManager>();
         if (taskMgr != null)
         {
             taskMgr.CompleteTask(taskNameName);
