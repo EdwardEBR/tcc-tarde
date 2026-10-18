@@ -11,6 +11,9 @@ public class ItemSeguravel : MonoBehaviour
     private bool[] collidersEstavamAtivos;
     private Outline outlineScript; // Referência para o Outline do objeto
     [HideInInspector] public bool estaSendoSegurado = false;
+    [HideInInspector] public bool temCafeNaXicara = false;
+    [HideInInspector] public bool podeSerPego = true;
+    [HideInInspector] public bool cafeConsumido = false;
 
     void Awake()
     {
@@ -121,6 +124,53 @@ public class ItemSeguravel : MonoBehaviour
         }
 
         Debug.Log("Item posicionado: " + nomeDoItem);
+    }
+
+    public bool BeberCafe()
+    {
+        if (!temCafeNaXicara) return false;
+
+        DesativarVisuaisDeCafe(transform);
+        temCafeNaXicara = false;
+        cafeConsumido = true;
+        podeSerPego = false;
+        nomeDoItem = slotDeOrigem != null ? slotDeOrigem.nomeDoItemAceito : gameObject.name;
+
+        // A representação pode manter um visual separado enquanto a xícara está no slot.
+        if (slotDeOrigem != null && slotDeOrigem.objetoAoOcupar != null)
+        {
+            Transform representacao = slotDeOrigem.objetoAoOcupar.transform;
+            DesativarVisuaisDeCafe(representacao);
+
+            ItemSeguravel itemRepresentado = representacao.GetComponent<ItemSeguravel>();
+            if (itemRepresentado != null && itemRepresentado != this)
+            {
+                itemRepresentado.temCafeNaXicara = false;
+                itemRepresentado.cafeConsumido = true;
+                itemRepresentado.podeSerPego = false;
+                itemRepresentado.nomeDoItem = slotDeOrigem.nomeDoItemAceito;
+            }
+        }
+
+        Debug.Log("O café foi bebido; a xícara está vazia.");
+        return true;
+    }
+
+    private static void DesativarVisuaisDeCafe(Transform raiz)
+    {
+        if (raiz == null) return;
+
+        foreach (Transform filho in raiz.GetComponentsInChildren<Transform>(true))
+        {
+            if (filho == raiz) continue;
+
+            if (filho.name.Equals("CafeNaXicara", System.StringComparison.OrdinalIgnoreCase)
+                || filho.name.Equals("CafenaXicara", System.StringComparison.OrdinalIgnoreCase)
+                || filho.name.Equals("LiquidoCafe", System.StringComparison.OrdinalIgnoreCase))
+            {
+                filho.gameObject.SetActive(false);
+            }
+        }
     }
 
     private static Vector3 EscalaLocalParaManterEscalaMundial(Vector3 escalaMundial, Transform pai)

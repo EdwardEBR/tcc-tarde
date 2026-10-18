@@ -24,6 +24,8 @@ public class TrocarXicaraAoDesviarOlhar : MonoBehaviour
     private float iniciarVigilanciaEm;
     private float tempoForaDaTela;
     private Renderer[] renderizadoresDaXicara;
+    private bool liberadaParaTrocar;
+    private bool podePegarNoSlot = true;
 
     void Start()
     {
@@ -40,7 +42,7 @@ public class TrocarXicaraAoDesviarOlhar : MonoBehaviour
 
     void Update()
     {
-        if (jaTrocou || !tarefaCafeConcluida) return;
+        if (!liberadaParaTrocar || jaTrocou || !tarefaCafeConcluida) return;
 
         if (camPrincipal == null)
             EncontrarCameraDoJogador();
@@ -141,15 +143,34 @@ public class TrocarXicaraAoDesviarOlhar : MonoBehaviour
     {
         jaTrocou = true;
 
+        // Depois da troca, o PortaItem fica vazio; a xícara deve ser retirada do novo local.
+        if (xicaraOriginal != null)
+        {
+            PortaItemSlot[] slots = FindObjectsByType<PortaItemSlot>(FindObjectsInactive.Include);
+            foreach (PortaItemSlot slot in slots)
+            {
+                if (slot != null && slot.objetoAoOcupar == xicaraOriginal)
+                {
+                    slot.MarcarItemMovidoParaOutroLocal();
+                }
+            }
+        }
+
         OcultarOriginalSemEsconderSlot();
         if (xicaraNovoLocal != null) xicaraNovoLocal.SetActive(true);
+
+        ItemSeguravel itemNoNovoLocal = xicaraNovoLocal != null
+            ? xicaraNovoLocal.GetComponent<ItemSeguravel>()
+            : null;
+        if (itemNoNovoLocal != null)
+            itemNoNovoLocal.podeSerPego = true;
 
         Debug.Log("SUCESSO ABSOLUTO: A xícara trocou de lugar ao desviar o olhar!");
     }
 
     public void ConcluirTarefaCafe()
     {
-        if (jaTrocou || tarefaCafeConcluida) return;
+        if (!liberadaParaTrocar || jaTrocou || tarefaCafeConcluida) return;
 
         if (camPrincipal == null)
             EncontrarCameraDoJogador();
@@ -161,7 +182,8 @@ public class TrocarXicaraAoDesviarOlhar : MonoBehaviour
         }
 
         tarefaCafeConcluida = true;
-        iniciarVigilanciaEm = Time.time + atrasoAntesDeVigiar;
+        // A xícara deve poder sumir ainda durante a animação da cafeteira.
+        iniciarVigilanciaEm = Time.time + (liberadaParaTrocar ? 0f : atrasoAntesDeVigiar);
         vigilanciaIniciada = false;
         xicaraJaFoiVista = false;
 
@@ -184,6 +206,8 @@ public class TrocarXicaraAoDesviarOlhar : MonoBehaviour
             bool estaNaMao = itemNoNovoLocal != null && itemNoNovoLocal.estaSendoSegurado;
             if (!estaNaMao)
                 xicaraNovoLocal.SetActive(false);
+            if (itemNoNovoLocal != null)
+                itemNoNovoLocal.podeSerPego = podePegarNoSlot && !itemNoNovoLocal.cafeConsumido;
         }
         if (xicaraOriginal != null)
         {
@@ -197,20 +221,43 @@ public class TrocarXicaraAoDesviarOlhar : MonoBehaviour
     // Libera a vigilância ao fim da animação, mantendo o resultado que já ocorreu.
     public void EncerrarVigilanciaAposAnimacao()
     {
+        liberadaParaTrocar = false;
+        podePegarNoSlot = true;
         jaTrocou = true;
         tarefaCafeConcluida = false;
         vigilanciaIniciada = false;
+        ItemSeguravel item = xicaraNovoLocal != null
+            ? xicaraNovoLocal.GetComponent<ItemSeguravel>()
+            : null;
+        if (item != null) item.podeSerPego = true;
         enabled = false;
     }
 
     public void PrepararTrocaDuranteAnimacao()
     {
+        // A troca por desvio do olhar acontece durante o preparo. Na origem, porém,
+        // a xícara fica bloqueada até terminar a animação.
+        liberadaParaTrocar = true;
+        podePegarNoSlot = false;
         jaTrocou = false;
         tarefaCafeConcluida = false;
         vigilanciaIniciada = false;
         xicaraJaFoiVista = false;
         tempoForaDaTela = 0f;
+        ItemSeguravel itemOriginal = xicaraOriginal != null
+            ? xicaraOriginal.GetComponent<ItemSeguravel>()
+            : null;
+        if (itemOriginal != null) itemOriginal.podeSerPego = false;
+        ItemSeguravel itemAlternativo = xicaraNovoLocal != null
+            ? xicaraNovoLocal.GetComponent<ItemSeguravel>()
+            : null;
+        if (itemAlternativo != null) itemAlternativo.podeSerPego = false;
         enabled = true;
+    }
+
+    public void LiberarTrocaQuandoCafePronto()
+    {
+        EncerrarVigilanciaAposAnimacao();
     }
 
     private void OcultarOriginalSemEsconderSlot()

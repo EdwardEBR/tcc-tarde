@@ -13,6 +13,7 @@ public class PortaItemSlot : MonoBehaviour
 
     private Outline outlineScript;
     private ItemSeguravel itemGuardado;
+    public ItemSeguravel ItemGuardado => itemGuardado;
 
     public bool TemItemVisivelNoSlot
     {
@@ -26,6 +27,14 @@ public class PortaItemSlot : MonoBehaviour
             }
 
             return itemGuardado != null && itemGuardado.gameObject.activeInHierarchy;
+        }
+    }
+
+    public bool PodeRetirarItem
+    {
+        get
+        {
+            return TemItemVisivelNoSlot && (itemGuardado == null || itemGuardado.podeSerPego);
         }
     }
 
@@ -120,10 +129,17 @@ public class PortaItemSlot : MonoBehaviour
     public void DesocuparSlot()
     {
         slotOcupado = false;
+        itemGuardado = null;
         if (visualQuadradoAzul != null)
         {
             visualQuadradoAzul.enabled = true;
         }
+    }
+
+    // A xícara foi deslocada para outro ponto da cena pela mecânica de olhar.
+    public void MarcarItemMovidoParaOutroLocal()
+    {
+        DesocuparSlot();
     }
 
     // Chamado quando o jogador clica no quadrado azul para devolver o item
@@ -182,7 +198,7 @@ public class PortaItemSlot : MonoBehaviour
     // Retira a representação visível e devolve à mão o item real guardado no slot.
     public ItemSeguravel RetirarItem()
     {
-        if (!slotOcupado || itemGuardado == null)
+        if (!slotOcupado || itemGuardado == null || !itemGuardado.podeSerPego)
         {
             return null;
         }

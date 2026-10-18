@@ -234,6 +234,18 @@ public class PlayerMovement : MonoBehaviour
             {
                 itemSeguravelDetectado = hit.collider.GetComponentInParent<ItemSeguravel>();
 
+                // Se a xícara estiver no local alternativo da mecânica de troca,
+                // ainda retire-a pelo slot para transferir o café junto com ela.
+                if (slot == null && itemSeguravelDetectado != null)
+                {
+                    slot = itemSeguravelDetectado.slotDeOrigem;
+                }
+
+                if (itemSeguravelDetectado != null && !itemSeguravelDetectado.podeSerPego)
+                {
+                    itemSeguravelDetectado = null;
+                }
+
                 // CanecaOri é a representação visual e também tem ItemSeguravel na cena.
                 // O item que deve ir para a mão é o filho real mantido pelo slot.
                 if (slot != null && slot.objetoAoOcupar != null
@@ -242,7 +254,7 @@ public class PlayerMovement : MonoBehaviour
                     itemSeguravelDetectado = null;
                 }
 
-                if (slot != null && slot.TemItemVisivelNoSlot)
+                if (slot != null && slot.PodeRetirarItem)
                 {
                     slotDetectado = slot;
                 }
@@ -361,6 +373,13 @@ public class PlayerMovement : MonoBehaviour
             if (objetoAtual != null)
             {
                 objetoAtual.Interact();
+                return;
+            }
+
+            // Com a xícara cheia na mão, clicar em uma área sem interação consome o café.
+            if (itemNaMao != null)
+            {
+                itemNaMao.BeberCafe();
             }
         }
     }

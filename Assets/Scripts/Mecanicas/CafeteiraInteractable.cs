@@ -59,6 +59,8 @@ public class CafeteiraInteractable : MonoBehaviour
                 trocaXicaraAoDesviarOlhar = trocas[0];
         }
 
+        DefinirCanecaPodeSerPega(false);
+
         if (animadorCafeteira == null)
         {
             Debug.LogWarning("CafeteiraInteractable: nenhum Animator foi atribuído ou encontrado neste objeto e seus filhos.", this);
@@ -133,6 +135,14 @@ public class CafeteiraInteractable : MonoBehaviour
                         visualAtivado |= AtivarVisualCafe(slotDaXicara.objetoAoOcupar);
                     }
 
+                    // O objeto aceito pode ser só a representação; registra o café também
+                    // no item real que será colocado na mão do jogador.
+                    if (slotDaXicara.ItemGuardado != null)
+                    {
+                        slotDaXicara.ItemGuardado.temCafeNaXicara = true;
+                        slotDaXicara.ItemGuardado.nomeDoItem = "Xícara com Café";
+                    }
+
                     if (!visualAtivado)
                     {
                         Debug.LogWarning("A xícara não tem visual de café. Atribua 'Visual Cafe Na Xicara' ou adicione um filho 'CafenaXicara'.", this);
@@ -192,12 +202,9 @@ public class CafeteiraInteractable : MonoBehaviour
             taskMgr.CompleteTask(taskNameName);
         }
 
-        // Mantém a vigilância vinculada ao intervalo da animação mesmo se a tarefa
-        // não estiver registrada no TaskManager da cena.
+        // Mantém o efeito durante a animação mesmo sem tarefa cadastrada no TaskManager.
         if (trocaXicaraAoDesviarOlhar != null)
-        {
             trocaXicaraAoDesviarOlhar.ConcluirTarefaCafe();
-        }
 
         Debug.Log("Cafeteira ligada! A aguardar o fim da animação...");
     }
@@ -205,6 +212,16 @@ public class CafeteiraInteractable : MonoBehaviour
     private bool AtivarVisualCafe(GameObject xicara)
     {
         bool ativouVisual = false;
+
+        if (xicara != null)
+        {
+            ItemSeguravel item = xicara.GetComponent<ItemSeguravel>();
+            if (item != null)
+            {
+                item.temCafeNaXicara = true;
+                item.nomeDoItem = "Xícara com Café";
+            }
+        }
 
         if (visualCafeNaXicara != null)
         {
@@ -272,11 +289,32 @@ public class CafeteiraInteractable : MonoBehaviour
             trocaXicaraAoDesviarOlhar.EncerrarVigilanciaAposAnimacao();
         }
 
+        DefinirCanecaPodeSerPega(true);
+
         if (cafeCheioObj != null)
         {
             cafeCheioObj.SetActive(true); // Deixa o café cheio visível
         }
 
         Debug.Log("Animação terminada! A cafeteira está cheia e pronta para encher a xícara.");
+    }
+
+    private void DefinirCanecaPodeSerPega(bool podePegar)
+    {
+        if (xicaraDaMesa != null)
+            xicaraDaMesa.podeSerPego = podePegar;
+
+        if (slotDaXicara == null) return;
+
+        if (slotDaXicara.ItemGuardado != null)
+            slotDaXicara.ItemGuardado.podeSerPego = podePegar;
+
+        // ItemGuardado pode ainda não ter sido inicializado por Start nesta mesma cena.
+        ItemSeguravel[] itens = FindObjectsByType<ItemSeguravel>(FindObjectsInactive.Include);
+        foreach (ItemSeguravel item in itens)
+        {
+            if (item != null && item.slotDeOrigem == slotDaXicara)
+                item.podeSerPego = podePegar;
+        }
     }
 }
