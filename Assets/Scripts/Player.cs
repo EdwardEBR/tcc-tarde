@@ -16,6 +16,7 @@ public class PlayerMovement : MonoBehaviour
     public LayerMask camadaInterativel;
     private InteractableObject objetoAtual;
     private CafeteiraInteractable cafeteiraAtual;
+    private TelefoneCarregadorInteractable carregadorAtual;
     private ItemSeguravel itemDestacadoAtual = null; // Item segurável que o jogador está a olhar
     private PortaItemSlot slotDestacadoAtual = null; // Slot azul que o jogador está a olhar
 
@@ -210,6 +211,7 @@ public class PlayerMovement : MonoBehaviour
 
         InteractableObject interativelDetectado = null;
         CafeteiraInteractable cafeteiraDetectada = null;
+        TelefoneCarregadorInteractable carregadorDetectado = null;
         ItemSeguravel itemSeguravelDetectado = null;
         PortaItemSlot slotDetectado = null;
 
@@ -218,6 +220,25 @@ public class PlayerMovement : MonoBehaviour
         if (Physics.Raycast(ray, out hit, distanciaInteracao, camadaInterativel, QueryTriggerInteraction.Collide))
         {
             cafeteiraDetectada = hit.collider.GetComponentInParent<CafeteiraInteractable>();
+            carregadorDetectado = hit.collider.GetComponentInParent<TelefoneCarregadorInteractable>();
+            // Se o collider do telefone estiver à frente do carregador, ainda trata o
+            // clique como interação com o carregador mesmo quando são objetos separados.
+            if (carregadorDetectado == null)
+            {
+                ItemSeguravel itemMirado = hit.collider.GetComponentInParent<ItemSeguravel>();
+                if (itemMirado != null)
+                {
+                    TelefoneCarregadorInteractable[] carregadores = FindObjectsByType<TelefoneCarregadorInteractable>(FindObjectsSortMode.None);
+                    foreach (TelefoneCarregadorInteractable carregador in carregadores)
+                    {
+                        if (carregador.telefone == itemMirado)
+                        {
+                            carregadorDetectado = carregador;
+                            break;
+                        }
+                    }
+                }
+            }
             if (cafeteiraDetectada == null)
             {
                 interativelDetectado = hit.collider.GetComponentInParent<InteractableObject>();
@@ -233,6 +254,13 @@ public class PlayerMovement : MonoBehaviour
             if (itemNaMao == null)
             {
                 itemSeguravelDetectado = hit.collider.GetComponentInParent<ItemSeguravel>();
+
+                // O telefone só pode ser retirado pelo carregador depois das tarefas.
+                TelefoneCarregadorInteractable carregadorDoItem = itemSeguravelDetectado != null
+                    ? itemSeguravelDetectado.GetComponentInParent<TelefoneCarregadorInteractable>()
+                    : null;
+                if (carregadorDoItem != null && !carregadorDoItem.PodePegarTelefone)
+                    itemSeguravelDetectado = null;
 
                 // Se a xícara estiver no local alternativo da mecânica de troca,
                 // ainda retire-a pelo slot para transferir o café junto com ela.
@@ -285,6 +313,13 @@ public class PlayerMovement : MonoBehaviour
         // Reaplica o highlight para ele poder voltar quando a animação marcar o café como pronto.
         if (cafeteiraAtual != null) cafeteiraAtual.SetHighlight(true);
 
+        if (carregadorAtual != carregadorDetectado)
+        {
+            if (carregadorAtual != null) carregadorAtual.SetHighlight(false);
+            carregadorAtual = carregadorDetectado;
+        }
+        if (carregadorAtual != null) carregadorAtual.SetHighlight(true);
+
         // Atualiza o destaque dos itens que podem ser apanhados.
         if (itemDestacadoAtual != itemSeguravelDetectado)
         {
@@ -304,6 +339,21 @@ public class PlayerMovement : MonoBehaviour
         // Executa as ações do clique.
         if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
         {
+            // O carregador funciona como ponto de retirada e devolução do telefone.
+            if (carregadorAtual != null)
+            {
+                if (itemNaMao == null && carregadorAtual.TentarPegar(maoDoJogador))
+                {
+                    itemNaMao = carregadorAtual.telefone;
+                    return;
+                }
+                if (itemNaMao != null && carregadorAtual.TentarDevolver(itemNaMao))
+                {
+                    itemNaMao = null;
+                    return;
+                }
+            }
+
             // Retira o item real do slot; a representação visual do cenário é desativada pelo slot.
             if (itemNaMao == null && slotDetectado != null && slotDetectado.slotOcupado)
             {

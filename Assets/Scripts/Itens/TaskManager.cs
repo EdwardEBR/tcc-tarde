@@ -11,6 +11,17 @@ public class TaskManager : MonoBehaviour
 
     private Dictionary<string, GameObject> dicionarioX3D = new Dictionary<string, GameObject>();
 
+    public bool TodasTarefasConcluidas
+    {
+        get
+        {
+            if (dailyTasks == null || dailyTasks.Count == 0) return false;
+            foreach (TaskData task in dailyTasks)
+                if (task == null || !task.isCompleted) return false;
+            return true;
+        }
+    }
+
     void Start()
     {
         ConfigurarQuadro();
