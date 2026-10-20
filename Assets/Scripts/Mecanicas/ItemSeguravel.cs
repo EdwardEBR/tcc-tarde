@@ -22,10 +22,13 @@ public class ItemSeguravel : MonoBehaviour
         
         // Procura o componente Outline no próprio objeto
         outlineScript = GetComponent<Outline>();
-        if (outlineScript != null)
-        {
-            outlineScript.enabled = false; // Começa sem brilho
-        }
+    }
+
+    private void Start()
+    {
+        // O QuickOutline inicializa seus renderers em Awake. Desligá-lo aqui
+        // evita chamar OnDisable antes dessa inicialização em objetos ativados depois.
+        if (outlineScript != null) outlineScript.enabled = false;
     }
 
     // Método para ligar/desligar o brilho quando o jogador olha para o item

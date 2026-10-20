@@ -131,7 +131,7 @@ public class TrocarXicaraAoDesviarOlhar : MonoBehaviour
         if (camPrincipal != null) return;
 
         // A cena tem mais de uma câmera com a tag MainCamera; use a que controla o jogador.
-        PlayerMovement jogador = Object.FindAnyObjectByType<PlayerMovement>();
+        PlayerFPS jogador = Object.FindAnyObjectByType<PlayerFPS>();
         if (jogador != null && jogador.cameraPlayer != null)
             camPrincipal = jogador.cameraPlayer.GetComponent<Camera>();
 

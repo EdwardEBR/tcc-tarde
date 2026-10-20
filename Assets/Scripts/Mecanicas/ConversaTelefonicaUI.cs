@@ -24,15 +24,19 @@ public class ConversaTelefonicaUI : MonoBehaviour
     [Min(0f)] public float intervaloEntreLetras = 0.025f;
 
     [Header("Jogador")]
-    public PlayerMovement jogador;
+    public PlayerFPS jogador;
 
     [Header("Aparição da colagem")]
     public GameObject colagemParaMostrar;
+    public GameObject[] objetosDaColagemParaMostrar;
     public string fraseQueMostraColagem = "colagem da árvore genealógica";
 
     private Coroutine rotinaDeTexto;
     private Coroutine rotinaDeEncerramento;
     private bool conversaAtiva;
+    private Keyboard tecladoInscrito;
+    private string bufferComandoAdmin = string.Empty;
+    private const string ComandoPularConversa = "PULAR";
     public bool ConversaConcluida { get; private set; }
     [SerializeField, HideInInspector] private int versaoDoRoteiroExemplo;
     private const int VersaoAtualDoRoteiroExemplo = 6;
@@ -44,13 +48,20 @@ public class ConversaTelefonicaUI : MonoBehaviour
 
     private void Awake()
     {
-        if (jogador == null) jogador = FindAnyObjectByType<PlayerMovement>();
+        if (jogador == null) jogador = FindAnyObjectByType<PlayerFPS>();
         if (conversa == null) conversa = new List<NoConversa>();
         if (versaoDoRoteiroExemplo < VersaoAtualDoRoteiroExemplo || conversa.Count == 0)
             CriarConversaDeExemplo();
         if (painel == null) CriarInterfacePadrao();
         if (painel != null) painel.SetActive(false);
         if (colagemParaMostrar != null) colagemParaMostrar.SetActive(false);
+        if (objetosDaColagemParaMostrar != null)
+        {
+            foreach (GameObject objeto in objetosDaColagemParaMostrar)
+            {
+                if (objeto != null) objeto.SetActive(false);
+            }
+        }
     }
 
     private void CriarConversaDeExemplo()
@@ -303,6 +314,7 @@ public class ConversaTelefonicaUI : MonoBehaviour
 
     private void Update()
     {
+        AtualizarTecladoInscrito();
         if (!conversaAtiva || rotinaDeTexto != null || Keyboard.current == null) return;
 
         if (Keyboard.current.digit1Key.wasPressedThisFrame || Keyboard.current.numpad1Key.wasPressedThisFrame)
@@ -321,9 +333,10 @@ public class ConversaTelefonicaUI : MonoBehaviour
 
         ConversaConcluida = false;
         conversaAtiva = true;
+        bufferComandoAdmin = string.Empty;
         indiceDoNoAtual = noInicial;
         if (painel != null) painel.SetActive(true);
-        if (jogador == null) jogador = FindAnyObjectByType<PlayerMovement>();
+        if (jogador == null) jogador = FindAnyObjectByType<PlayerFPS>();
         if (jogador != null) jogador.DefinirModoConversa(true);
         MostrarNo(noInicial);
     }
@@ -331,6 +344,7 @@ public class ConversaTelefonicaUI : MonoBehaviour
     public void EncerrarConversa()
     {
         conversaAtiva = false;
+        bufferComandoAdmin = string.Empty;
         if (rotinaDeTexto != null) StopCoroutine(rotinaDeTexto);
         rotinaDeTexto = null;
         if (rotinaDeEncerramento != null) StopCoroutine(rotinaDeEncerramento);
@@ -380,6 +394,17 @@ public class ConversaTelefonicaUI : MonoBehaviour
             && no.falaDaPessoa.IndexOf(fraseQueMostraColagem, System.StringComparison.OrdinalIgnoreCase) >= 0)
         {
             colagemParaMostrar.SetActive(true);
+        }
+
+        if (objetosDaColagemParaMostrar != null
+            && !string.IsNullOrWhiteSpace(fraseQueMostraColagem)
+            && !string.IsNullOrEmpty(no.falaDaPessoa)
+            && no.falaDaPessoa.IndexOf(fraseQueMostraColagem, System.StringComparison.OrdinalIgnoreCase) >= 0)
+        {
+            foreach (GameObject objeto in objetosDaColagemParaMostrar)
+            {
+                if (objeto != null) objeto.SetActive(true);
+            }
         }
 
         bool temResposta1 = !string.IsNullOrWhiteSpace(no.resposta1);
@@ -436,6 +461,75 @@ public class ConversaTelefonicaUI : MonoBehaviour
 
         indiceDoNoAtual = proximo;
         MostrarNo(indiceDoNoAtual);
+    }
+
+    private void AtualizarTecladoInscrito()
+    {
+        Keyboard tecladoAtual = Keyboard.current;
+        if (tecladoAtual == tecladoInscrito) return;
+
+        if (tecladoInscrito != null)
+            tecladoInscrito.onTextInput -= ReceberTextoDigitado;
+
+        tecladoInscrito = tecladoAtual;
+        if (tecladoInscrito != null)
+            tecladoInscrito.onTextInput += ReceberTextoDigitado;
+    }
+
+    private void OnDisable()
+    {
+        if (tecladoInscrito != null)
+            tecladoInscrito.onTextInput -= ReceberTextoDigitado;
+        tecladoInscrito = null;
+    }
+
+    private void ReceberTextoDigitado(char caractere)
+    {
+        if (!conversaAtiva) return;
+
+        // O texto recebido respeita Caps Lock/Shift. O comando só aceita letras maiúsculas.
+        if (!char.IsLetter(caractere) || char.ToUpperInvariant(caractere) != caractere)
+        {
+            bufferComandoAdmin = string.Empty;
+            return;
+        }
+
+        bufferComandoAdmin += caractere;
+        if (!ComandoPularConversa.StartsWith(bufferComandoAdmin, System.StringComparison.Ordinal))
+        {
+            bufferComandoAdmin = caractere == 'P' ? "P" : string.Empty;
+            return;
+        }
+
+        if (bufferComandoAdmin == ComandoPularConversa)
+        {
+            bufferComandoAdmin = string.Empty;
+            PularParaUltimaFala();
+        }
+    }
+
+    private void PularParaUltimaFala()
+    {
+        if (!conversaAtiva || conversa == null || conversa.Count == 0) return;
+
+        // Busca de trás para frente a última fala terminal do roteiro configurado.
+        for (int indice = conversa.Count - 1; indice >= 0; indice--)
+        {
+            NoConversa no = conversa[indice];
+            if (!string.IsNullOrWhiteSpace(no.falaDaPessoa)
+                && string.IsNullOrWhiteSpace(no.resposta1)
+                && string.IsNullOrWhiteSpace(no.resposta2))
+            {
+                if (rotinaDeTexto != null) StopCoroutine(rotinaDeTexto);
+                rotinaDeTexto = null;
+                if (rotinaDeEncerramento != null) StopCoroutine(rotinaDeEncerramento);
+                rotinaDeEncerramento = null;
+                MostrarNo(indice);
+                return;
+            }
+        }
+
+        Debug.LogWarning("ConversaTelefonicaUI: não encontrei uma fala terminal para o comando PULAR.", this);
     }
 
     private int indiceDoNoAtual;

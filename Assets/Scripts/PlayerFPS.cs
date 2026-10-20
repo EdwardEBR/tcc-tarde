@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class PlayerMovement : MonoBehaviour
+public class PlayerFPS : MonoBehaviour
 {
     [Header("Movimento")]
     public float velocidade = 3f;
@@ -19,6 +19,7 @@ public class PlayerMovement : MonoBehaviour
     private TelefoneCarregadorInteractable carregadorAtual;
     private ItemSeguravel itemDestacadoAtual = null; // Item segurável que o jogador está a olhar
     private PortaItemSlot slotDestacadoAtual = null; // Slot azul que o jogador está a olhar
+    private MecanicaColagem mecanicaColagemAtual;
 
     [Header("Sistema de Inventário/Mão (Segurar Itens)")]
     public Transform maoDoJogador;          // Ponto de fixação do item, acompanhado pela câmera
@@ -132,6 +133,12 @@ public class PlayerMovement : MonoBehaviour
         {
             carregadorAtual.SetHighlight(false);
             carregadorAtual = null;
+        }
+
+        if (mecanicaColagemAtual != null)
+        {
+            mecanicaColagemAtual.SetHighlightArvore(false);
+            mecanicaColagemAtual = null;
         }
     }
 
@@ -305,10 +312,50 @@ public class PlayerMovement : MonoBehaviour
             }
             else
             {
-                // Se o jogador TEM um item na mão, procura por slots vagos (quadrado azul)
-                if (slot != null && !slot.slotOcupado)
+                // Um slot da colagem só destaca/recebe sua foto correspondente.
+                if (slot != null && mecanicaColagem != null
+                    && mecanicaColagem.EhPortaDaColagem(slot)
+                    && mecanicaColagem.PodeColocarFoto(itemNaMao, slot))
                 {
                     slotDetectado = slot;
+                }
+                // Mantém o comportamento dos outros slots do jogo.
+                else if (slot != null && !slot.slotOcupado
+                    && (mecanicaColagem == null || !mecanicaColagem.EhPortaDaColagem(slot)))
+                {
+                    slotDetectado = slot;
+                }
+            }
+        }
+
+        // Algumas fotos têm colliders muito finos. Se o raycast físico não as
+        // encontrou, usa os limites visuais da foto, sem permitir atravessar paredes.
+        if (itemNaMao == null && itemSeguravelDetectado == null)
+        {
+            MecanicaColagem[] mecanicasColagem = FindObjectsByType<MecanicaColagem>(FindObjectsSortMode.None);
+            foreach (MecanicaColagem mecanica in mecanicasColagem)
+            {
+                ItemSeguravel fotoMirada = mecanica.EncontrarFotoNaMira(ray, distanciaInteracao, out float distanciaFoto);
+                if (fotoMirada == null) continue;
+
+                bool caminhoLivre = true;
+                RaycastHit[] obstaculos = Physics.RaycastAll(ray, distanciaFoto, ~0, QueryTriggerInteraction.Ignore);
+                foreach (RaycastHit obstaculo in obstaculos)
+                {
+                    if (obstaculo.collider.transform.IsChildOf(transform)) continue;
+                    ItemSeguravel itemNoCaminho = obstaculo.collider.GetComponentInParent<ItemSeguravel>();
+                    if (itemNoCaminho == fotoMirada) continue;
+                    if (obstaculo.distance < distanciaFoto - 0.02f)
+                    {
+                        caminhoLivre = false;
+                        break;
+                    }
+                }
+
+                if (caminhoLivre)
+                {
+                    itemSeguravelDetectado = fotoMirada;
+                    break;
                 }
             }
         }
@@ -335,6 +382,13 @@ public class PlayerMovement : MonoBehaviour
             carregadorAtual = carregadorDetectado;
         }
         if (carregadorAtual != null) carregadorAtual.SetHighlight(true);
+
+        if (mecanicaColagemAtual != mecanicaColagemDetectada)
+        {
+            if (mecanicaColagemAtual != null) mecanicaColagemAtual.SetHighlightArvore(false);
+            mecanicaColagemAtual = mecanicaColagemDetectada;
+            if (mecanicaColagemAtual != null) mecanicaColagemAtual.SetHighlightArvore(true);
+        }
 
         // Atualiza o destaque dos itens que podem ser apanhados.
         if (itemDestacadoAtual != itemSeguravelDetectado)
@@ -402,9 +456,13 @@ public class PlayerMovement : MonoBehaviour
                 bool nomeAceito = string.Equals(slotDetectado.nomeDoItemAceito, itemNaMao.nomeDoItem, System.StringComparison.OrdinalIgnoreCase)
                     || string.Equals(slotDetectado.nomeDoItemAceito, itemNaMao.gameObject.name, System.StringComparison.OrdinalIgnoreCase);
 
+                MecanicaColagem mecanicaDoSlot = slotDetectado.GetComponentInParent<MecanicaColagem>();
+                bool fotoDaColagem = mecanicaDoSlot != null
+                    && mecanicaDoSlot.PodeColocarFoto(itemNaMao, slotDetectado);
+
                 // O slot de origem sempre pode receber seu próprio item, mesmo que outra mecânica
                 // tenha mudado o nome exibido (por exemplo, para "Xícara com Café").
-                if (veioDesteSlot || nomeAceito)
+                if (veioDesteSlot || nomeAceito || fotoDaColagem)
                 {
                     if (!slotDetectado.OcuparSlot(itemNaMao)) return;
                     itemNaMao = null;

@@ -15,6 +15,7 @@ public class MecanicaColagem : MonoBehaviour
 
     private bool colagemMontada;
     private Transform quarto;
+    private Outline outlineArvore;
 
     public GameObject ColagemVisual => quarto != null ? quarto.gameObject : null;
 
@@ -54,6 +55,12 @@ public class MecanicaColagem : MonoBehaviour
         PrepararPortasFotos();
     }
 
+    private void Start()
+    {
+        // O QuickOutline precisa terminar o Awake antes de ser desligado.
+        if (outlineArvore != null) outlineArvore.enabled = false;
+    }
+
     public bool EhAlvoDaArvore(Transform alvo)
     {
         return arvoreGenealogica != null && alvo != null
@@ -72,6 +79,10 @@ public class MecanicaColagem : MonoBehaviour
                 foto.podeSerPego = false;
                 foto.gameObject.SetActive(false);
             }
+
+            // Esconde a representação que ficou no PortaFoto quando a foto foi colocada.
+            if (porta.objetoAoOcupar != null)
+                porta.objetoAoOcupar.SetActive(false);
         }
 
         foreach (GameObject foto in fotosDaSala)
@@ -111,10 +122,15 @@ public class MecanicaColagem : MonoBehaviour
 
             ItemSeguravel item = objeto.GetComponent<ItemSeguravel>();
             if (item == null) item = objeto.AddComponent<ItemSeguravel>();
-            item.nomeDoItem = "FotoColagem";
             item.slotDeOrigem = null;
             item.podeSerPego = true;
-            objeto.layer = CamadaInterativa;
+            // O raycast do Player usa a layer Interativel. Aplicá-la à hierarquia
+            // inteira evita que um collider em um filho fique fora da máscara.
+            DefinirCamadaRecursiva(objeto.transform, CamadaInterativa);
+            foreach (Collider colisor in objeto.GetComponentsInChildren<Collider>(true))
+            {
+                colisor.enabled = true;
+            }
             objeto.SetActive(false);
         }
     }
@@ -122,13 +138,78 @@ public class MecanicaColagem : MonoBehaviour
     private void PrepararColagem()
     {
         if (arvoreGenealogica != null)
+        {
             arvoreGenealogica.layer = CamadaInterativa;
+            outlineArvore = arvoreGenealogica.GetComponent<Outline>();
+        }
 
         if (fotosDaColagem == null) return;
         foreach (GameObject foto in fotosDaColagem)
         {
             if (foto != null) foto.SetActive(false);
         }
+    }
+
+    public void SetHighlightArvore(bool ativo)
+    {
+        if (outlineArvore != null)
+            outlineArvore.enabled = ativo && TodasAsPortasPreenchidas() && !colagemMontada;
+    }
+
+    public bool EhPortaDaColagem(PortaItemSlot porta)
+    {
+        if (porta == null || portasFotos == null) return false;
+        foreach (PortaItemSlot portaFoto in portasFotos)
+        {
+            if (portaFoto == porta) return true;
+        }
+        return false;
+    }
+
+    public bool EhFotoDaSala(ItemSeguravel item)
+    {
+        if (item == null || fotosDaSala == null) return false;
+        foreach (GameObject foto in fotosDaSala)
+        {
+            if (foto == item.gameObject) return true;
+        }
+        return false;
+    }
+
+    public bool PodeColocarFoto(ItemSeguravel item, PortaItemSlot porta)
+    {
+        if (item == null || porta == null || porta.slotOcupado || !EhPortaDaColagem(porta)
+            || !EhFotoDaSala(item)) return false;
+
+        string nomeAceito = porta.nomeDoItemAceito;
+        return string.Equals(nomeAceito, item.nomeDoItem, System.StringComparison.OrdinalIgnoreCase)
+            || string.Equals(nomeAceito, item.gameObject.name, System.StringComparison.OrdinalIgnoreCase);
+    }
+
+    public ItemSeguravel EncontrarFotoNaMira(Ray raio, float distanciaMaxima, out float distancia)
+    {
+        distancia = float.MaxValue;
+        ItemSeguravel melhorFoto = null;
+        if (fotosDaSala == null) return null;
+
+        foreach (GameObject foto in fotosDaSala)
+        {
+            if (foto == null || !foto.activeInHierarchy) continue;
+            ItemSeguravel item = foto.GetComponent<ItemSeguravel>();
+            if (item == null || !item.podeSerPego) continue;
+
+            foreach (Renderer rendererFoto in foto.GetComponentsInChildren<Renderer>())
+            {
+                if (rendererFoto.bounds.IntersectRay(raio, out float distanciaBounds)
+                    && distanciaBounds <= distanciaMaxima && distanciaBounds < distancia)
+                {
+                    distancia = distanciaBounds;
+                    melhorFoto = item;
+                }
+            }
+        }
+
+        return melhorFoto;
     }
 
     private void PrepararPortasFotos()
@@ -138,7 +219,6 @@ public class MecanicaColagem : MonoBehaviour
         foreach (PortaItemSlot porta in portasFotos)
         {
             if (porta == null) continue;
-            porta.nomeDoItemAceito = "FotoColagem";
             DefinirCamadaRecursiva(porta.transform, CamadaInterativa);
         }
     }
