@@ -26,6 +26,10 @@ public class ConversaTelefonicaUI : MonoBehaviour
     [Header("Jogador")]
     public PlayerMovement jogador;
 
+    [Header("Aparição da colagem")]
+    public GameObject colagemParaMostrar;
+    public string fraseQueMostraColagem = "colagem da árvore genealógica";
+
     private Coroutine rotinaDeTexto;
     private Coroutine rotinaDeEncerramento;
     private bool conversaAtiva;
@@ -46,6 +50,7 @@ public class ConversaTelefonicaUI : MonoBehaviour
             CriarConversaDeExemplo();
         if (painel == null) CriarInterfacePadrao();
         if (painel != null) painel.SetActive(false);
+        if (colagemParaMostrar != null) colagemParaMostrar.SetActive(false);
     }
 
     private void CriarConversaDeExemplo()
@@ -369,6 +374,14 @@ public class ConversaTelefonicaUI : MonoBehaviour
 
     private void MostrarRespostas(NoConversa no)
     {
+        if (colagemParaMostrar != null
+            && !string.IsNullOrWhiteSpace(fraseQueMostraColagem)
+            && !string.IsNullOrEmpty(no.falaDaPessoa)
+            && no.falaDaPessoa.IndexOf(fraseQueMostraColagem, System.StringComparison.OrdinalIgnoreCase) >= 0)
+        {
+            colagemParaMostrar.SetActive(true);
+        }
+
         bool temResposta1 = !string.IsNullOrWhiteSpace(no.resposta1);
         bool temResposta2 = !string.IsNullOrWhiteSpace(no.resposta2);
         ConfigurarResposta(botaoResposta1, textoResposta1, no.resposta1, 1);

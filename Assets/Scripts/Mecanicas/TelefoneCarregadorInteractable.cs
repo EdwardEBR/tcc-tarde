@@ -13,6 +13,9 @@ public class TelefoneCarregadorInteractable : MonoBehaviour
     [Header("Ligação (opcional)")]
     public ConversaTelefonicaUI conversaTelefonica;
 
+    [Header("Fotos que aparecem após devolver o telefone")]
+    public GameObject[] fotosParaMostrarAoDevolver;
+
     private Outline outline;
     private Vector3 posicaoLocalDeRetorno;
     private Quaternion rotacaoLocalDeRetorno;
@@ -28,6 +31,14 @@ public class TelefoneCarregadorInteractable : MonoBehaviour
         if (outline != null) outline.enabled = false;
         if (taskManager == null) taskManager = FindAnyObjectByType<TaskManager>();
         CapturarPoseDeRetorno();
+
+        if (fotosParaMostrarAoDevolver != null)
+        {
+            foreach (GameObject foto in fotosParaMostrarAoDevolver)
+            {
+                if (foto != null) foto.SetActive(false);
+            }
+        }
     }
 
     public bool EstaDesbloqueado => taskManager != null && taskManager.TodasTarefasConcluidas;
@@ -64,6 +75,7 @@ public class TelefoneCarregadorInteractable : MonoBehaviour
 
         if (conversaTelefonica != null && conversaTelefonica.ConversaConcluida)
         {
+            MostrarFotosDaLigacao();
             telefoneArquivado = true;
             telefone.podeSerPego = false;
             telefone.SetHighlight(false);
@@ -71,6 +83,16 @@ public class TelefoneCarregadorInteractable : MonoBehaviour
         }
 
         return true;
+    }
+
+    private void MostrarFotosDaLigacao()
+    {
+        if (fotosParaMostrarAoDevolver == null) return;
+
+        foreach (GameObject foto in fotosParaMostrarAoDevolver)
+        {
+            if (foto != null) foto.SetActive(true);
+        }
     }
 
     private void CapturarPoseDeRetorno()

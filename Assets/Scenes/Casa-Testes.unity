@@ -2035,12 +2035,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4f6500816b54496e9980728465d01372, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TelefoneCarregadorInteractable
   telefone: {fileID: 538015068}
   pontoDeRetorno: {fileID: 0}
   taskManager: {fileID: 214806651}
   conversaTelefonica: {fileID: 1583273475}
+  fotosParaMostrarAoDevolver: []
 --- !u!114 &154146558
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3861,7 +3862,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: a21cd09809c63f651b5243fca4c86933, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -3959,6 +3960,118 @@ MeshCollider:
   serializedVersion: 5
   m_Convex: 0
   m_CookingOptions: 30
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &219974287
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 219974288}
+  - component: {fileID: 219974291}
+  - component: {fileID: 219974290}
+  - component: {fileID: 219974289}
+  m_Layer: 0
+  m_Name: "Crian\xE7a"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &219974288
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 219974287}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.6718609, y: 0.671861, z: 0.22046062, w: 0.22046079}
+  m_LocalPosition: {x: -5.2566237, y: -1.662, z: 1.4465752}
+  m_LocalScale: {x: 0.017679999, y: 0.30576998, z: 0.54962}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 632190280}
+  m_LocalEulerAnglesHint: {x: 0, y: 143.667, z: 90}
+--- !u!65 &219974289
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 219974287}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!23 &219974290
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 219974287}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 942f1457dc697df918d7b7d675e673c9, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &219974291
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 219974287}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!1 &231579083
 GameObject:
@@ -5762,6 +5875,118 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 338831466}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &341399118
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 341399119}
+  - component: {fileID: 341399122}
+  - component: {fileID: 341399121}
+  - component: {fileID: 341399120}
+  m_Layer: 0
+  m_Name: Foto2
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &341399119
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 341399118}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: 0.7071068, w: 0.7071068}
+  m_LocalPosition: {x: 0.95300007, y: -0.78999996, z: 2.2520008}
+  m_LocalScale: {x: 0.01767697, y: 0.3057732, z: 0.5496232}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1276103568}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 90}
+--- !u!65 &341399120
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 341399118}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!23 &341399121
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 341399118}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: c3c6a21dd10d411a8ae5d8650ab96d68, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &341399122
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 341399118}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!1001 &350756918
 PrefabInstance:
@@ -9507,6 +9732,40 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 41a56843070fe18cdb05fc07d9d67096, type: 3}
   m_PrefabInstance: {fileID: 1098483385}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &632190279
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 632190280}
+  m_Layer: 0
+  m_Name: Sala
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &632190280
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 632190279}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.059, y: 0, z: -0.291}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 757520291}
+  - {fileID: 914287635}
+  - {fileID: 219974288}
+  m_Father: {fileID: 786072096}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &635312033
 GameObject:
   m_ObjectHideFlags: 0
@@ -10547,6 +10806,118 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: -5495902117074765545, guid: cb88a0a68741ad2288b9e4c3b1c9800f, type: 3}
+--- !u!1 &735309913
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 735309914}
+  - component: {fileID: 735309917}
+  - component: {fileID: 735309916}
+  - component: {fileID: 735309915}
+  m_Layer: 0
+  m_Name: ArvoreGenealogica
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &735309914
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 735309913}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: 0.7071068, w: 0.7071068}
+  m_LocalPosition: {x: 0.9359999, y: -0.78999996, z: 0.99900055}
+  m_LocalScale: {x: 0.055757854, y: 0.96448976, z: 1.7336572}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1276103568}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 90}
+--- !u!65 &735309915
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 735309913}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!23 &735309916
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 735309913}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: e808637d3bd357b57a07a2a93d0b4e12, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &735309917
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 735309913}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!1001 &741321700
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -10844,6 +11215,118 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 755428057}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &757520290
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 757520291}
+  - component: {fileID: 757520294}
+  - component: {fileID: 757520293}
+  - component: {fileID: 757520292}
+  m_Layer: 0
+  m_Name: Homem
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &757520291
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 757520290}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.6718609, y: 0.671861, z: 0.22046062, w: 0.22046079}
+  m_LocalPosition: {x: -5.301, y: -1.611, z: 1.464}
+  m_LocalScale: {x: 0.017679999, y: 0.30576998, z: 0.54962}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 632190280}
+  m_LocalEulerAnglesHint: {x: 0, y: 143.667, z: 90}
+--- !u!65 &757520292
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 757520290}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!23 &757520293
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 757520290}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: a21cd09809c63f651b5243fca4c86933, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &757520294
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 757520290}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!1 &761930002
 GameObject:
@@ -11165,6 +11648,39 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: cb88a0a68741ad2288b9e4c3b1c9800f, type: 3}
   m_PrefabInstance: {fileID: 351945026}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &786072095
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 786072096}
+  m_Layer: 0
+  m_Name: MecanicaColagem
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &786072096
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 786072095}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 8.03629, y: 4.70578, z: -22.18002}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1276103568}
+  - {fileID: 632190280}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &789834624
 GameObject:
   m_ObjectHideFlags: 0
@@ -14761,6 +15277,118 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 906539567}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &914287634
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 914287635}
+  - component: {fileID: 914287638}
+  - component: {fileID: 914287637}
+  - component: {fileID: 914287636}
+  m_Layer: 0
+  m_Name: Mulher
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &914287635
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 914287634}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.6718609, y: 0.671861, z: 0.22046062, w: 0.22046079}
+  m_LocalPosition: {x: -5.189, y: -1.636, z: 1.419}
+  m_LocalScale: {x: 0.017679999, y: 0.30576998, z: 0.54962}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 632190280}
+  m_LocalEulerAnglesHint: {x: 0, y: 143.667, z: 90}
+--- !u!65 &914287636
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 914287634}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!23 &914287637
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 914287634}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 3cb326a461ba8427b9cd2226771cd561, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &914287638
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 914287634}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!1001 &914453117
 PrefabInstance:
@@ -19530,6 +20158,41 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &1276103567
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1276103568}
+  m_Layer: 0
+  m_Name: Quarto
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1276103568
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1276103567}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 735309914}
+  - {fileID: 1373854209}
+  - {fileID: 341399119}
+  - {fileID: 1535137883}
+  m_Father: {fileID: 786072096}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1280468616
 GameObject:
   m_ObjectHideFlags: 0
@@ -22293,6 +22956,118 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 8843031432167929507, guid: df0a91bc767877c29a55d18dc08a01f2, type: 3}
+--- !u!1 &1373854208
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1373854209}
+  - component: {fileID: 1373854212}
+  - component: {fileID: 1373854211}
+  - component: {fileID: 1373854210}
+  m_Layer: 0
+  m_Name: Foto1
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1373854209
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1373854208}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: 0.7071068, w: 0.7071068}
+  m_LocalPosition: {x: 0.61200047, y: -0.78999996, z: 2.2520008}
+  m_LocalScale: {x: 0.01767697, y: 0.3057732, z: 0.5496232}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1276103568}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 90}
+--- !u!65 &1373854210
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1373854208}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!23 &1373854211
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1373854208}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: c3c6a21dd10d411a8ae5d8650ab96d68, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &1373854212
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1373854208}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!1 &1376883399
 GameObject:
   m_ObjectHideFlags: 0
@@ -25250,6 +26025,118 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 286789ae8dba86d16bdb600805eb53ea, type: 3}
   m_PrefabInstance: {fileID: 1532504937}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1535137882
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1535137883}
+  - component: {fileID: 1535137886}
+  - component: {fileID: 1535137885}
+  - component: {fileID: 1535137884}
+  m_Layer: 0
+  m_Name: Foto3
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1535137883
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1535137882}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: 0.7071068, w: 0.7071068}
+  m_LocalPosition: {x: 1.2980003, y: -0.78999996, z: 2.2520008}
+  m_LocalScale: {x: 0.01767697, y: 0.3057732, z: 0.5496232}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1276103568}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 90}
+--- !u!65 &1535137884
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1535137882}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!23 &1535137885
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1535137882}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: c3c6a21dd10d411a8ae5d8650ab96d68, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &1535137886
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1535137882}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!1 &1539007171
 GameObject:
   m_ObjectHideFlags: 0
@@ -26693,7 +27580,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7d04dd4c98b84b398d6c026074a26529, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ConversaTelefonicaUI
   painel: {fileID: 0}
   textoPessoa: {fileID: 0}
@@ -26704,109 +27591,143 @@ MonoBehaviour:
   textoResposta2: {fileID: 0}
   textoInstrucao: {fileID: 0}
   conversa:
-  - falaDaPessoa: "Oi, mãe! É a Elisa. Tô te ligando no caminho de casa. Você tá me ouvindo bem? Como foi sua manhã? Lembrei que hoje você começou o remédio novo e queria saber como se sentiu."
-    resposta1: "Tô bem, filha... só tomei um café hoje."
+  - falaDaPessoa: "Oi, m\xE3e! \xC9 a Elisa. T\xF4 te ligando no caminho de casa.
+      Voc\xEA t\xE1 me ouvindo bem? Como foi sua manh\xE3? Lembrei que hoje voc\xEA
+      come\xE7ou o rem\xE9dio novo e queria saber como se sentiu."
+    resposta1: "T\xF4 bem, filha... s\xF3 tomei um caf\xE9 hoje."
     proximoNoResposta1: 1
-    resposta2: "Desculpa, pode repetir? Me perdi no meio."
+    resposta2: Desculpa, pode repetir? Me perdi no meio.
     proximoNoResposta2: 2
-  - falaDaPessoa: "Café conta como começo, né? Você sempre dizia que sem café o dia nem começava. Conseguiu comer mais alguma coisa?"
-    resposta1: "Acho que sim, mas não lembro o quê."
+  - falaDaPessoa: "Caf\xE9 conta como come\xE7o, n\xE9? Voc\xEA sempre dizia que
+      sem caf\xE9 o dia nem come\xE7ava. Conseguiu comer mais alguma coisa?"
+    resposta1: "Acho que sim, mas n\xE3o lembro o qu\xEA."
     proximoNoResposta1: 3
-    resposta2: "Só o café. Não tô com fome."
+    resposta2: "S\xF3 o caf\xE9. N\xE3o t\xF4 com fome."
     proximoNoResposta2: 4
-  - falaDaPessoa: "Claro, mãe. Vou repetir devagar. Perguntei como foi sua manhã e como você se sentiu depois do remédio."
-    resposta1: "Acho que tomei só café."
+  - falaDaPessoa: "Claro, m\xE3e. Vou repetir devagar. Perguntei como foi sua manh\xE3
+      e como voc\xEA se sentiu depois do rem\xE9dio."
+    resposta1: "Acho que tomei s\xF3 caf\xE9."
     proximoNoResposta1: 3
-    resposta2: "Eu me perdi de novo, desculpa."
+    resposta2: Eu me perdi de novo, desculpa.
     proximoNoResposta2: 4
-  - falaDaPessoa: "Tudo bem. Não precisa se apressar. Conseguiu comer alguma coisa além do café?"
-    resposta1: "Acho que não."
+  - falaDaPessoa: "Tudo bem. N\xE3o precisa se apressar. Conseguiu comer alguma coisa
+      al\xE9m do caf\xE9?"
+    resposta1: "Acho que n\xE3o."
     proximoNoResposta1: 5
-    resposta2: "Eu não lembro."
+    resposta2: "Eu n\xE3o lembro."
     proximoNoResposta2: 6
-  - falaDaPessoa: "Tudo bem, mãe. A gente não precisa descobrir tudo agora. Quer me dizer se está se sentindo enjoada ou se está tudo bem?"
-    resposta1: "Senti um pouco de enjoo."
+  - falaDaPessoa: "Tudo bem, m\xE3e. A gente n\xE3o precisa descobrir tudo agora.
+      Quer me dizer se est\xE1 se sentindo enjoada ou se est\xE1 tudo bem?"
+    resposta1: Senti um pouco de enjoo.
     proximoNoResposta1: 5
-    resposta2: "Não sei dizer."
+    resposta2: "N\xE3o sei dizer."
     proximoNoResposta2: 6
-  - falaDaPessoa: "Entendi, mãe. Quando eu chegar, a gente confere juntas a orientação do Dr. Mário. E a colagem da árvore genealógica que você queria montar? Eu trouxe as fotos que você me pediu pra colocar nela."
-    resposta1: "É a colagem da árvore da família?"
+  - falaDaPessoa: "Entendi, m\xE3e. Quando eu chegar, a gente confere juntas a orienta\xE7\xE3o
+      do Dr. M\xE1rio. E a colagem da \xE1rvore geneal\xF3gica que voc\xEA queria
+      montar? Eu trouxe as fotos que voc\xEA me pediu pra colocar nela."
+    resposta1: "\xC9 a colagem da \xE1rvore da fam\xEDlia?"
     proximoNoResposta1: 7
-    resposta2: "Não tô lembrando, filha."
+    resposta2: "N\xE3o t\xF4 lembrando, filha."
     proximoNoResposta2: 8
-  - falaDaPessoa: "Isso, mãe. É pra reunir os nomes e as histórias da nossa família. Eu trouxe aquelas fotos que você me pediu para colocar na colagem."
-    resposta1: "Essa colagem fica onde?"
+  - falaDaPessoa: "Isso, m\xE3e. \xC9 pra reunir os nomes e as hist\xF3rias da nossa
+      fam\xEDlia. Eu trouxe aquelas fotos que voc\xEA me pediu para colocar na colagem."
+    resposta1: Essa colagem fica onde?
     proximoNoResposta1: 9
-    resposta2: "Eu não lembro direito."
+    resposta2: "Eu n\xE3o lembro direito."
     proximoNoResposta2: 10
-  - falaDaPessoa: "Você comentou que queria fazer uma colagem com a árvore da família e enfeitar com fotos. Eu trouxe as que você me pediu. Você pode começar sem pressa, no seu ritmo."
-    resposta1: "Essa colagem fica onde?"
+  - falaDaPessoa: "Voc\xEA comentou que queria fazer uma colagem com a \xE1rvore
+      da fam\xEDlia e enfeitar com fotos. Eu trouxe as que voc\xEA me pediu. Voc\xEA
+      pode come\xE7ar sem pressa, no seu ritmo."
+    resposta1: Essa colagem fica onde?
     proximoNoResposta1: 9
-    resposta2: "Eu não lembro direito."
+    resposta2: "Eu n\xE3o lembro direito."
     proximoNoResposta2: 10
-  - falaDaPessoa: "Não tem problema, mãe. A colagem é pra reunir os nomes e as histórias da família com as fotos que eu trouxe. Posso te mostrar quando você quiser."
-    resposta1: "Prefiro não olhar agora."
+  - falaDaPessoa: "N\xE3o tem problema, m\xE3e. A colagem \xE9 pra reunir os nomes
+      e as hist\xF3rias da fam\xEDlia com as fotos que eu trouxe. Posso te mostrar
+      quando voc\xEA quiser."
+    resposta1: "Prefiro n\xE3o olhar agora."
     proximoNoResposta1: 16
-    resposta2: "Não sei por onde começar."
+    resposta2: "N\xE3o sei por onde come\xE7ar."
     proximoNoResposta2: 10
-  - falaDaPessoa: "Olha em cima da escrivaninha, no seu quarto, mãe. É a colagem da árvore genealógica que você queria fazer. Agora só falta encontrar as fotos que eu te entreguei para você continuar seu projeto."
-    resposta1: "Acho que lembro dessas fotos."
+  - falaDaPessoa: "Olha em cima da escrivaninha, no seu quarto, m\xE3e. \xC9 a colagem
+      da \xE1rvore geneal\xF3gica que voc\xEA queria fazer. Agora s\xF3 falta encontrar
+      as fotos que eu te entreguei para voc\xEA continuar seu projeto."
+    resposta1: Acho que lembro dessas fotos.
     proximoNoResposta1: 11
-    resposta2: "Não lembro onde coloquei as fotos."
+    resposta2: "N\xE3o lembro onde coloquei as fotos."
     proximoNoResposta2: 12
-  - falaDaPessoa: "O projeto está no seu quarto, em cima da escrivaninha. É a colagem da árvore da família. Você me pediu fotos pra completar; lembra onde guardou?"
-    resposta1: "Acho que lembro dessas fotos."
+  - falaDaPessoa: "O projeto est\xE1 no seu quarto, em cima da escrivaninha. \xC9
+      a colagem da \xE1rvore da fam\xEDlia. Voc\xEA me pediu fotos pra completar;
+      lembra onde guardou?"
+    resposta1: Acho que lembro dessas fotos.
     proximoNoResposta1: 11
-    resposta2: "Não lembro onde coloquei as fotos."
+    resposta2: "N\xE3o lembro onde coloquei as fotos."
     proximoNoResposta2: 12
-  - falaDaPessoa: "Você me pediu pra trazer as fotos e escolheu quais queria usar. Se lembrar onde guardou, me conta; se não, tudo bem, mãe."
-    resposta1: "Tenho medo de não encontrar as fotos."
+  - falaDaPessoa: "Voc\xEA me pediu pra trazer as fotos e escolheu quais queria usar.
+      Se lembrar onde guardou, me conta; se n\xE3o, tudo bem, m\xE3e."
+    resposta1: "Tenho medo de n\xE3o encontrar as fotos."
     proximoNoResposta1: 13
-    resposta2: "Vou procurar depois da ligação."
+    resposta2: "Vou procurar depois da liga\xE7\xE3o."
     proximoNoResposta2: 14
-  - falaDaPessoa: "Tudo bem, mãe. Às vezes a gente guarda uma coisa e depois não lembra onde deixou. Não precisa se preocupar com isso agora."
-    resposta1: "E se eu não achar as fotos?"
+  - falaDaPessoa: "Tudo bem, m\xE3e. \xC0s vezes a gente guarda uma coisa e depois
+      n\xE3o lembra onde deixou. N\xE3o precisa se preocupar com isso agora."
+    resposta1: "E se eu n\xE3o achar as fotos?"
     proximoNoResposta1: 13
-    resposta2: "Você me ajuda a procurar?"
+    resposta2: "Voc\xEA me ajuda a procurar?"
     proximoNoResposta2: 14
-  - falaDaPessoa: "Você pode procurar pela casa com calma, mãe. Essa colagem pode ser um jeito gostoso de exercitar a memória e recordar a história da nossa família."
-    resposta1: "Tenho medo de esquecer você."
+  - falaDaPessoa: "Voc\xEA pode procurar pela casa com calma, m\xE3e. Essa colagem
+      pode ser um jeito gostoso de exercitar a mem\xF3ria e recordar a hist\xF3ria
+      da nossa fam\xEDlia."
+    resposta1: "Tenho medo de esquecer voc\xEA."
     proximoNoResposta1: 15
-    resposta2: "Fica comigo mais um pouquinho?"
+    resposta2: Fica comigo mais um pouquinho?
     proximoNoResposta2: 16
-  - falaDaPessoa: "Claro, mãe. Quando eu passar aí, vou gostar de ver como sua colagem ficou. Tenho certeza de que você vai fazer do seu jeito."
-    resposta1: "Promete que vem?"
+  - falaDaPessoa: "Claro, m\xE3e. Quando eu passar a\xED, vou gostar de ver como
+      sua colagem ficou. Tenho certeza de que voc\xEA vai fazer do seu jeito."
+    resposta1: Promete que vem?
     proximoNoResposta1: 17
-    resposta2: "Vou esperar você."
+    resposta2: "Vou esperar voc\xEA."
     proximoNoResposta2: 16
-  - falaDaPessoa: "Eu também fico triste quando penso nisso, mãe. Mas, se um dia você não lembrar meu nome, eu posso contar de novo quem sou. Sem pressa. Eu sou a Elisa, sua filha, e te amo."
-    resposta1: "Eu também te amo, Lise. Tchau, tchau."
+  - falaDaPessoa: "Eu tamb\xE9m fico triste quando penso nisso, m\xE3e. Mas, se um
+      dia voc\xEA n\xE3o lembrar meu nome, eu posso contar de novo quem sou. Sem
+      pressa. Eu sou a Elisa, sua filha, e te amo."
+    resposta1: "Eu tamb\xE9m te amo, Lise. Tchau, tchau."
     proximoNoResposta1: 18
-    resposta2: "Obrigada por ficar comigo. Te amo, minha filha."
+    resposta2: Obrigada por ficar comigo. Te amo, minha filha.
     proximoNoResposta2: 19
-  - falaDaPessoa: "Fico, mãe. A gente não precisa falar o tempo todo. Eu gosto de estar com você, mesmo quando a conversa se perde."
-    resposta1: "Eu também te amo, Lise. Tchau, tchau."
+  - falaDaPessoa: "Fico, m\xE3e. A gente n\xE3o precisa falar o tempo todo. Eu gosto
+      de estar com voc\xEA, mesmo quando a conversa se perde."
+    resposta1: "Eu tamb\xE9m te amo, Lise. Tchau, tchau."
     proximoNoResposta1: 18
-    resposta2: "Obrigada por ficar comigo. Te amo, minha filha."
+    resposta2: Obrigada por ficar comigo. Te amo, minha filha.
     proximoNoResposta2: 19
-  - falaDaPessoa: "Prometo, mãe. Vou te ligar antes e, quando chegar, vou querer te dar um abraço bem apertado."
-    resposta1: "Eu também te amo, Lise. Tchau, tchau."
+  - falaDaPessoa: "Prometo, m\xE3e. Vou te ligar antes e, quando chegar, vou querer
+      te dar um abra\xE7o bem apertado."
+    resposta1: "Eu tamb\xE9m te amo, Lise. Tchau, tchau."
     proximoNoResposta1: 18
-    resposta2: "Obrigada por ficar comigo. Te amo, minha filha."
+    resposta2: Obrigada por ficar comigo. Te amo, minha filha.
     proximoNoResposta2: 19
-  - falaDaPessoa: "Eu também te amo, mãe. Depois que desligar, procura pela casa as fotos que eu te entreguei pra colagem. Você tinha guardado em algum lugar, mas não lembra onde. Quando encontrar, pode continuar seu projeto no seu tempo. Vai ser bom recordar essas histórias. Um beijo, mãe. Tchau."
-    resposta1: ""
+  - falaDaPessoa: "Eu tamb\xE9m te amo, m\xE3e. Depois que desligar, procura pela
+      casa as fotos que eu te entreguei pra colagem. Voc\xEA tinha guardado em algum
+      lugar, mas n\xE3o lembra onde. Quando encontrar, pode continuar seu projeto
+      no seu tempo. Vai ser bom recordar essas hist\xF3rias. Um beijo, m\xE3e. Tchau."
+    resposta1: 
     proximoNoResposta1: -1
-    resposta2: ""
+    resposta2: 
     proximoNoResposta2: -1
-  - falaDaPessoa: "Também te amo, mãe. Depois que desligar, dá uma procurada pela casa nas fotos que eu te entreguei. Você não lembra onde guardou, mas vai encontrar com calma. Aí pode escolher quais quer colocar na colagem. Te amo. Um beijo."
-    resposta1: ""
+  - falaDaPessoa: "Tamb\xE9m te amo, m\xE3e. Depois que desligar, d\xE1 uma procurada
+      pela casa nas fotos que eu te entreguei. Voc\xEA n\xE3o lembra onde guardou,
+      mas vai encontrar com calma. A\xED pode escolher quais quer colocar na colagem.
+      Te amo. Um beijo."
+    resposta1: 
     proximoNoResposta1: -1
-    resposta2: ""
+    resposta2: 
     proximoNoResposta2: -1
   noInicial: 0
   intervaloEntreLetras: 0.025
   jogador: {fileID: 248737565}
+  colagemParaMostrar: {fileID: 0}
+  fraseQueMostraColagem: "colagem da \xE1rvore geneal\xF3gica"
   versaoDoRoteiroExemplo: 6
 --- !u!4 &1583273476
 Transform:
@@ -34874,3 +35795,4 @@ SceneRoots:
   - {fileID: 238839585}
   - {fileID: 1001288382}
   - {fileID: 1583273476}
+  - {fileID: 786072096}
