@@ -2035,11 +2035,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4f6500816b54496e9980728465d01372, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::TelefoneCarregadorInteractable
   telefone: {fileID: 538015068}
   pontoDeRetorno: {fileID: 0}
   taskManager: {fileID: 214806651}
+  conversaTelefonica: {fileID: 1583273475}
 --- !u!114 &154146558
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -26665,6 +26666,163 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1570764918}
   m_Mesh: {fileID: 8769268392601398891, guid: e5c8ecc981345d9ff802e7b372dc9626, type: 3}
+--- !u!1 &1583273474
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1583273476}
+  - component: {fileID: 1583273475}
+  m_Layer: 0
+  m_Name: GerenciadorLigacao
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1583273475
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1583273474}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d04dd4c98b84b398d6c026074a26529, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::ConversaTelefonicaUI
+  painel: {fileID: 0}
+  textoPessoa: {fileID: 0}
+  painelRespostas: {fileID: 0}
+  botaoResposta1: {fileID: 0}
+  textoResposta1: {fileID: 0}
+  botaoResposta2: {fileID: 0}
+  textoResposta2: {fileID: 0}
+  textoInstrucao: {fileID: 0}
+  conversa:
+  - falaDaPessoa: "Oi, mãe! É a Elisa. Tô te ligando no caminho de casa. Você tá me ouvindo bem? Como foi sua manhã? Lembrei que hoje você começou o remédio novo e queria saber como se sentiu."
+    resposta1: "Tô bem, filha... só tomei um café hoje."
+    proximoNoResposta1: 1
+    resposta2: "Desculpa, pode repetir? Me perdi no meio."
+    proximoNoResposta2: 2
+  - falaDaPessoa: "Café conta como começo, né? Você sempre dizia que sem café o dia nem começava. Conseguiu comer mais alguma coisa?"
+    resposta1: "Acho que sim, mas não lembro o quê."
+    proximoNoResposta1: 3
+    resposta2: "Só o café. Não tô com fome."
+    proximoNoResposta2: 4
+  - falaDaPessoa: "Claro, mãe. Vou repetir devagar. Perguntei como foi sua manhã e como você se sentiu depois do remédio."
+    resposta1: "Acho que tomei só café."
+    proximoNoResposta1: 3
+    resposta2: "Eu me perdi de novo, desculpa."
+    proximoNoResposta2: 4
+  - falaDaPessoa: "Tudo bem. Não precisa se apressar. Conseguiu comer alguma coisa além do café?"
+    resposta1: "Acho que não."
+    proximoNoResposta1: 5
+    resposta2: "Eu não lembro."
+    proximoNoResposta2: 6
+  - falaDaPessoa: "Tudo bem, mãe. A gente não precisa descobrir tudo agora. Quer me dizer se está se sentindo enjoada ou se está tudo bem?"
+    resposta1: "Senti um pouco de enjoo."
+    proximoNoResposta1: 5
+    resposta2: "Não sei dizer."
+    proximoNoResposta2: 6
+  - falaDaPessoa: "Entendi, mãe. Quando eu chegar, a gente confere juntas a orientação do Dr. Mário. E a colagem da árvore genealógica que você queria montar? Eu trouxe as fotos que você me pediu pra colocar nela."
+    resposta1: "É a colagem da árvore da família?"
+    proximoNoResposta1: 7
+    resposta2: "Não tô lembrando, filha."
+    proximoNoResposta2: 8
+  - falaDaPessoa: "Isso, mãe. É pra reunir os nomes e as histórias da nossa família. Eu trouxe aquelas fotos que você me pediu para colocar na colagem."
+    resposta1: "Essa colagem fica onde?"
+    proximoNoResposta1: 9
+    resposta2: "Eu não lembro direito."
+    proximoNoResposta2: 10
+  - falaDaPessoa: "Você comentou que queria fazer uma colagem com a árvore da família e enfeitar com fotos. Eu trouxe as que você me pediu. Você pode começar sem pressa, no seu ritmo."
+    resposta1: "Essa colagem fica onde?"
+    proximoNoResposta1: 9
+    resposta2: "Eu não lembro direito."
+    proximoNoResposta2: 10
+  - falaDaPessoa: "Não tem problema, mãe. A colagem é pra reunir os nomes e as histórias da família com as fotos que eu trouxe. Posso te mostrar quando você quiser."
+    resposta1: "Prefiro não olhar agora."
+    proximoNoResposta1: 16
+    resposta2: "Não sei por onde começar."
+    proximoNoResposta2: 10
+  - falaDaPessoa: "Olha em cima da escrivaninha, no seu quarto, mãe. É a colagem da árvore genealógica que você queria fazer. Agora só falta encontrar as fotos que eu te entreguei para você continuar seu projeto."
+    resposta1: "Acho que lembro dessas fotos."
+    proximoNoResposta1: 11
+    resposta2: "Não lembro onde coloquei as fotos."
+    proximoNoResposta2: 12
+  - falaDaPessoa: "O projeto está no seu quarto, em cima da escrivaninha. É a colagem da árvore da família. Você me pediu fotos pra completar; lembra onde guardou?"
+    resposta1: "Acho que lembro dessas fotos."
+    proximoNoResposta1: 11
+    resposta2: "Não lembro onde coloquei as fotos."
+    proximoNoResposta2: 12
+  - falaDaPessoa: "Você me pediu pra trazer as fotos e escolheu quais queria usar. Se lembrar onde guardou, me conta; se não, tudo bem, mãe."
+    resposta1: "Tenho medo de não encontrar as fotos."
+    proximoNoResposta1: 13
+    resposta2: "Vou procurar depois da ligação."
+    proximoNoResposta2: 14
+  - falaDaPessoa: "Tudo bem, mãe. Às vezes a gente guarda uma coisa e depois não lembra onde deixou. Não precisa se preocupar com isso agora."
+    resposta1: "E se eu não achar as fotos?"
+    proximoNoResposta1: 13
+    resposta2: "Você me ajuda a procurar?"
+    proximoNoResposta2: 14
+  - falaDaPessoa: "Você pode procurar pela casa com calma, mãe. Essa colagem pode ser um jeito gostoso de exercitar a memória e recordar a história da nossa família."
+    resposta1: "Tenho medo de esquecer você."
+    proximoNoResposta1: 15
+    resposta2: "Fica comigo mais um pouquinho?"
+    proximoNoResposta2: 16
+  - falaDaPessoa: "Claro, mãe. Quando eu passar aí, vou gostar de ver como sua colagem ficou. Tenho certeza de que você vai fazer do seu jeito."
+    resposta1: "Promete que vem?"
+    proximoNoResposta1: 17
+    resposta2: "Vou esperar você."
+    proximoNoResposta2: 16
+  - falaDaPessoa: "Eu também fico triste quando penso nisso, mãe. Mas, se um dia você não lembrar meu nome, eu posso contar de novo quem sou. Sem pressa. Eu sou a Elisa, sua filha, e te amo."
+    resposta1: "Eu também te amo, Lise. Tchau, tchau."
+    proximoNoResposta1: 18
+    resposta2: "Obrigada por ficar comigo. Te amo, minha filha."
+    proximoNoResposta2: 19
+  - falaDaPessoa: "Fico, mãe. A gente não precisa falar o tempo todo. Eu gosto de estar com você, mesmo quando a conversa se perde."
+    resposta1: "Eu também te amo, Lise. Tchau, tchau."
+    proximoNoResposta1: 18
+    resposta2: "Obrigada por ficar comigo. Te amo, minha filha."
+    proximoNoResposta2: 19
+  - falaDaPessoa: "Prometo, mãe. Vou te ligar antes e, quando chegar, vou querer te dar um abraço bem apertado."
+    resposta1: "Eu também te amo, Lise. Tchau, tchau."
+    proximoNoResposta1: 18
+    resposta2: "Obrigada por ficar comigo. Te amo, minha filha."
+    proximoNoResposta2: 19
+  - falaDaPessoa: "Eu também te amo, mãe. Depois que desligar, procura pela casa as fotos que eu te entreguei pra colagem. Você tinha guardado em algum lugar, mas não lembra onde. Quando encontrar, pode continuar seu projeto no seu tempo. Vai ser bom recordar essas histórias. Um beijo, mãe. Tchau."
+    resposta1: ""
+    proximoNoResposta1: -1
+    resposta2: ""
+    proximoNoResposta2: -1
+  - falaDaPessoa: "Também te amo, mãe. Depois que desligar, dá uma procurada pela casa nas fotos que eu te entreguei. Você não lembra onde guardou, mas vai encontrar com calma. Aí pode escolher quais quer colocar na colagem. Te amo. Um beijo."
+    resposta1: ""
+    proximoNoResposta1: -1
+    resposta2: ""
+    proximoNoResposta2: -1
+  noInicial: 0
+  intervaloEntreLetras: 0.025
+  jogador: {fileID: 248737565}
+  versaoDoRoteiroExemplo: 6
+--- !u!4 &1583273476
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1583273474}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 5.08167, y: 3.57839, z: -23.76927}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1595320478
 GameObject:
   m_ObjectHideFlags: 0
@@ -34715,3 +34873,4 @@ SceneRoots:
   - {fileID: 1479543790}
   - {fileID: 238839585}
   - {fileID: 1001288382}
+  - {fileID: 1583273476}

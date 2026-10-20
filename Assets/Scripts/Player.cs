@@ -30,6 +30,7 @@ public class PlayerMovement : MonoBehaviour
     private float rotacaoCamera = 0f;
 
     private bool mouseLivre = false;
+    private bool modoConversaAtivo = false;
 
     void Start()
     {
@@ -76,7 +77,7 @@ public class PlayerMovement : MonoBehaviour
         // Alterna entre soltar e prender o mouse com ESC
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
-            AlternarCursor();
+            if (!modoConversaAtivo) AlternarCursor();
         }
 
         // A gravidade e o chão continuam a funcionar mesmo se o mouse estiver livre, evitando cair pelo mapa
@@ -87,7 +88,7 @@ public class PlayerMovement : MonoBehaviour
 
         Movimento();
         Camera();
-        GerenciarInteracao();
+        if (!modoConversaAtivo) GerenciarInteracao();
     }
 
     void TravarMouse()
@@ -126,6 +127,17 @@ public class PlayerMovement : MonoBehaviour
             slotDestacadoAtual.SetHighlight(false);
             slotDestacadoAtual = null;
         }
+
+        if (carregadorAtual != null)
+        {
+            carregadorAtual.SetHighlight(false);
+            carregadorAtual = null;
+        }
+    }
+
+    public void DefinirModoConversa(bool ativo)
+    {
+        modoConversaAtivo = ativo;
     }
 
     void AlternarCursor()

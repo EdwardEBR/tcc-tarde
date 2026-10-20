@@ -10,10 +10,14 @@ public class TelefoneCarregadorInteractable : MonoBehaviour
     [Header("Desbloqueio")]
     public TaskManager taskManager;
 
+    [Header("Ligação (opcional)")]
+    public ConversaTelefonicaUI conversaTelefonica;
+
     private Outline outline;
     private Vector3 posicaoLocalDeRetorno;
     private Quaternion rotacaoLocalDeRetorno;
     private bool poseDeRetornoCapturada;
+    private bool telefoneArquivado;
 
     private void Awake()
     {
@@ -27,31 +31,45 @@ public class TelefoneCarregadorInteractable : MonoBehaviour
     }
 
     public bool EstaDesbloqueado => taskManager != null && taskManager.TodasTarefasConcluidas;
+    public bool PodeInteragir => EstaDesbloqueado && !telefoneArquivado;
 
-    public bool PodePegarTelefone => EstaDesbloqueado && telefone != null
+    public bool PodePegarTelefone => PodeInteragir && telefone != null
         && !telefone.estaSendoSegurado && telefone.podeSerPego;
 
     public void SetHighlight(bool ativo)
     {
-        if (outline != null) outline.enabled = ativo && EstaDesbloqueado;
+        if (outline != null) outline.enabled = ativo && PodeInteragir;
     }
 
     public bool TentarPegar(Transform mao)
     {
         if (!PodePegarTelefone) return false;
         telefone.PegarItem(mao);
+        // O jogador para de atualizar os alvos enquanto a conversa está ativa;
+        // apague o destaque agora para ele não ficar preso no carregador.
+        SetHighlight(false);
+        if (conversaTelefonica != null) conversaTelefonica.IniciarConversa();
         return true;
     }
 
     public bool TentarDevolver(ItemSeguravel itemNaMao)
     {
-        if (!EstaDesbloqueado || telefone == null || itemNaMao != telefone) return false;
+        if (!PodeInteragir || telefone == null || itemNaMao != telefone) return false;
         Transform destino = pontoDeRetorno != null ? pontoDeRetorno : transform;
         if (!poseDeRetornoCapturada) CapturarPoseDeRetorno();
 
         telefone.SoltarItem(destino);
         telefone.transform.localPosition = posicaoLocalDeRetorno;
         telefone.transform.localRotation = rotacaoLocalDeRetorno;
+
+        if (conversaTelefonica != null && conversaTelefonica.ConversaConcluida)
+        {
+            telefoneArquivado = true;
+            telefone.podeSerPego = false;
+            telefone.SetHighlight(false);
+            SetHighlight(false);
+        }
+
         return true;
     }
 
