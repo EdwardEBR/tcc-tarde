@@ -224,6 +224,7 @@ public class PlayerMovement : MonoBehaviour
         InteractableObject interativelDetectado = null;
         CafeteiraInteractable cafeteiraDetectada = null;
         TelefoneCarregadorInteractable carregadorDetectado = null;
+        MecanicaColagem mecanicaColagemDetectada = null;
         ItemSeguravel itemSeguravelDetectado = null;
         PortaItemSlot slotDetectado = null;
 
@@ -233,6 +234,9 @@ public class PlayerMovement : MonoBehaviour
         {
             cafeteiraDetectada = hit.collider.GetComponentInParent<CafeteiraInteractable>();
             carregadorDetectado = hit.collider.GetComponentInParent<TelefoneCarregadorInteractable>();
+            MecanicaColagem mecanicaColagem = hit.collider.GetComponentInParent<MecanicaColagem>();
+            if (mecanicaColagem != null && mecanicaColagem.EhAlvoDaArvore(hit.collider.transform))
+                mecanicaColagemDetectada = mecanicaColagem;
             // Se o collider do telefone estiver à frente do carregador, ainda trata o
             // clique como interação com o carregador mesmo quando são objetos separados.
             if (carregadorDetectado == null)
@@ -351,6 +355,12 @@ public class PlayerMovement : MonoBehaviour
         // Executa as ações do clique.
         if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
         {
+            if (itemNaMao == null && mecanicaColagemDetectada != null
+                && mecanicaColagemDetectada.TentarMontarColagem())
+            {
+                return;
+            }
+
             // O carregador funciona como ponto de retirada e devolução do telefone.
             if (carregadorAtual != null)
             {
