@@ -37,6 +37,8 @@ public class ConversaTelefonicaUI : MonoBehaviour
     private Keyboard tecladoInscrito;
     private string bufferComandoAdmin = string.Empty;
     private const string ComandoPularConversa = "PULAR";
+    private string bufferComandoTarefas = string.Empty;
+    private const string ComandoCompletarTarefas = "pular";
     public bool ConversaConcluida { get; private set; }
     [SerializeField, HideInInspector] private int versaoDoRoteiroExemplo;
     private const int VersaoAtualDoRoteiroExemplo = 6;
@@ -485,6 +487,25 @@ public class ConversaTelefonicaUI : MonoBehaviour
 
     private void ReceberTextoDigitado(char caractere)
     {
+        // O cheat de tarefas funciona durante o jogo todo e diferencia
+        // maiúsculas de minúsculas: somente "pular" ativa esse comando.
+        if (char.IsLower(caractere))
+        {
+            bufferComandoAdmin = string.Empty;
+            bufferComandoTarefas += caractere;
+
+            if (!ComandoCompletarTarefas.StartsWith(bufferComandoTarefas, System.StringComparison.Ordinal))
+                bufferComandoTarefas = caractere == 'p' ? "p" : string.Empty;
+
+            if (bufferComandoTarefas == ComandoCompletarTarefas)
+            {
+                bufferComandoTarefas = string.Empty;
+                CompletarTodasAsTarefas();
+            }
+            return;
+        }
+
+        bufferComandoTarefas = string.Empty;
         if (!conversaAtiva) return;
 
         // O texto recebido respeita Caps Lock/Shift. O comando só aceita letras maiúsculas.
@@ -506,6 +527,24 @@ public class ConversaTelefonicaUI : MonoBehaviour
             bufferComandoAdmin = string.Empty;
             PularParaUltimaFala();
         }
+    }
+
+    private void CompletarTodasAsTarefas()
+    {
+        TaskManager gerenciadorTarefas = FindAnyObjectByType<TaskManager>();
+        if (gerenciadorTarefas == null || gerenciadorTarefas.dailyTasks == null)
+        {
+            Debug.LogWarning("ConversaTelefonicaUI: não encontrei um TaskManager com tarefas para o cheat 'pular'.", this);
+            return;
+        }
+
+        foreach (TaskData tarefa in gerenciadorTarefas.dailyTasks)
+        {
+            if (tarefa != null && !string.IsNullOrWhiteSpace(tarefa.taskName))
+                gerenciadorTarefas.CompleteTask(tarefa.taskName);
+        }
+
+        Debug.Log("Cheat 'pular': todas as tarefas foram concluídas.", this);
     }
 
     private void PularParaUltimaFala()

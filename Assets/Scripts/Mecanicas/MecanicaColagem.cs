@@ -13,6 +13,9 @@ public class MecanicaColagem : MonoBehaviour
     public GameObject arvoreGenealogica;
     public GameObject[] fotosDaColagem;
 
+    [Header("Iluminação da árvore")]
+    public Light luzLuminaria;
+
     private bool colagemMontada;
     private Transform quarto;
     private Outline outlineArvore;
@@ -53,6 +56,38 @@ public class MecanicaColagem : MonoBehaviour
         PrepararFotosDaSala();
         PrepararColagem();
         PrepararPortasFotos();
+
+        if (luzLuminaria != null)
+            luzLuminaria.enabled = false;
+    }
+
+    private void Update()
+    {
+        if (luzLuminaria == null || !ArvoreOuFotosEstaoVisiveis()) return;
+
+        // O GameObject da luminária pode ter sido desativado no Inspector.
+        // Ligar só o componente Light não funciona enquanto o objeto está inativo.
+        if (!luzLuminaria.gameObject.activeSelf)
+            luzLuminaria.gameObject.SetActive(true);
+
+        if (!luzLuminaria.enabled)
+            luzLuminaria.enabled = true;
+    }
+
+    private bool ArvoreOuFotosEstaoVisiveis()
+    {
+        if (arvoreGenealogica != null && arvoreGenealogica.activeInHierarchy)
+            return true;
+
+        if (fotosDaColagem == null) return false;
+
+        foreach (GameObject foto in fotosDaColagem)
+        {
+            if (foto != null && foto.activeInHierarchy)
+                return true;
+        }
+
+        return false;
     }
 
     private void Start()
