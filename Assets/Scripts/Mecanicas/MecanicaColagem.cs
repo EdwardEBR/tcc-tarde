@@ -106,6 +106,8 @@ public class MecanicaColagem : MonoBehaviour
     {
         if (colagemMontada || !TodasAsPortasPreenchidas()) return false;
 
+        if (arvoreGenealogica != null) SomJogo.Tocar(arvoreGenealogica.transform, "Snd-Corte");
+
         foreach (PortaItemSlot porta in portasFotos)
         {
             ItemSeguravel foto = porta.ItemGuardado;

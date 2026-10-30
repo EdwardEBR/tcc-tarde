@@ -183,6 +183,7 @@ public class CafeteiraInteractable : MonoBehaviour
         }
 
         isDone = true;
+        SomJogo.Tocar(transform, "Snd-Coffe", 0.25f);
         aguardandoFimDaAnimacao = true;
         animacaoDeEncherIniciou = false;
 
@@ -195,12 +196,6 @@ public class CafeteiraInteractable : MonoBehaviour
         if (outlineScript != null) outlineScript.enabled = false;
 
         animadorCafeteira.SetTrigger("DoAction");
-
-        TaskManager taskMgr = FindAnyObjectByType<TaskManager>();
-        if (taskMgr != null)
-        {
-            taskMgr.CompleteTask(taskNameName);
-        }
 
         // Mantém o efeito durante a animação mesmo sem tarefa cadastrada no TaskManager.
         if (trocaXicaraAoDesviarOlhar != null)

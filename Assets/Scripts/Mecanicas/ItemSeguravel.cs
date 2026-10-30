@@ -139,6 +139,10 @@ public class ItemSeguravel : MonoBehaviour
         podeSerPego = false;
         nomeDoItem = slotDeOrigem != null ? slotDeOrigem.nomeDoItemAceito : gameObject.name;
 
+        TaskManager taskMgr = FindAnyObjectByType<TaskManager>();
+        if (taskMgr != null)
+            taskMgr.CompleteTask("TarefaCafe");
+
         // A representação pode manter um visual separado enquanto a xícara está no slot.
         if (slotDeOrigem != null && slotDeOrigem.objetoAoOcupar != null)
         {

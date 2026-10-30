@@ -21,6 +21,9 @@ public class TelefoneCarregadorInteractable : MonoBehaviour
     private Quaternion rotacaoLocalDeRetorno;
     private bool poseDeRetornoCapturada;
     private bool telefoneArquivado;
+    private bool toqueLiberado;
+    private bool toqueCanceladoPorInteracao;
+    private AudioSource audioToque;
 
     private void Awake()
     {
@@ -31,6 +34,11 @@ public class TelefoneCarregadorInteractable : MonoBehaviour
         if (outline != null) outline.enabled = false;
         if (taskManager == null) taskManager = FindAnyObjectByType<TaskManager>();
         CapturarPoseDeRetorno();
+        audioToque = SomJogo.CriarFonte(transform);
+        // O telefone deve ser ouvido em qualquer ponto da casa.
+        audioToque.spatialBlend = 0f;
+        audioToque.loop = true;
+        audioToque.clip = SomJogo.Carregar("Snd-Telefone");
 
         if (fotosParaMostrarAoDevolver != null)
         {
@@ -39,6 +47,22 @@ public class TelefoneCarregadorInteractable : MonoBehaviour
                 if (foto != null) foto.SetActive(false);
             }
         }
+    }
+
+    private void Update()
+    {
+        if (!toqueLiberado && EstaDesbloqueado)
+        {
+            toqueLiberado = true;
+            Invoke(nameof(IniciarToque), 7f);
+        }
+    }
+
+    private void IniciarToque()
+    {
+        if (!toqueCanceladoPorInteracao && PodeInteragir && telefone != null
+            && !telefone.estaSendoSegurado && audioToque != null && audioToque.clip != null)
+            audioToque.Play();
     }
 
     public bool EstaDesbloqueado => taskManager != null && taskManager.TodasTarefasConcluidas;
@@ -55,6 +79,9 @@ public class TelefoneCarregadorInteractable : MonoBehaviour
     public bool TentarPegar(Transform mao)
     {
         if (!PodePegarTelefone) return false;
+        toqueCanceladoPorInteracao = true;
+        CancelInvoke(nameof(IniciarToque));
+        if (audioToque != null) audioToque.Stop();
         telefone.PegarItem(mao);
         // O jogador para de atualizar os alvos enquanto a conversa está ativa;
         // apague o destaque agora para ele não ficar preso no carregador.

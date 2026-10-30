@@ -37,6 +37,11 @@ public class InteractableObject : MonoBehaviour
         if (isDone) return; 
         isDone = true;
 
+        if (string.Equals(taskNameName, TarefaRemedio, System.StringComparison.OrdinalIgnoreCase))
+            SomJogo.Tocar(transform, "Snd-Remedio");
+        else if (string.Equals(gameObject.name, "Wine_0", System.StringComparison.OrdinalIgnoreCase))
+            StartCoroutine(TocarSomRegadorComAtraso());
+
         if (outlineScript != null)
         {
             outlineScript.enabled = false;
@@ -71,6 +76,12 @@ public class InteractableObject : MonoBehaviour
         }
 
         Debug.Log("Interagiu com: " + taskNameName);
+    }
+
+    private IEnumerator TocarSomRegadorComAtraso()
+    {
+        yield return new WaitForSeconds(1f);
+        if (this != null) SomJogo.Tocar(transform, "Snd_Regar");
     }
 
     private Animator EncontrarAnimadorPilulas()

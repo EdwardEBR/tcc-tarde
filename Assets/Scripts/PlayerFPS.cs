@@ -21,6 +21,18 @@ public class PlayerFPS : MonoBehaviour
     private PortaItemSlot slotDestacadoAtual = null; // Slot azul que o jogador está a olhar
     private MecanicaColagem mecanicaColagemAtual;
 
+    [Header("Sons de passos")]
+    public AudioClip somPasso1;
+    public AudioClip somPasso2;
+    public float intervaloPassos = 1.5f;
+    [Tooltip("Pausa adicional após cada clipe antes de tocar o próximo passo.")]
+    public float pausaEntrePassos = 0.6f;
+    private AudioSource audioPassos;
+    private float proximoPasso;
+    private bool alternarPasso;
+    private AudioSource somGeladeira;
+    private AudioSource somAmbiente;
+
     [Header("Sistema de Inventário/Mão (Segurar Itens)")]
     public Transform maoDoJogador;          // Ponto de fixação do item, acompanhado pela câmera
     public Vector3 posicaoMaoNaCamera = new Vector3(0.3f, -0.25f, 0.6f);
@@ -36,8 +48,40 @@ public class PlayerFPS : MonoBehaviour
     void Start()
     {
         controller = GetComponent<CharacterController>();
+        // Fontes independentes: os passos não podem substituir a faixa ambiente.
+        audioPassos = gameObject.AddComponent<AudioSource>();
+        audioPassos.spatialBlend = 0f;
+        audioPassos.playOnAwake = false;
+        if (somPasso1 == null) somPasso1 = Resources.Load<AudioClip>("Sons/AudioClip/Snd-Passo1");
+        if (somPasso2 == null) somPasso2 = Resources.Load<AudioClip>("Sons/AudioClip/Snd-Passo2");
+        ConfigurarSomAmbiente();
+        ConfigurarSomGeladeira();
         ConfigurarPontoDaMao();
         TravarMouse();
+    }
+
+    private void ConfigurarSomAmbiente()
+    {
+        somAmbiente = gameObject.AddComponent<AudioSource>();
+        somAmbiente.playOnAwake = false;
+        somAmbiente.spatialBlend = 0f;
+        somAmbiente.loop = true;
+        somAmbiente.volume = 0.5f;
+        somAmbiente.clip = SomJogo.Carregar("Snd-Ambiente");
+        if (somAmbiente.clip != null) somAmbiente.Play();
+        else Debug.LogWarning("PlayerFPS: não foi possível carregar Snd-Ambiente em Resources/Sons/AudioClip.", this);
+    }
+
+    private void ConfigurarSomGeladeira()
+    {
+        GameObject porta = GameObject.Find("PortaGeladeira");
+        if (porta == null) return;
+        somGeladeira = SomJogo.CriarFonte(porta.transform);
+        somGeladeira.clip = SomJogo.Carregar("Snd-Geladeira");
+        somGeladeira.loop = true;
+        somGeladeira.minDistance = 1f;
+        somGeladeira.maxDistance = 8f;
+        if (somGeladeira.clip != null) somGeladeira.Play();
     }
 
     void ConfigurarPontoDaMao()
@@ -185,6 +229,36 @@ public class PlayerFPS : MonoBehaviour
         movimento.Normalize();
 
         controller.Move(movimento * velocidade * Time.deltaTime);
+
+        bool andando = input.sqrMagnitude > 0.01f && controller.isGrounded;
+        if (!andando) { proximoPasso = 0f; return; }
+        if (Time.time >= proximoPasso)
+        {
+            if (audioPassos.isPlaying)
+            {
+                proximoPasso = Time.time + 0.1f;
+                return;
+            }
+
+            AudioClip passo = alternarPasso ? somPasso2 : somPasso1;
+            if (passo != null)
+            {
+                // Aguarda o clipe atual terminar e acrescenta uma pausa maior,
+                // mantendo uma cadência de caminhada mais lenta.
+                audioPassos.clip = passo;
+                audioPassos.Play();
+                float duracaoMaisLonga = Mathf.Max(
+                    passo.length,
+                    somPasso1 != null ? somPasso1.length : 0f,
+                    somPasso2 != null ? somPasso2.length : 0f);
+                proximoPasso = Time.time + Mathf.Max(intervaloPassos, duracaoMaisLonga + pausaEntrePassos);
+            }
+            else
+            {
+                proximoPasso = Time.time + intervaloPassos;
+            }
+            alternarPasso = !alternarPasso;
+        }
     }
 
     void AplicarGravidade()
