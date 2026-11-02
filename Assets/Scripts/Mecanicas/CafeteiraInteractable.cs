@@ -117,6 +117,7 @@ public class CafeteiraInteractable : MonoBehaviour
             if (slotDaXicara != null && slotDaXicara.TemItemVisivelNoSlot)
             {
                 Debug.Log("A encher a xícara de café...");
+                SomJogo.Tocar(transform, "Snd-Colocar-Café");
 
                 if (cafeCheioObj != null) cafeCheioObj.SetActive(false);
                 // O Animator está no CafePivot, que representa o reservatório cheio.

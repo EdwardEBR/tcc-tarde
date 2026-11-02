@@ -21,21 +21,23 @@ public class IntroManager : MonoBehaviour
 
     IEnumerator TrocarParaPlayer()
     {
-        Animator anim = camIntroObj.GetComponent<Animator>();
-        float tempoDeAnimacao = 2f; // Tempo de segurança caso não ache o animator
-
+        Animator anim = camIntroObj != null ? camIntroObj.GetComponent<Animator>() : null;
         if (anim != null)
         {
-            yield return null; // Espera 1 frame para o Animator iniciar
-            tempoDeAnimacao = anim.GetCurrentAnimatorStateInfo(0).length;
+            // A transição só deve acontecer quando a animação tiver realmente
+            // chegado ao fim; esperar apenas o seu comprimento pode perder o
+            // frame final e revelar o primeiro frame caso o clipe esteja em loop.
+            while (anim != null && anim.GetCurrentAnimatorStateInfo(0).normalizedTime < 1f)
+                yield return null;
+        }
+        else
+        {
+            yield return new WaitForSeconds(2f);
         }
 
-        // Espera a animação da intro (e dos olhos) terminar por completo
-        yield return new WaitForSeconds(tempoDeAnimacao);
-
-        // 3. Ativa o Player e desativa a Intro e a Tela Preta de uma vez
-        if (playerObj != null) playerObj.SetActive(true);
+        // Troca as câmeras na mesma atualização, sem renderizar as duas juntas.
         if (camIntroObj != null) camIntroObj.SetActive(false);
+        if (playerObj != null) playerObj.SetActive(true);
         if (telaPretaObj != null) telaPretaObj.SetActive(false);
     }
 }

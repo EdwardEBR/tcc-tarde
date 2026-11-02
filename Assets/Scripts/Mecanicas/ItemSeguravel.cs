@@ -133,6 +133,7 @@ public class ItemSeguravel : MonoBehaviour
     {
         if (!temCafeNaXicara) return false;
 
+        SomJogo.Tocar(transform, "Snd-Beber-Café");
         DesativarVisuaisDeCafe(transform);
         temCafeNaXicara = false;
         cafeConsumido = true;

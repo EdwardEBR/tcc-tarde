@@ -82,6 +82,8 @@ public class TelefoneCarregadorInteractable : MonoBehaviour
         toqueCanceladoPorInteracao = true;
         CancelInvoke(nameof(IniciarToque));
         if (audioToque != null) audioToque.Stop();
+        AudioClip somAtender = SomJogo.Carregar("Snd-Atender");
+        if (audioToque != null && somAtender != null) audioToque.PlayOneShot(somAtender);
         telefone.PegarItem(mao);
         // O jogador para de atualizar os alvos enquanto a conversa está ativa;
         // apague o destaque agora para ele não ficar preso no carregador.
@@ -93,6 +95,9 @@ public class TelefoneCarregadorInteractable : MonoBehaviour
     public bool TentarDevolver(ItemSeguravel itemNaMao)
     {
         if (!PodeInteragir || telefone == null || itemNaMao != telefone) return false;
+        AudioClip somAtender = SomJogo.Carregar("Snd-Atender");
+        if (audioToque != null && somAtender != null) audioToque.PlayOneShot(somAtender);
+
         Transform destino = pontoDeRetorno != null ? pontoDeRetorno : transform;
         if (!poseDeRetornoCapturada) CapturarPoseDeRetorno();
 
