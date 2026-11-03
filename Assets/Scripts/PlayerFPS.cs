@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Rendering;
 
 public class PlayerFPS : MonoBehaviour
 {
@@ -10,6 +11,12 @@ public class PlayerFPS : MonoBehaviour
     [Header("Camera")]
     public Transform cameraPlayer;
     public float sensibilidade = 0.15f;
+    [Tooltip("Campo de visão da câmera enquanto o botão do meio do mouse estiver pressionado.")]
+    [Range(1f, 179f)] public float campoVisaoZoom = 30f;
+    [Tooltip("Velocidade de transição do zoom.")]
+    public float velocidadeZoom = 10f;
+    private Camera cameraComponente;
+    private float campoVisaoOriginal;
 
     [Header("Interação")]
     public float distanciaInteracao = 3f;
@@ -48,6 +55,12 @@ public class PlayerFPS : MonoBehaviour
     void Start()
     {
         controller = GetComponent<CharacterController>();
+        DesativarSombrasDoJogador();
+        if (cameraPlayer != null)
+        {
+            cameraComponente = cameraPlayer.GetComponent<Camera>();
+            if (cameraComponente != null) campoVisaoOriginal = cameraComponente.fieldOfView;
+        }
         // Fontes independentes: os passos não podem substituir a faixa ambiente.
         audioPassos = gameObject.AddComponent<AudioSource>();
         audioPassos.spatialBlend = 0f;
@@ -58,6 +71,14 @@ public class PlayerFPS : MonoBehaviour
         ConfigurarSomGeladeira();
         ConfigurarPontoDaMao();
         TravarMouse();
+    }
+
+    private void DesativarSombrasDoJogador()
+    {
+        // Evita que o cilindro/corpo do jogador projete sombra nas luzes da cena.
+        Renderer[] renderizadores = GetComponentsInChildren<Renderer>(true);
+        foreach (Renderer renderizador in renderizadores)
+            renderizador.shadowCastingMode = ShadowCastingMode.Off;
     }
 
     private void ConfigurarSomAmbiente()
@@ -278,8 +299,9 @@ public class PlayerFPS : MonoBehaviour
 
     void Camera()
     {
-        if (Mouse.current == null)
-            return;
+        if (Mouse.current == null) return;
+
+        AtualizarZoom();
 
         Vector2 mouse = Mouse.current.delta.ReadValue();
 
@@ -293,6 +315,19 @@ public class PlayerFPS : MonoBehaviour
         rotacaoCamera = Mathf.Clamp(rotacaoCamera, -80f, 80f);
 
         cameraPlayer.localRotation = Quaternion.Euler(rotacaoCamera, 0f, 0f);
+    }
+
+    void AtualizarZoom()
+    {
+        if (cameraComponente == null || campoVisaoOriginal <= 0f) return;
+
+        float campoVisaoAlvo = Mouse.current.middleButton.isPressed
+            ? Mathf.Clamp(campoVisaoZoom, 1f, campoVisaoOriginal)
+            : campoVisaoOriginal;
+        cameraComponente.fieldOfView = Mathf.Lerp(
+            cameraComponente.fieldOfView,
+            campoVisaoAlvo,
+            velocidadeZoom * Time.deltaTime);
     }
 
     void GerenciarInteracao()
