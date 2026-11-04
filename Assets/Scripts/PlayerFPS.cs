@@ -51,6 +51,7 @@ public class PlayerFPS : MonoBehaviour
 
     private bool mouseLivre = false;
     private bool modoConversaAtivo = false;
+    private bool descartarDeltaMouse;
 
     void Start()
     {
@@ -157,11 +158,21 @@ public class PlayerFPS : MonoBehaviour
         if (!modoConversaAtivo) GerenciarInteracao();
     }
 
+    private void OnApplicationFocus(bool ganhouFoco)
+    {
+        if (!ganhouFoco || mouseLivre || modoConversaAtivo) return;
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+        descartarDeltaMouse = true;
+    }
+
     void TravarMouse()
     {
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
         mouseLivre = false;
+        descartarDeltaMouse = true;
     }
 
     void LiberarMouse()
@@ -299,11 +310,25 @@ public class PlayerFPS : MonoBehaviour
 
     void Camera()
     {
-        if (Mouse.current == null) return;
+        if (Mouse.current == null || cameraPlayer == null) return;
 
         AtualizarZoom();
 
+        // Depois de voltar o foco para o jogo, o Input System pode entregar
+        // um delta acumulado que deixa a mira em um estado inesperado.
+        if (descartarDeltaMouse)
+        {
+            descartarDeltaMouse = false;
+            return;
+        }
+
         Vector2 mouse = Mouse.current.delta.ReadValue();
+        if (!ValorFinito(mouse.x) || !ValorFinito(mouse.y))
+            return;
+
+        // Um delta extremo pode ocorrer quando o cursor recupera o foco; evita
+        // que esse valor contamine a rotação da câmera.
+        mouse = Vector2.ClampMagnitude(mouse, 100f);
 
         // Rotação horizontal do corpo do jogador
         transform.Rotate(
@@ -311,10 +336,19 @@ public class PlayerFPS : MonoBehaviour
         );
 
         // Rotação vertical da câmara
-        rotacaoCamera -= mouse.y * sensibilidade;
-        rotacaoCamera = Mathf.Clamp(rotacaoCamera, -80f, 80f);
+        float novaRotacaoCamera = rotacaoCamera - mouse.y * sensibilidade;
+        if (!ValorFinito(novaRotacaoCamera)) return;
+        rotacaoCamera = Mathf.Clamp(novaRotacaoCamera, -80f, 80f);
 
-        cameraPlayer.localRotation = Quaternion.Euler(rotacaoCamera, 0f, 0f);
+        Quaternion rotacao = Quaternion.Euler(rotacaoCamera, 0f, 0f);
+        if (ValorFinito(rotacao.x) && ValorFinito(rotacao.y)
+            && ValorFinito(rotacao.z) && ValorFinito(rotacao.w))
+            cameraPlayer.localRotation = rotacao;
+    }
+
+    private static bool ValorFinito(float valor)
+    {
+        return !float.IsNaN(valor) && !float.IsInfinity(valor);
     }
 
     void AtualizarZoom()

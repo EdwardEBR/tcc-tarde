@@ -7,9 +7,15 @@ public class IntroManager : MonoBehaviour
     public GameObject camIntroObj;      // Arraste a CamIntro aqui
     public GameObject playerObj;        // Arraste o Player aqui
     public GameObject telaPretaObj;     // Arraste o objeto da tela preta/painel aqui
+    public GameObject telaPretaFechandoObj;
 
     void Start()
     {
+        if (telaPretaFechandoObj == null)
+            telaPretaFechandoObj = GameObject.Find("TelaPretaFechar");
+        if (telaPretaFechandoObj != null)
+            telaPretaFechandoObj.SetActive(false);
+
         // 1. Estado inicial: Intro e tela preta ligadas, player desligado
         if (camIntroObj != null) camIntroObj.SetActive(true);
         if (telaPretaObj != null) telaPretaObj.SetActive(true);

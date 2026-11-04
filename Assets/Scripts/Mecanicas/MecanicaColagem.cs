@@ -1,4 +1,6 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using System.Collections;
 
 /// <summary>Controla a coleta das fotos e a montagem da colagem da árvore genealógica.</summary>
 public class MecanicaColagem : MonoBehaviour
@@ -16,14 +18,23 @@ public class MecanicaColagem : MonoBehaviour
     [Header("Iluminação da árvore")]
     public Light luzLuminaria;
 
+    [Header("Transição para o próximo nível")]
+    public GameObject objetoTelaPretaFechar;
+    public float esperaAntesDaTransicao = 4f;
+    public string proximaCena = "Nivel2";
+
     private bool colagemMontada;
     private Transform quarto;
     private Outline outlineArvore;
+    private bool transicaoIniciada;
 
     public GameObject ColagemVisual => quarto != null ? quarto.gameObject : null;
 
     private void Awake()
     {
+        if (objetoTelaPretaFechar == null)
+            objetoTelaPretaFechar = GameObject.Find("TelaPretaFechar");
+
         Transform sala = transform.Find("Sala");
         quarto = transform.Find("Quarto");
 
@@ -104,7 +115,7 @@ public class MecanicaColagem : MonoBehaviour
 
     public bool TentarMontarColagem()
     {
-        if (colagemMontada || !TodasAsPortasPreenchidas()) return false;
+        if (colagemMontada || transicaoIniciada || !TodasAsPortasPreenchidas()) return false;
 
         if (arvoreGenealogica != null) SomJogo.Tocar(arvoreGenealogica.transform, "Snd-Corte");
 
@@ -133,7 +144,49 @@ public class MecanicaColagem : MonoBehaviour
         }
 
         colagemMontada = true;
+        transicaoIniciada = true;
+        StartCoroutine(TransicionarParaProximaCena());
         return true;
+    }
+
+    private IEnumerator TransicionarParaProximaCena()
+    {
+        yield return new WaitForSeconds(esperaAntesDaTransicao);
+
+        if (objetoTelaPretaFechar != null)
+        {
+            objetoTelaPretaFechar.SetActive(true);
+        }
+
+        if (objetoTelaPretaFechar != null)
+        {
+            // Os olhos de cima e de baixo têm Animators independentes que
+            // começam pelo estado inicial assim que o grupo é ativado.
+            yield return null;
+            Animator[] animadores = objetoTelaPretaFechar.GetComponentsInChildren<Animator>(true);
+            float maiorDuracao = 0f;
+            foreach (Animator animator in animadores)
+            {
+                if (animator == null || !animator.isActiveAndEnabled || animator.runtimeAnimatorController == null)
+                    continue;
+
+                AnimatorStateInfo estado = animator.GetCurrentAnimatorStateInfo(0);
+                float velocidadeEstado = Mathf.Abs(estado.speed * animator.speed);
+                if (estado.length > 0f && velocidadeEstado > 0.001f)
+                    maiorDuracao = Mathf.Max(maiorDuracao, estado.length / velocidadeEstado);
+            }
+
+            if (animadores.Length == 0)
+                Debug.LogWarning("MecanicaColagem: TelaPretaFechar não tem Animator nos filhos; carregando Nivel2 após uma espera curta.", objetoTelaPretaFechar);
+
+            yield return new WaitForSecondsRealtime(Mathf.Max(maiorDuracao, 0.1f));
+        }
+        else
+        {
+            Debug.LogWarning("MecanicaColagem: não encontrou TelaPretaFechar; carregando Nivel2 após uma espera curta.", this);
+        }
+
+        SceneManager.LoadScene(proximaCena);
     }
 
     private bool TodasAsPortasPreenchidas()
