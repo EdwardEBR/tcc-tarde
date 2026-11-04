@@ -11,6 +11,8 @@ public class PlayerFPS : MonoBehaviour
     [Header("Camera")]
     public Transform cameraPlayer;
     public float sensibilidade = 0.15f;
+    [Tooltip("Tempo de suavização do movimento do olhar. Valores menores respondem mais rápido.")]
+    [Min(0f)] public float suavidadeOlhar = 0.08f;
     [Tooltip("Campo de visão da câmera enquanto o botão do meio do mouse estiver pressionado.")]
     [Range(1f, 179f)] public float campoVisaoZoom = 30f;
     [Tooltip("Velocidade de transição do zoom.")]
@@ -48,6 +50,9 @@ public class PlayerFPS : MonoBehaviour
     private CharacterController controller;
     private Vector3 velocidadeVertical;
     private float rotacaoCamera = 0f;
+    private float rotacaoHorizontalAlvo;
+    private float velocidadeRotacaoHorizontal;
+    private float velocidadeRotacaoVertical;
 
     private bool mouseLivre = false;
     private bool modoConversaAtivo = false;
@@ -61,7 +66,10 @@ public class PlayerFPS : MonoBehaviour
         {
             cameraComponente = cameraPlayer.GetComponent<Camera>();
             if (cameraComponente != null) campoVisaoOriginal = cameraComponente.fieldOfView;
+            rotacaoCamera = cameraPlayer.localEulerAngles.x;
+            if (rotacaoCamera > 180f) rotacaoCamera -= 360f;
         }
+        rotacaoHorizontalAlvo = transform.eulerAngles.y;
         // Fontes independentes: os passos não podem substituir a faixa ambiente.
         audioPassos = gameObject.AddComponent<AudioSource>();
         audioPassos.spatialBlend = 0f;
@@ -330,17 +338,27 @@ public class PlayerFPS : MonoBehaviour
         // que esse valor contamine a rotação da câmera.
         mouse = Vector2.ClampMagnitude(mouse, 100f);
 
-        // Rotação horizontal do corpo do jogador
-        transform.Rotate(
-            Vector3.up * mouse.x * sensibilidade
-        );
+        rotacaoHorizontalAlvo += mouse.x * sensibilidade;
 
         // Rotação vertical da câmara
         float novaRotacaoCamera = rotacaoCamera - mouse.y * sensibilidade;
         if (!ValorFinito(novaRotacaoCamera)) return;
         rotacaoCamera = Mathf.Clamp(novaRotacaoCamera, -80f, 80f);
 
-        Quaternion rotacao = Quaternion.Euler(rotacaoCamera, 0f, 0f);
+        float suavidade = Mathf.Max(0f, suavidadeOlhar);
+        float rotacaoHorizontalSuave = suavidade == 0f
+            ? rotacaoHorizontalAlvo
+            : Mathf.SmoothDampAngle(transform.eulerAngles.y, rotacaoHorizontalAlvo,
+                ref velocidadeRotacaoHorizontal, suavidade);
+        float rotacaoVerticalSuave = suavidade == 0f
+            ? rotacaoCamera
+            : Mathf.SmoothDampAngle(cameraPlayer.localEulerAngles.x > 180f
+                    ? cameraPlayer.localEulerAngles.x - 360f
+                    : cameraPlayer.localEulerAngles.x,
+                rotacaoCamera, ref velocidadeRotacaoVertical, suavidade);
+
+        transform.rotation = Quaternion.Euler(transform.eulerAngles.x, rotacaoHorizontalSuave, transform.eulerAngles.z);
+        Quaternion rotacao = Quaternion.Euler(rotacaoVerticalSuave, 0f, 0f);
         if (ValorFinito(rotacao.x) && ValorFinito(rotacao.y)
             && ValorFinito(rotacao.z) && ValorFinito(rotacao.w))
             cameraPlayer.localRotation = rotacao;

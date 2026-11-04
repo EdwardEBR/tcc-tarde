@@ -20,7 +20,7 @@ public class MecanicaColagem : MonoBehaviour
 
     [Header("Transição para o próximo nível")]
     public GameObject objetoTelaPretaFechar;
-    public float esperaAntesDaTransicao = 4f;
+    public float esperaAntesDaTransicao = 0.5f;
     public string proximaCena = "Nivel2";
 
     private bool colagemMontada;
@@ -170,6 +170,7 @@ public class MecanicaColagem : MonoBehaviour
                 if (animator == null || !animator.isActiveAndEnabled || animator.runtimeAnimatorController == null)
                     continue;
 
+                animator.speed *= 2f;
                 AnimatorStateInfo estado = animator.GetCurrentAnimatorStateInfo(0);
                 float velocidadeEstado = Mathf.Abs(estado.speed * animator.speed);
                 if (estado.length > 0f && velocidadeEstado > 0.001f)
@@ -179,7 +180,7 @@ public class MecanicaColagem : MonoBehaviour
             if (animadores.Length == 0)
                 Debug.LogWarning("MecanicaColagem: TelaPretaFechar não tem Animator nos filhos; carregando Nivel2 após uma espera curta.", objetoTelaPretaFechar);
 
-            yield return new WaitForSecondsRealtime(Mathf.Max(maiorDuracao, 0.1f));
+            yield return new WaitForSecondsRealtime(Mathf.Max(maiorDuracao - 1f, 0f));
         }
         else
         {

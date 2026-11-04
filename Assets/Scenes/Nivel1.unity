@@ -5854,13 +5854,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8f4f497f11cea781bae410160dcaf835, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerFPS
-  velocidade: 5
+  velocidade: 3
   gravidade: -20
   cameraPlayer: {fileID: 330585546}
-  sensibilidade: 0.5
+  sensibilidade: 0.2
+  suavidadeOlhar: 0.08
   campoVisaoZoom: 30
   velocidadeZoom: 10
-  distanciaInteracao: 5
+  distanciaInteracao: 4
   camadaInterativel:
     serializedVersion: 2
     m_Bits: 64
@@ -47280,7 +47281,7 @@ MonoBehaviour:
   - {fileID: 708019276}
   luzLuminaria: {fileID: 1233252930}
   objetoTelaPretaFechar: {fileID: 0}
-  esperaAntesDaTransicao: 2
+  esperaAntesDaTransicao: 0.5
   proximaCena: Nivel2
 --- !u!4 &1583392294231731934
 Transform:

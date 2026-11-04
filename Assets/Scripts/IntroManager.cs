@@ -11,6 +11,8 @@ public class IntroManager : MonoBehaviour
 
     void Start()
     {
+        TocarSomDeAcordar();
+
         if (telaPretaFechandoObj == null)
             telaPretaFechandoObj = GameObject.Find("TelaPretaFechar");
         if (telaPretaFechandoObj != null)
@@ -23,6 +25,22 @@ public class IntroManager : MonoBehaviour
 
         // 2. Inicia a contagem
         StartCoroutine(TrocarParaPlayer());
+    }
+
+    private void TocarSomDeAcordar()
+    {
+        AudioClip bocejo = SomJogo.Carregar("Snd-Bocejo");
+        if (bocejo == null)
+        {
+            Debug.LogWarning("IntroManager: não foi possível carregar Snd-Bocejo em Resources/Sons/AudioClip.", this);
+            return;
+        }
+
+        AudioSource fonte = GetComponent<AudioSource>();
+        if (fonte == null) fonte = gameObject.AddComponent<AudioSource>();
+        fonte.playOnAwake = false;
+        fonte.spatialBlend = 0f;
+        fonte.PlayOneShot(bocejo);
     }
 
     IEnumerator TrocarParaPlayer()
