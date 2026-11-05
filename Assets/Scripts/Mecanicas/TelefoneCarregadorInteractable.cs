@@ -5,6 +5,7 @@ public class TelefoneCarregadorInteractable : MonoBehaviour
 {
     [Header("Telefone")]
     public ItemSeguravel telefone;
+    public ItemSeguravel telefoneForaDeLugar;
     public Transform pontoDeRetorno;
 
     [Header("Desbloqueio")]
@@ -90,9 +91,15 @@ public class TelefoneCarregadorInteractable : MonoBehaviour
     public bool PodePegarTelefone => PodeInteragir && telefone != null
         && !telefone.estaSendoSegurado && telefone.podeSerPego;
 
-    public void SetHighlight(bool ativo)
+    public void SetHighlight(bool ativo, ItemSeguravel itemNaMao = null)
     {
-        if (outline != null) outline.enabled = ativo && PodeInteragir;
+        bool podeDevolverTelefoneDeslocado = itemNaMao != null
+            && itemNaMao == telefoneForaDeLugar
+            && telefone == telefoneForaDeLugar
+            && EstaDesbloqueado
+            && !telefoneArquivado;
+        if (outline != null)
+            outline.enabled = ativo && (PodeInteragir || podeDevolverTelefoneDeslocado);
     }
 
     public bool TentarPegar(Transform mao)
@@ -113,7 +120,9 @@ public class TelefoneCarregadorInteractable : MonoBehaviour
 
     public bool TentarDevolver(ItemSeguravel itemNaMao)
     {
-        if (!PodeInteragir || telefone == null || itemNaMao != telefone) return false;
+        bool devolvendoTelefoneForaDeLugar = itemNaMao != null && itemNaMao == telefoneForaDeLugar;
+        if (telefone == null || itemNaMao != telefone
+            || (!PodeInteragir && !devolvendoTelefoneForaDeLugar)) return false;
         AudioClip somAtender = SomJogo.Carregar("Snd-Atender");
         if (audioToque != null && somAtender != null) audioToque.PlayOneShot(somAtender);
 
@@ -123,6 +132,15 @@ public class TelefoneCarregadorInteractable : MonoBehaviour
         telefone.SoltarItem(destino);
         telefone.transform.localPosition = posicaoLocalDeRetorno;
         telefone.transform.localRotation = rotacaoLocalDeRetorno;
+
+        if (devolvendoTelefoneForaDeLugar)
+        {
+            telefone.podeSerPego = false;
+            telefoneArquivado = true;
+            telefone.SetHighlight(false);
+            SetHighlight(false);
+            return true;
+        }
 
         if (conversaTelefonica != null && conversaTelefonica.ConversaConcluida)
         {
@@ -134,6 +152,19 @@ public class TelefoneCarregadorInteractable : MonoBehaviour
         }
 
         return true;
+    }
+
+    public void RegistrarTelefoneForaDeLugar(ItemSeguravel item)
+    {
+        if (item == null || telefoneForaDeLugar == item) return;
+
+        if (telefone != null && telefone != item)
+            telefone.gameObject.SetActive(false);
+
+        telefoneForaDeLugar = item;
+        telefone = item;
+        telefoneDesligado = true;
+        telefoneArquivado = false;
     }
 
     private void MostrarFotosDaLigacao()

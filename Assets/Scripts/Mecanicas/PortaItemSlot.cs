@@ -21,6 +21,10 @@ public class PortaItemSlot : MonoBehaviour
         {
             if (!slotOcupado) return false;
 
+            // Alguns itens, como a CanecaDerrubada, ficam visíveis diretamente no slot.
+            if (itemGuardado != null && itemGuardado.gameObject.activeInHierarchy)
+                return true;
+
             if (objetoAoOcupar != null && (itemGuardado == null || objetoAoOcupar != itemGuardado.gameObject))
             {
                 return objetoAoOcupar.activeInHierarchy && TemRendererVisivelNaRepresentacao();
@@ -179,6 +183,24 @@ public class PortaItemSlot : MonoBehaviour
             itemGuardado.SoltarItem(transform);
         }
 
+        if (EhCanecaDerrubada(itemGuardado))
+        {
+            // Esta caneca fica visível no PortaItem, mas não pode ser retirada nem
+            // acionada novamente depois de guardada.
+            itemGuardado.RestaurarEscalaOriginal();
+            ApoiarCanecaSobrePortaItem(itemGuardado);
+            itemGuardado.podeSerPego = false;
+            foreach (Collider colisor in itemGuardado.GetComponentsInChildren<Collider>(true))
+                if (colisor != null) colisor.enabled = false;
+            itemGuardado.SetHighlight(false);
+
+            if (objetoAoOcupar != null && objetoAoOcupar != itemGuardado.gameObject
+                && !transform.IsChildOf(objetoAoOcupar.transform))
+                objetoAoOcupar.SetActive(false);
+            if (outlineScript != null) outlineScript.enabled = false;
+            return true;
+        }
+
         if (ObjetoDeExibicaoPodeSerAlternado() && objetoAoOcupar != itemGuardado.gameObject)
         {
             TransferirVisual(itemGuardado.transform, objetoAoOcupar.transform);
@@ -193,6 +215,28 @@ public class PortaItemSlot : MonoBehaviour
         }
 
         return true;
+    }
+
+    private static bool EhCanecaDerrubada(ItemSeguravel item)
+    {
+        return item != null && (
+            string.Equals(item.nomeDoItem, "CanecaDerrubada", System.StringComparison.OrdinalIgnoreCase)
+            || string.Equals(item.gameObject.name, "CanecaDerrubada", System.StringComparison.OrdinalIgnoreCase));
+    }
+
+    private void ApoiarCanecaSobrePortaItem(ItemSeguravel caneca)
+    {
+        Renderer[] renderizadores = caneca.GetComponentsInChildren<Renderer>();
+        if (renderizadores.Length == 0) return;
+
+        Bounds limitesCaneca = renderizadores[0].bounds;
+        for (int i = 1; i < renderizadores.Length; i++)
+            limitesCaneca.Encapsulate(renderizadores[i].bounds);
+
+        float topoDoPortaItem = visualQuadradoAzul != null
+            ? visualQuadradoAzul.bounds.max.y
+            : transform.position.y;
+        caneca.transform.position += Vector3.up * (topoDoPortaItem - limitesCaneca.min.y);
     }
 
     // Retira a representação visível e devolve à mão o item real guardado no slot.

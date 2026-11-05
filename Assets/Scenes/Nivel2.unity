@@ -3499,6 +3499,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TelefoneCarregadorInteractable
   telefone: {fileID: 538015068}
+  telefoneForaDeLugar: {fileID: 0}
   pontoDeRetorno: {fileID: 0}
   taskManager: {fileID: 214806651}
   conversaTelefonica: {fileID: 1583273475}
@@ -18070,7 +18071,7 @@ Transform:
   m_GameObject: {fileID: 634951063}
   serializedVersion: 2
   m_LocalRotation: {x: -0.7071068, y: -0, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: -7.0874605, y: 2.8727136, z: 7.2380505}
+  m_LocalPosition: {x: -7.0874605, y: 2.8727136, z: 7.239}
   m_LocalScale: {x: 0.49132, y: 1, z: 0.29750997}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -55556,7 +55557,7 @@ Transform:
   m_GameObject: {fileID: 1727640551}
   serializedVersion: 2
   m_LocalRotation: {x: -0.7071068, y: -0, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 2.6225395, y: 2.93746, z: 7.2380505}
+  m_LocalPosition: {x: 2.6225395, y: 2.93746, z: 7.239}
   m_LocalScale: {x: 0.49132, y: 1, z: 0.29750997}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -58953,7 +58954,7 @@ Transform:
   m_GameObject: {fileID: 1817689456}
   serializedVersion: 2
   m_LocalRotation: {x: -0.7071068, y: -0, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: -7.0874605, y: 2.8727136, z: 7.2380505}
+  m_LocalPosition: {x: -7.0874605, y: 2.8727136, z: 7.228}
   m_LocalScale: {x: 0.49132, y: 1, z: 0.29750997}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -59905,14 +59906,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1858290050}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.36026636, y: -0.63791347, z: 0.49130008, w: 0.4710614}
-  m_LocalPosition: {x: -5.854, y: -0.426, z: -10.393}
+  m_LocalRotation: {x: 0.34926936, y: -0.6491115, z: 0.476407, w: 0.47927192}
+  m_LocalPosition: {x: -5.8539543, y: -0.42607912, z: -10.392988}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 817641707}
   m_Father: {fileID: 591089727}
-  m_LocalEulerAnglesHint: {x: 75.067, y: -106.561, z: 0.718}
+  m_LocalEulerAnglesHint: {x: 72.416, y: -106.671, z: 0.612}
 --- !u!114 &1858290052
 MonoBehaviour:
   m_ObjectHideFlags: 0

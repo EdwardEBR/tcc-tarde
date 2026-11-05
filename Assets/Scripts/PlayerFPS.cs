@@ -632,7 +632,14 @@ public class PlayerFPS : MonoBehaviour
                 // ainda retire-a pelo slot para transferir o café junto com ela.
                 if (slot == null && itemSeguravelDetectado != null)
                 {
-                    slot = itemSeguravelDetectado.slotDeOrigem;
+                    PortaItemSlot slotDeOrigem = itemSeguravelDetectado.slotDeOrigem;
+                    // CanecaDerrubada mantém o vínculo com o PortaItem, mas é um item
+                    // solto. Não tratar o clique nela como retirada do item antigo do slot.
+                    if (slotDeOrigem != null
+                        && (!slotDeOrigem.slotOcupado || slotDeOrigem.ItemGuardado == itemSeguravelDetectado))
+                    {
+                        slot = slotDeOrigem;
+                    }
                 }
 
                 if (itemSeguravelDetectado != null && !itemSeguravelDetectado.podeSerPego)
@@ -726,7 +733,7 @@ public class PlayerFPS : MonoBehaviour
             if (carregadorAtual != null) carregadorAtual.SetHighlight(false);
             carregadorAtual = carregadorDetectado;
         }
-        if (carregadorAtual != null) carregadorAtual.SetHighlight(true);
+        if (carregadorAtual != null) carregadorAtual.SetHighlight(true, itemNaMao);
 
         if (cadeiraAtual != cadeiraDetectada)
         {

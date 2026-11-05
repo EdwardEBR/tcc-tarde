@@ -44,6 +44,8 @@ public class ItemSeguravel : MonoBehaviour
     public void SetHighlight(bool state)
     {
         if (estaSendoSegurado) return; // Se já estiver na mão, não mostra o outline
+        if (outlineScript == null)
+            outlineScript = GetComponent<Outline>();
         if (outlineScript != null)
         {
             outlineScript.enabled = state;
@@ -162,6 +164,13 @@ public class ItemSeguravel : MonoBehaviour
         }
 
         Debug.Log("Item posicionado: " + nomeDoItem);
+    }
+
+    public void RestaurarEscalaOriginal()
+    {
+        transform.localScale = EscalaLocalParaManterEscalaMundial(
+            escalaOriginalNoMundo,
+            transform.parent);
     }
 
     public bool BeberCafe()

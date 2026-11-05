@@ -379,6 +379,10 @@ public class TaskManager : MonoBehaviour
             {
                 if (ativos && string.Equals(nome, "LIVROPT", System.StringComparison.OrdinalIgnoreCase))
                     PrepararLivroPegavel(objeto.gameObject);
+                else if (ativos && string.Equals(nome, "CanecaDerrubada", System.StringComparison.OrdinalIgnoreCase))
+                    PrepararCanecaDerrubada(objeto.gameObject);
+                else if (ativos && string.Equals(nome, "Telefone-ForadeLugar", System.StringComparison.OrdinalIgnoreCase))
+                    PrepararTelefoneForaDeLugar(objeto.gameObject);
 
                 objeto.gameObject.SetActive(ativos);
             }
@@ -424,6 +428,59 @@ public class TaskManager : MonoBehaviour
         int camadaInterativa = LayerMask.NameToLayer("Interativel");
         if (camadaInterativa >= 0)
             DefinirCamadaRecursiva(livro.transform, camadaInterativa);
+    }
+
+    private static void PrepararCanecaDerrubada(GameObject caneca)
+    {
+        ItemSeguravel item = caneca.GetComponent<ItemSeguravel>();
+        if (item == null) item = caneca.AddComponent<ItemSeguravel>();
+        item.nomeDoItem = "CanecaDerrubada";
+        item.podeSerPego = true;
+
+        Outline contorno = caneca.GetComponent<Outline>();
+        if (contorno == null) contorno = caneca.AddComponent<Outline>();
+        contorno.OutlineMode = Outline.Mode.OutlineAll;
+        contorno.OutlineColor = new Color(1f, 0.45336083f, 0f, 1f);
+        contorno.OutlineWidth = 10f;
+        contorno.enabled = false;
+
+        Collider[] colisores = caneca.GetComponentsInChildren<Collider>(true);
+        foreach (Collider colisor in colisores)
+        {
+            if (colisor != null) colisor.enabled = true;
+        }
+
+        int camadaInterativa = LayerMask.NameToLayer("Interativel");
+        if (camadaInterativa >= 0)
+            DefinirCamadaRecursiva(caneca.transform, camadaInterativa);
+    }
+
+    private static void PrepararTelefoneForaDeLugar(GameObject telefone)
+    {
+        ItemSeguravel item = telefone.GetComponent<ItemSeguravel>();
+        if (item == null) item = telefone.AddComponent<ItemSeguravel>();
+        item.nomeDoItem = "Telefone";
+        item.podeSerPego = true;
+
+        Outline contorno = telefone.GetComponent<Outline>();
+        if (contorno == null) contorno = telefone.AddComponent<Outline>();
+        contorno.OutlineMode = Outline.Mode.OutlineAll;
+        contorno.OutlineColor = new Color(1f, 0.45336083f, 0f, 1f);
+        contorno.OutlineWidth = 10f;
+        contorno.enabled = false;
+
+        foreach (Collider colisor in telefone.GetComponentsInChildren<Collider>(true))
+            if (colisor != null) colisor.enabled = true;
+
+        int camadaInterativa = LayerMask.NameToLayer("Interativel");
+        if (camadaInterativa >= 0)
+            DefinirCamadaRecursiva(telefone.transform, camadaInterativa);
+
+        TelefoneCarregadorInteractable carregador = FindAnyObjectByType<TelefoneCarregadorInteractable>();
+        if (carregador != null)
+            carregador.RegistrarTelefoneForaDeLugar(item);
+        else
+            Debug.LogWarning("TaskManager: não encontrou o Carregador para registrar o Telefone-ForadeLugar.");
     }
 
     private static void DefinirCamadaRecursiva(Transform raiz, int camada)
