@@ -16,6 +16,10 @@ public class TelefoneCarregadorInteractable : MonoBehaviour
     [Header("Fotos que aparecem após devolver o telefone")]
     public GameObject[] fotosParaMostrarAoDevolver;
 
+    [Header("Estado inicial")]
+    public GameObject[] objetosVisiveisDesdeInicio;
+    public bool telefoneDesligado;
+
     private Outline outline;
     private Vector3 posicaoLocalDeRetorno;
     private Quaternion rotacaoLocalDeRetorno;
@@ -44,14 +48,29 @@ public class TelefoneCarregadorInteractable : MonoBehaviour
         {
             foreach (GameObject foto in fotosParaMostrarAoDevolver)
             {
-                if (foto != null) foto.SetActive(false);
+                if (foto != null && !DeveFicarVisivelDesdeInicio(foto)) foto.SetActive(false);
             }
+        }
+
+        if (objetosVisiveisDesdeInicio != null)
+        {
+            foreach (GameObject objeto in objetosVisiveisDesdeInicio)
+            {
+                if (objeto != null) objeto.SetActive(true);
+            }
+        }
+
+        if (telefoneDesligado)
+        {
+            toqueLiberado = true;
+            CancelInvoke(nameof(IniciarToque));
+            if (audioToque != null) audioToque.Stop();
         }
     }
 
     private void Update()
     {
-        if (!toqueLiberado && EstaDesbloqueado)
+        if (!telefoneDesligado && !toqueLiberado && EstaDesbloqueado)
         {
             toqueLiberado = true;
             Invoke(nameof(IniciarToque), 7f);
@@ -66,7 +85,7 @@ public class TelefoneCarregadorInteractable : MonoBehaviour
     }
 
     public bool EstaDesbloqueado => taskManager != null && taskManager.TodasTarefasConcluidas;
-    public bool PodeInteragir => EstaDesbloqueado && !telefoneArquivado;
+    public bool PodeInteragir => !telefoneDesligado && EstaDesbloqueado && !telefoneArquivado;
 
     public bool PodePegarTelefone => PodeInteragir && telefone != null
         && !telefone.estaSendoSegurado && telefone.podeSerPego;
@@ -125,6 +144,16 @@ public class TelefoneCarregadorInteractable : MonoBehaviour
         {
             if (foto != null) foto.SetActive(true);
         }
+    }
+
+    private bool DeveFicarVisivelDesdeInicio(GameObject objeto)
+    {
+        if (objetosVisiveisDesdeInicio == null) return false;
+        foreach (GameObject visivel in objetosVisiveisDesdeInicio)
+        {
+            if (visivel == objeto) return true;
+        }
+        return false;
     }
 
     private void CapturarPoseDeRetorno()

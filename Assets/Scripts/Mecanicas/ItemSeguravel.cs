@@ -5,11 +5,20 @@ public class ItemSeguravel : MonoBehaviour
     [Header("Configurações do Item")]
     public string nomeDoItem = "Objeto";
     public PortaItemSlot slotDeOrigem; // Arraste o PortaItemSlot correspondente aqui no Inspector
+
+    [Header("Ajuste opcional ao segurar")]
+    public bool usarAjusteDeMao;
+    public Vector3 posicaoLocalNaMao;
+    public Vector3 rotacaoLocalNaMao;
+    public float escalaRelativaNaMao = 1f;
+    public bool centralizarMalhaNaMao;
     
     private Rigidbody rb;
     private Collider[] colliders;
     private bool[] collidersEstavamAtivos;
     private Outline outlineScript; // Referência para o Outline do objeto
+    private Vector3 escalaOriginalNoMundo;
+    private Quaternion rotacaoOriginalNoMundo;
     [HideInInspector] public bool estaSendoSegurado = false;
     [HideInInspector] public bool temCafeNaXicara = false;
     [HideInInspector] public bool podeSerPego = true;
@@ -46,6 +55,16 @@ public class ItemSeguravel : MonoBehaviour
     {
         // Guarda a escala visual atual antes de tirar o item da hierarquia original.
         Vector3 escalaNoMundo = transform.lossyScale;
+        escalaOriginalNoMundo = escalaNoMundo;
+        rotacaoOriginalNoMundo = transform.rotation;
+        Vector3 centroMalhaNaRaiz = Vector3.zero;
+        if (centralizarMalhaNaMao)
+        {
+            MeshFilter malha = GetComponentInChildren<MeshFilter>(true);
+            if (malha != null && malha.sharedMesh != null)
+                centroMalhaNaRaiz = transform.InverseTransformPoint(
+                    malha.transform.TransformPoint(malha.sharedMesh.bounds.center));
+        }
         estaSendoSegurado = true;
 
         // Desliga o outline ao apanhar
@@ -82,9 +101,20 @@ public class ItemSeguravel : MonoBehaviour
 
         // Usa o suporte da câmera sem herdar escalas da hierarquia original do item.
         transform.SetParent(pontoDaMao, false);
-        transform.localPosition = Vector3.zero;
-        transform.localRotation = Quaternion.identity;
-        transform.localScale = EscalaLocalParaManterEscalaMundial(escalaNoMundo, pontoDaMao);
+        if (usarAjusteDeMao)
+        {
+            transform.localRotation = Quaternion.Euler(rotacaoLocalNaMao);
+            transform.localScale = EscalaLocalParaManterEscalaMundial(escalaNoMundo, pontoDaMao)
+                * Mathf.Max(0.001f, escalaRelativaNaMao);
+            Vector3 deslocamentoDoCentro = Vector3.Scale(centroMalhaNaRaiz, transform.localScale);
+            transform.localPosition = posicaoLocalNaMao - transform.localRotation * deslocamentoDoCentro;
+        }
+        else
+        {
+            transform.localPosition = Vector3.zero;
+            transform.localRotation = Quaternion.identity;
+            transform.localScale = EscalaLocalParaManterEscalaMundial(escalaNoMundo, pontoDaMao);
+        }
 
         Debug.Log("Item apanhado: " + nomeDoItem);
     }
@@ -105,6 +135,11 @@ public class ItemSeguravel : MonoBehaviour
         else
         {
             transform.SetParent(null);
+            if (usarAjusteDeMao)
+            {
+                transform.localScale = escalaOriginalNoMundo;
+                transform.rotation = rotacaoOriginalNoMundo;
+            }
         }
 
         if (rb != null)

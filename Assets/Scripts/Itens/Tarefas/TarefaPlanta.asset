@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: TarefaPlanta
   m_EditorClassIdentifier: Assembly-CSharp::TaskData
   taskName: TarefaPlanta
-  isCompleted: 1
+  isCompleted: 0

@@ -27,14 +27,26 @@ public class InteractableObject : MonoBehaviour
 
     public void SetHighlight(bool state)
     {
-        if (isDone) return;
+        TaskManager taskMgr = FindAnyObjectByType<TaskManager>();
+        if (isDone || (taskMgr != null && taskMgr.IsTaskCompleted(taskNameName)))
+        {
+            if (outlineScript != null) outlineScript.enabled = false;
+            return;
+        }
         if (outlineScript == null) return;
         outlineScript.enabled = state;
     }
 
     public void Interact()
     {
-        if (isDone) return; 
+        TaskManager taskMgr = FindAnyObjectByType<TaskManager>();
+        if (isDone || (taskMgr != null && taskMgr.IsTaskCompleted(taskNameName)))
+        {
+            isDone = true;
+            if (outlineScript != null) outlineScript.enabled = false;
+            return;
+        }
+
         isDone = true;
 
         if (string.Equals(taskNameName, TarefaRemedio, System.StringComparison.OrdinalIgnoreCase))
@@ -69,7 +81,6 @@ public class InteractableObject : MonoBehaviour
             }
         }
 
-        TaskManager taskMgr = FindAnyObjectByType<TaskManager>();
         if (taskMgr != null)
         {
             taskMgr.CompleteTask(taskNameName);

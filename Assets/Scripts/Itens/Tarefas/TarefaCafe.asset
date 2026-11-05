@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: TarefaCafe
   m_EditorClassIdentifier: Assembly-CSharp::TaskData
   taskName: TarefaCafe
-  isCompleted: 1
+  isCompleted: 0

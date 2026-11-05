@@ -30,10 +30,12 @@ public class ConversaTelefonicaUI : MonoBehaviour
     public GameObject colagemParaMostrar;
     public GameObject[] objetosDaColagemParaMostrar;
     public string fraseQueMostraColagem = "colagem da árvore genealógica";
+    public bool mostrarColagemDesdeInicio;
 
     private Coroutine rotinaDeTexto;
     private Coroutine rotinaDeEncerramento;
     private bool conversaAtiva;
+    private bool aguardandoSentarParaContinuar;
     private Keyboard tecladoInscrito;
     private string bufferComandoAdmin = string.Empty;
     private const string ComandoPularConversa = "PULAR";
@@ -56,8 +58,9 @@ public class ConversaTelefonicaUI : MonoBehaviour
             CriarConversaDeExemplo();
         if (painel == null) CriarInterfacePadrao();
         if (painel != null) painel.SetActive(false);
-        if (colagemParaMostrar != null) colagemParaMostrar.SetActive(false);
-        if (objetosDaColagemParaMostrar != null)
+        if (!mostrarColagemDesdeInicio && colagemParaMostrar != null)
+            colagemParaMostrar.SetActive(false);
+        if (!mostrarColagemDesdeInicio && objetosDaColagemParaMostrar != null)
         {
             foreach (GameObject objeto in objetosDaColagemParaMostrar)
             {
@@ -327,25 +330,49 @@ public class ConversaTelefonicaUI : MonoBehaviour
 
     public void IniciarConversa()
     {
+        IniciarConversa(false);
+    }
+
+    public bool IniciarConversaAguardandoSentar()
+    {
+        return IniciarConversa(true);
+    }
+
+    private bool IniciarConversa(bool aguardarSentar)
+    {
         if (conversa == null || conversa.Count == 0 || noInicial < 0 || noInicial >= conversa.Count)
         {
             Debug.LogWarning("ConversaTelefonicaUI: configure ao menos um nó válido da conversa.", this);
-            return;
+            return false;
         }
 
         ConversaConcluida = false;
         conversaAtiva = true;
+        aguardandoSentarParaContinuar = aguardarSentar;
         bufferComandoAdmin = string.Empty;
         indiceDoNoAtual = noInicial;
         if (painel != null) painel.SetActive(true);
         if (jogador == null) jogador = FindAnyObjectByType<PlayerFPS>();
-        if (jogador != null) jogador.DefinirModoConversa(true);
+        if (jogador != null) jogador.DefinirModoConversa(!aguardarSentar);
         MostrarNo(noInicial);
+        return true;
+    }
+
+    public void ContinuarAposSentar()
+    {
+        if (!conversaAtiva || !aguardandoSentarParaContinuar) return;
+
+        aguardandoSentarParaContinuar = false;
+        if (jogador == null) jogador = FindAnyObjectByType<PlayerFPS>();
+        if (jogador != null) jogador.DefinirModoConversa(true);
+        if (rotinaDeTexto == null && indiceDoNoAtual >= 0 && indiceDoNoAtual < conversa.Count)
+            MostrarRespostas(conversa[indiceDoNoAtual]);
     }
 
     public void EncerrarConversa()
     {
         conversaAtiva = false;
+        aguardandoSentarParaContinuar = false;
         bufferComandoAdmin = string.Empty;
         if (rotinaDeTexto != null) StopCoroutine(rotinaDeTexto);
         rotinaDeTexto = null;
@@ -409,6 +436,13 @@ public class ConversaTelefonicaUI : MonoBehaviour
             }
         }
 
+        if (aguardandoSentarParaContinuar)
+        {
+            if (painelRespostas != null) painelRespostas.SetActive(false);
+            if (textoInstrucao != null) textoInstrucao.gameObject.SetActive(false);
+            return;
+        }
+
         bool temResposta1 = !string.IsNullOrWhiteSpace(no.resposta1);
         bool temResposta2 = !string.IsNullOrWhiteSpace(no.resposta2);
         ConfigurarResposta(botaoResposta1, textoResposta1, no.resposta1, 1);
@@ -450,7 +484,7 @@ public class ConversaTelefonicaUI : MonoBehaviour
 
     private void EscolherResposta(int indiceResposta)
     {
-        if (!conversaAtiva || rotinaDeTexto != null || conversa.Count == 0) return;
+        if (!conversaAtiva || aguardandoSentarParaContinuar || rotinaDeTexto != null || conversa.Count == 0) return;
 
         NoConversa no = conversa[indiceDoNoAtual];
         string resposta = indiceResposta == 0 ? no.resposta1 : no.resposta2;
@@ -549,7 +583,7 @@ public class ConversaTelefonicaUI : MonoBehaviour
 
     private void PularParaUltimaFala()
     {
-        if (!conversaAtiva || conversa == null || conversa.Count == 0) return;
+        if (!conversaAtiva || aguardandoSentarParaContinuar || conversa == null || conversa.Count == 0) return;
 
         // Busca de trás para frente a última fala terminal do roteiro configurado.
         for (int indice = conversa.Count - 1; indice >= 0; indice--)

@@ -226,6 +226,22 @@ public class MecanicaColagem : MonoBehaviour
         }
     }
 
+    public void MostrarFotosDaSala()
+    {
+        if (fotosDaSala == null) return;
+
+        foreach (GameObject foto in fotosDaSala)
+        {
+            if (foto == null) continue;
+
+            ItemSeguravel item = foto.GetComponent<ItemSeguravel>();
+            if (item != null) item.podeSerPego = true;
+            foreach (Collider colisor in foto.GetComponentsInChildren<Collider>(true))
+                colisor.enabled = true;
+            foto.SetActive(true);
+        }
+    }
+
     private void PrepararColagem()
     {
         if (arvoreGenealogica != null)

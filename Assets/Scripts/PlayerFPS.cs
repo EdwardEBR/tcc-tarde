@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Rendering;
@@ -17,8 +18,16 @@ public class PlayerFPS : MonoBehaviour
     [Range(1f, 179f)] public float campoVisaoZoom = 30f;
     [Tooltip("Velocidade de transição do zoom.")]
     public float velocidadeZoom = 10f;
+    [Tooltip("Quanto baixar a câmera ao sentar.")]
+    public float baixarCameraAoSentar = 0.65f;
+    [Tooltip("Limite horizontal de olhar, para cada lado, enquanto sentado.")]
+    [Range(10f, 120f)] public float limiteGiroHorizontalSentado = 90f;
+    [Tooltip("Limite vertical de olhar, para cima e para baixo, enquanto sentado.")]
+    [Range(10f, 80f)] public float limiteGiroVerticalSentado = 80f;
     private Camera cameraComponente;
     private float campoVisaoOriginal;
+    private Vector3 posicaoLocalCameraOriginal;
+    private Quaternion rotacaoLocalCameraOriginal;
 
     [Header("Interação")]
     public float distanciaInteracao = 3f;
@@ -26,9 +35,11 @@ public class PlayerFPS : MonoBehaviour
     private InteractableObject objetoAtual;
     private CafeteiraInteractable cafeteiraAtual;
     private TelefoneCarregadorInteractable carregadorAtual;
+    private CadeiraSentavelInteractable cadeiraAtual;
     private ItemSeguravel itemDestacadoAtual = null; // Item segurável que o jogador está a olhar
     private PortaItemSlot slotDestacadoAtual = null; // Slot azul que o jogador está a olhar
     private MecanicaColagem mecanicaColagemAtual;
+    private Outline outlineEstanteLivro;
 
     [Header("Sons de passos")]
     public AudioClip somPasso1;
@@ -48,22 +59,42 @@ public class PlayerFPS : MonoBehaviour
     private ItemSeguravel itemNaMao = null; // Guarda o item que o player está a segurar no momento
 
     private CharacterController controller;
+    private Rigidbody corpoRigido;
+    private bool corpoRigidoUsavaGravidade;
+    private bool corpoRigidoEraKinematic;
     private Vector3 velocidadeVertical;
     private float rotacaoCamera = 0f;
     private float rotacaoHorizontalAlvo;
+    private float rotacaoHorizontalBaseSentado;
     private float velocidadeRotacaoHorizontal;
     private float velocidadeRotacaoVertical;
 
     private bool mouseLivre = false;
     private bool modoConversaAtivo = false;
     private bool descartarDeltaMouse;
+    private bool sentandoNaCadeira;
+    private bool sentadoNaCadeira;
+    private Vector3 posicaoNormalAntesDeSentar;
+    private Quaternion rotacaoNormalAntesDeSentar;
+
+    public float MeiaAlturaMundialDoPersonagem => controller != null
+        ? controller.bounds.extents.y
+        : Mathf.Max(0.5f, transform.lossyScale.y);
 
     void Start()
     {
         controller = GetComponent<CharacterController>();
+        corpoRigido = GetComponent<Rigidbody>();
+        if (corpoRigido != null)
+        {
+            corpoRigidoUsavaGravidade = corpoRigido.useGravity;
+            corpoRigidoEraKinematic = corpoRigido.isKinematic;
+        }
         DesativarSombrasDoJogador();
         if (cameraPlayer != null)
         {
+            posicaoLocalCameraOriginal = cameraPlayer.localPosition;
+            rotacaoLocalCameraOriginal = cameraPlayer.localRotation;
             cameraComponente = cameraPlayer.GetComponent<Camera>();
             if (cameraComponente != null) campoVisaoOriginal = cameraComponente.fieldOfView;
             rotacaoCamera = cameraPlayer.localEulerAngles.x;
@@ -155,13 +186,15 @@ public class PlayerFPS : MonoBehaviour
             if (!modoConversaAtivo) AlternarCursor();
         }
 
+        if (sentandoNaCadeira) return;
+
         // A gravidade e o chão continuam a funcionar mesmo se o mouse estiver livre, evitando cair pelo mapa
-        AplicarGravidade();
+        if (!sentadoNaCadeira) AplicarGravidade();
 
         // Se o mouse estiver livre (mexendo no Inspetor), não anda nem mexe a câmara
         if (mouseLivre) return;
 
-        Movimento();
+        if (!sentadoNaCadeira) Movimento();
         Camera();
         if (!modoConversaAtivo) GerenciarInteracao();
     }
@@ -219,6 +252,12 @@ public class PlayerFPS : MonoBehaviour
             carregadorAtual = null;
         }
 
+        if (cadeiraAtual != null)
+        {
+            cadeiraAtual.SetHighlight(false);
+            cadeiraAtual = null;
+        }
+
         if (mecanicaColagemAtual != null)
         {
             mecanicaColagemAtual.SetHighlightArvore(false);
@@ -245,6 +284,8 @@ public class PlayerFPS : MonoBehaviour
 
     void Movimento()
     {
+        if (sentadoNaCadeira) return;
+
         Vector2 input = Vector2.zero;
 
         if (Keyboard.current != null)
@@ -339,17 +380,30 @@ public class PlayerFPS : MonoBehaviour
         mouse = Vector2.ClampMagnitude(mouse, 100f);
 
         rotacaoHorizontalAlvo += mouse.x * sensibilidade;
+        if (sentadoNaCadeira)
+        {
+            float deslocamentoHorizontal = Mathf.DeltaAngle(rotacaoHorizontalBaseSentado, rotacaoHorizontalAlvo);
+            rotacaoHorizontalAlvo = rotacaoHorizontalBaseSentado
+                + Mathf.Clamp(deslocamentoHorizontal, -limiteGiroHorizontalSentado, limiteGiroHorizontalSentado);
+        }
 
         // Rotação vertical da câmara
         float novaRotacaoCamera = rotacaoCamera - mouse.y * sensibilidade;
         if (!ValorFinito(novaRotacaoCamera)) return;
-        rotacaoCamera = Mathf.Clamp(novaRotacaoCamera, -80f, 80f);
+        float limiteVertical = sentadoNaCadeira ? limiteGiroVerticalSentado : 80f;
+        rotacaoCamera = Mathf.Clamp(novaRotacaoCamera, -limiteVertical, limiteVertical);
 
         float suavidade = Mathf.Max(0f, suavidadeOlhar);
         float rotacaoHorizontalSuave = suavidade == 0f
             ? rotacaoHorizontalAlvo
             : Mathf.SmoothDampAngle(transform.eulerAngles.y, rotacaoHorizontalAlvo,
                 ref velocidadeRotacaoHorizontal, suavidade);
+        if (sentadoNaCadeira)
+        {
+            float deslocamentoSuave = Mathf.DeltaAngle(rotacaoHorizontalBaseSentado, rotacaoHorizontalSuave);
+            rotacaoHorizontalSuave = rotacaoHorizontalBaseSentado
+                + Mathf.Clamp(deslocamentoSuave, -limiteGiroHorizontalSentado, limiteGiroHorizontalSentado);
+        }
         float rotacaoVerticalSuave = suavidade == 0f
             ? rotacaoCamera
             : Mathf.SmoothDampAngle(cameraPlayer.localEulerAngles.x > 180f
@@ -367,6 +421,132 @@ public class PlayerFPS : MonoBehaviour
     private static bool ValorFinito(float valor)
     {
         return !float.IsNaN(valor) && !float.IsInfinity(valor);
+    }
+
+    public void SentarNaCadeira(Vector3 posicaoFinal, Quaternion rotacaoFinal)
+    {
+        if (sentadoNaCadeira || sentandoNaCadeira) return;
+        posicaoNormalAntesDeSentar = transform.position;
+        rotacaoNormalAntesDeSentar = transform.rotation;
+        if (audioPassos != null) audioPassos.Stop();
+        StartCoroutine(AproximarEChegarNaCadeira(posicaoFinal, rotacaoFinal));
+    }
+
+    private IEnumerator AproximarEChegarNaCadeira(Vector3 posicaoFinal, Quaternion rotacaoFinal)
+    {
+        sentandoNaCadeira = true;
+        if (controller == null) controller = GetComponent<CharacterController>();
+        if (controller != null) controller.enabled = false;
+        if (corpoRigido == null) corpoRigido = GetComponent<Rigidbody>();
+        if (corpoRigido != null)
+        {
+            corpoRigido.linearVelocity = Vector3.zero;
+            corpoRigido.angularVelocity = Vector3.zero;
+            corpoRigido.useGravity = false;
+            corpoRigido.isKinematic = true;
+        }
+
+        Vector3 posicaoInicial = transform.position;
+        Quaternion rotacaoInicial = transform.rotation;
+        Vector3 posicaoCameraInicial = cameraPlayer != null
+            ? cameraPlayer.localPosition
+            : Vector3.zero;
+        Vector3 posicaoCameraFinal = posicaoCameraInicial;
+        Quaternion rotacaoCameraInicial = cameraPlayer != null
+            ? cameraPlayer.localRotation
+            : Quaternion.identity;
+        float rotacaoCameraFinalGraus = Mathf.Clamp(
+            rotacaoCamera, -limiteGiroVerticalSentado, limiteGiroVerticalSentado);
+        Quaternion rotacaoCameraFinal = Quaternion.Euler(rotacaoCameraFinalGraus, 0f, 0f);
+        if (cameraPlayer != null)
+            posicaoCameraFinal.y = posicaoLocalCameraOriginal.y - Mathf.Abs(baixarCameraAoSentar);
+
+        const float duracao = 0.8f;
+        float tempo = 0f;
+
+        while (tempo < duracao)
+        {
+            tempo += Time.unscaledDeltaTime;
+            float progresso = Mathf.Clamp01(tempo / duracao);
+            float suavizado = progresso * progresso * (3f - 2f * progresso);
+            transform.position = Vector3.Lerp(posicaoInicial, posicaoFinal, suavizado);
+            transform.rotation = Quaternion.Slerp(rotacaoInicial, rotacaoFinal, suavizado);
+            if (cameraPlayer != null)
+            {
+                cameraPlayer.localPosition = Vector3.Lerp(posicaoCameraInicial, posicaoCameraFinal, suavizado);
+                cameraPlayer.localRotation = Quaternion.Slerp(rotacaoCameraInicial, rotacaoCameraFinal, suavizado);
+            }
+            yield return null;
+        }
+
+        transform.SetPositionAndRotation(posicaoFinal, rotacaoFinal);
+        rotacaoHorizontalBaseSentado = rotacaoFinal.eulerAngles.y;
+        rotacaoHorizontalAlvo = rotacaoHorizontalBaseSentado;
+        velocidadeRotacaoHorizontal = 0f;
+        velocidadeRotacaoVertical = 0f;
+        if (cameraPlayer != null)
+        {
+            rotacaoCamera = rotacaoCameraFinalGraus;
+            cameraPlayer.localPosition = posicaoCameraFinal;
+            cameraPlayer.localRotation = rotacaoCameraFinal;
+        }
+
+        // O CharacterController e o Rigidbody ficam desligados enquanto sentado,
+        // para gravidade e colisões não deslocarem o jogador da cadeira.
+        velocidadeVertical = Vector3.zero;
+        sentadoNaCadeira = true;
+        sentandoNaCadeira = false;
+
+        TaskManager gerenciadorTarefas = FindAnyObjectByType<TaskManager>();
+        if (gerenciadorTarefas != null)
+            gerenciadorTarefas.IniciarDialogoAposSentar();
+    }
+
+    public void TeleportarPara(Vector3 posicao)
+    {
+        bool estavaSentado = sentadoNaCadeira || sentandoNaCadeira;
+        Vector3 destino = posicao;
+        Quaternion rotacaoDestino = transform.rotation;
+        if (estavaSentado)
+        {
+            destino.y = posicaoNormalAntesDeSentar.y;
+            rotacaoDestino = rotacaoNormalAntesDeSentar;
+        }
+
+        if (controller == null) controller = GetComponent<CharacterController>();
+        if (controller != null) controller.enabled = false;
+        if (corpoRigido == null) corpoRigido = GetComponent<Rigidbody>();
+        if (corpoRigido != null) corpoRigido.isKinematic = true;
+
+        transform.SetPositionAndRotation(destino, rotacaoDestino);
+        if (corpoRigido != null)
+        {
+            corpoRigido.position = destino;
+            corpoRigido.rotation = rotacaoDestino;
+            corpoRigido.useGravity = corpoRigidoUsavaGravidade;
+            corpoRigido.isKinematic = corpoRigidoEraKinematic;
+            corpoRigido.linearVelocity = Vector3.zero;
+            corpoRigido.angularVelocity = Vector3.zero;
+        }
+
+        if (cameraPlayer != null)
+        {
+            cameraPlayer.localPosition = posicaoLocalCameraOriginal;
+            cameraPlayer.localRotation = rotacaoLocalCameraOriginal;
+            rotacaoCamera = cameraPlayer.localEulerAngles.x;
+            if (rotacaoCamera > 180f) rotacaoCamera -= 360f;
+        }
+
+        velocidadeVertical = Vector3.zero;
+        rotacaoHorizontalAlvo = rotacaoDestino.eulerAngles.y;
+        velocidadeRotacaoHorizontal = 0f;
+        velocidadeRotacaoVertical = 0f;
+        sentadoNaCadeira = false;
+        sentandoNaCadeira = false;
+        modoConversaAtivo = false;
+        Physics.SyncTransforms();
+        if (controller != null) controller.enabled = true;
+        descartarDeltaMouse = true;
     }
 
     void AtualizarZoom()
@@ -392,6 +572,7 @@ public class PlayerFPS : MonoBehaviour
         InteractableObject interativelDetectado = null;
         CafeteiraInteractable cafeteiraDetectada = null;
         TelefoneCarregadorInteractable carregadorDetectado = null;
+        CadeiraSentavelInteractable cadeiraDetectada = null;
         MecanicaColagem mecanicaColagemDetectada = null;
         ItemSeguravel itemSeguravelDetectado = null;
         PortaItemSlot slotDetectado = null;
@@ -402,6 +583,7 @@ public class PlayerFPS : MonoBehaviour
         {
             cafeteiraDetectada = hit.collider.GetComponentInParent<CafeteiraInteractable>();
             carregadorDetectado = hit.collider.GetComponentInParent<TelefoneCarregadorInteractable>();
+            cadeiraDetectada = hit.collider.GetComponentInParent<CadeiraSentavelInteractable>();
             MecanicaColagem mecanicaColagem = hit.collider.GetComponentInParent<MecanicaColagem>();
             if (mecanicaColagem != null && mecanicaColagem.EhAlvoDaArvore(hit.collider.transform))
                 mecanicaColagemDetectada = mecanicaColagem;
@@ -521,6 +703,8 @@ public class PlayerFPS : MonoBehaviour
             }
         }
 
+        AtualizarOutlineEstanteLivro(ray);
+
         // Atualiza o destaque das interações normais.
         if (objetoAtual != interativelDetectado)
         {
@@ -543,6 +727,13 @@ public class PlayerFPS : MonoBehaviour
             carregadorAtual = carregadorDetectado;
         }
         if (carregadorAtual != null) carregadorAtual.SetHighlight(true);
+
+        if (cadeiraAtual != cadeiraDetectada)
+        {
+            if (cadeiraAtual != null) cadeiraAtual.SetHighlight(false);
+            cadeiraAtual = cadeiraDetectada;
+        }
+        if (cadeiraAtual != null) cadeiraAtual.SetHighlight(true);
 
         if (mecanicaColagemAtual != mecanicaColagemDetectada)
         {
@@ -570,6 +761,12 @@ public class PlayerFPS : MonoBehaviour
         // Executa as ações do clique.
         if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
         {
+            if (itemNaMao != null && EhLivroPT(itemNaMao)
+                && TentarColocarLivroNaEstante(ray))
+            {
+                return;
+            }
+
             if (itemNaMao == null && mecanicaColagemDetectada != null
                 && mecanicaColagemDetectada.TentarMontarColagem())
             {
@@ -591,6 +788,12 @@ public class PlayerFPS : MonoBehaviour
                 }
             }
 
+            if (cadeiraAtual != null)
+            {
+                cadeiraAtual.Interact(this);
+                return;
+            }
+
             // Retira o item real do slot; a representação visual do cenário é desativada pelo slot.
             if (itemNaMao == null && slotDetectado != null && slotDetectado.slotOcupado)
             {
@@ -599,6 +802,7 @@ public class PlayerFPS : MonoBehaviour
                 {
                     itemNaMao = itemRetirado;
                     itemNaMao.PegarItem(maoDoJogador);
+                    AoPegarLivroPT();
 
                     if (slotDestacadoAtual != null)
                     {
@@ -650,6 +854,7 @@ public class PlayerFPS : MonoBehaviour
 
                 itemNaMao = itemSeguravelDetectado;
                 itemNaMao.PegarItem(maoDoJogador);
+                AoPegarLivroPT();
                 return;
             }
 
@@ -673,5 +878,163 @@ public class PlayerFPS : MonoBehaviour
                 itemNaMao.BeberCafe();
             }
         }
+    }
+
+    private bool TentarColocarLivroNaEstante(Ray ray)
+    {
+        if (!Physics.Raycast(ray, out RaycastHit hit, distanciaInteracao, ~0, QueryTriggerInteraction.Ignore))
+            return false;
+
+        if (!EhEstante(hit.collider.transform)) return false;
+
+        Transform livroNaEstante = EncontrarObjetoNaCena("LIVROPTESTANTE");
+        if (livroNaEstante == null || livroNaEstante.gameObject.activeSelf)
+            return false;
+
+        ItemSeguravel livroDaMao = itemNaMao;
+        livroNaEstante.gameObject.SetActive(true);
+        livroDaMao.SoltarItem();
+        livroDaMao.gameObject.SetActive(false);
+        itemNaMao = null;
+        if (outlineEstanteLivro != null)
+        {
+            outlineEstanteLivro.enabled = false;
+            outlineEstanteLivro = null;
+        }
+
+        if (itemDestacadoAtual == livroDaMao)
+            itemDestacadoAtual = null;
+
+        Debug.Log("LIVROPT colocado na estante.");
+        return true;
+    }
+
+    private void AoPegarLivroPT()
+    {
+        if (!EhLivroPT(itemNaMao)) return;
+
+        StartCoroutine(ConcluirPegarLivroPT());
+    }
+
+    private IEnumerator ConcluirPegarLivroPT()
+    {
+        TaskManager taskManager = FindAnyObjectByType<TaskManager>();
+        if (taskManager != null)
+            taskManager.ReproduzirTelaPretaFecharRapido();
+        else
+            Debug.LogWarning("PlayerFPS: não encontrou TaskManager para tocar TelaPretaFecharRapido.", this);
+
+        yield return new WaitForSecondsRealtime(1.5f);
+
+        // Reutiliza a posição da cozinha, mantendo a altura normal atual do Player.
+        // O teleporte após a conversa preserva essa altura quando ele está sentado.
+        TeleportarPara(new Vector3(-7.66099977f, transform.position.y, -32.2929993f));
+
+        CadeiraSentavelInteractable cadeira = FindAnyObjectByType<CadeiraSentavelInteractable>();
+        if (cadeira != null) cadeira.RestaurarColliders();
+
+        Transform posJantar = EncontrarObjetoNaCena("PósJantar");
+        Transform louca = posJantar != null
+            ? EncontrarDescendente(posJantar, "Louça")
+            : null;
+        if (louca != null)
+            louca.gameObject.SetActive(false);
+        else
+            Debug.LogWarning("PlayerFPS: não encontrou Louça dentro de PósJantar para desativar.", this);
+    }
+
+    private void AtualizarOutlineEstanteLivro(Ray ray)
+    {
+        Outline novoOutline = null;
+        if (EhLivroPT(itemNaMao)
+            && Physics.Raycast(ray, out RaycastHit hit, distanciaInteracao, ~0, QueryTriggerInteraction.Ignore)
+            && EhEstante(hit.collider.transform))
+        {
+            Transform raizVisual = EncontrarRaizVisualEstante(hit.collider.transform);
+            if (raizVisual != null)
+            {
+                if (raizVisual.GetComponentsInChildren<Renderer>(true).Length == 0)
+                {
+                    Renderer renderizadorPai = raizVisual.GetComponentInParent<Renderer>();
+                    if (renderizadorPai != null) raizVisual = renderizadorPai.transform;
+                }
+
+                novoOutline = raizVisual.GetComponent<Outline>();
+                if (novoOutline == null)
+                    novoOutline = raizVisual.gameObject.AddComponent<Outline>();
+
+                novoOutline.OutlineMode = Outline.Mode.OutlineAndSilhouette;
+                novoOutline.OutlineColor = new Color(1f, 0.28f, 0f, 1f);
+                novoOutline.OutlineWidth = 22f;
+                novoOutline.enabled = true;
+            }
+        }
+
+        if (outlineEstanteLivro != novoOutline)
+        {
+            if (outlineEstanteLivro != null)
+                outlineEstanteLivro.enabled = false;
+            outlineEstanteLivro = novoOutline;
+        }
+    }
+
+    private static bool EhEstante(Transform alvo)
+    {
+        while (alvo != null)
+        {
+            if (string.Equals(alvo.name, "Bookcase_0", System.StringComparison.OrdinalIgnoreCase)
+                || string.Equals(alvo.name, "Prateleira", System.StringComparison.OrdinalIgnoreCase))
+                return true;
+            alvo = alvo.parent;
+        }
+        return false;
+    }
+
+    private static Transform EncontrarRaizVisualEstante(Transform alvo)
+    {
+        Transform prateleira = null;
+        while (alvo != null)
+        {
+            if (string.Equals(alvo.name, "Bookcase_0", System.StringComparison.OrdinalIgnoreCase))
+                return alvo;
+            if (string.Equals(alvo.name, "Prateleira", System.StringComparison.OrdinalIgnoreCase))
+                prateleira = alvo;
+            alvo = alvo.parent;
+        }
+        return prateleira;
+    }
+
+    private static bool EhLivroPT(ItemSeguravel item)
+    {
+        return item != null && (
+            string.Equals(item.nomeDoItem, "LIVROPT", System.StringComparison.OrdinalIgnoreCase)
+            || string.Equals(item.gameObject.name, "LIVROPT", System.StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static Transform EncontrarObjetoNaCena(string nome)
+    {
+        GameObject[] raizes = UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects();
+        foreach (GameObject raiz in raizes)
+        {
+            if (string.Equals(raiz.name, nome, System.StringComparison.OrdinalIgnoreCase))
+                return raiz.transform;
+
+            Transform encontrado = EncontrarDescendente(raiz.transform, nome);
+            if (encontrado != null) return encontrado;
+        }
+        return null;
+    }
+
+    private static Transform EncontrarDescendente(Transform raiz, string nome)
+    {
+        foreach (Transform filho in raiz)
+        {
+            if (string.Equals(filho.name, nome, System.StringComparison.OrdinalIgnoreCase))
+                return filho;
+
+            Transform encontrado = EncontrarDescendente(filho, nome);
+            if (encontrado != null) return encontrado;
+        }
+        return null;
     }
 }

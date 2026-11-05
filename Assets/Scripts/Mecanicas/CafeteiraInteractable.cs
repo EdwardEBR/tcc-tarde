@@ -103,6 +103,13 @@ public class CafeteiraInteractable : MonoBehaviour
 
     public void SetHighlight(bool state)
     {
+        TaskManager taskManager = FindAnyObjectByType<TaskManager>();
+        if (taskManager != null && taskManager.IsTaskCompleted(taskNameName))
+        {
+            if (outlineScript != null) outlineScript.enabled = false;
+            return;
+        }
+
         // Se a tarefa já acabou, mas a cafeteira está cheia e pronta para encher a xícara, ela pode brilhar de novo!
         if (isDone && !cafeProntoParaServir) return; 
         if (outlineScript == null) return;
@@ -111,6 +118,14 @@ public class CafeteiraInteractable : MonoBehaviour
 
     public void Interact()
     {
+        TaskManager taskManager = FindAnyObjectByType<TaskManager>();
+        if (taskManager != null && taskManager.IsTaskCompleted(taskNameName))
+        {
+            isDone = true;
+            if (outlineScript != null) outlineScript.enabled = false;
+            return;
+        }
+
         // --- ETAPA 2: Depois de cheia, o clique serve o café na xícara do slot ---
         if (cafeProntoParaServir)
         {

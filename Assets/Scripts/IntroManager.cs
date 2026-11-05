@@ -8,10 +8,15 @@ public class IntroManager : MonoBehaviour
     public GameObject playerObj;        // Arraste o Player aqui
     public GameObject telaPretaObj;     // Arraste o objeto da tela preta/painel aqui
     public GameObject telaPretaFechandoObj;
+    public GameObject telaPretaFecharRapidoObj;
 
     void Start()
     {
         TocarSomDeAcordar();
+
+        // Este efeito pertence somente à conclusão da tarefa de regar a planta.
+        if (telaPretaFecharRapidoObj != null)
+            telaPretaFecharRapidoObj.SetActive(false);
 
         if (telaPretaFechandoObj == null)
             telaPretaFechandoObj = GameObject.Find("TelaPretaFechar");
