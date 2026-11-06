@@ -12,8 +12,6 @@ public class IntroManager : MonoBehaviour
 
     void Start()
     {
-        TocarSomDeAcordar();
-
         // Este efeito pertence somente à conclusão da tarefa de regar a planta.
         if (telaPretaFecharRapidoObj != null)
             telaPretaFecharRapidoObj.SetActive(false);
@@ -28,17 +26,29 @@ public class IntroManager : MonoBehaviour
         if (telaPretaObj != null) telaPretaObj.SetActive(true);
         if (playerObj != null) playerObj.SetActive(false);
 
+        StartCoroutine(TocarSomDeAcordar());
+
         // 2. Inicia a contagem
         StartCoroutine(TrocarParaPlayer());
     }
 
-    private void TocarSomDeAcordar()
+    private IEnumerator TocarSomDeAcordar()
     {
         AudioClip bocejo = SomJogo.Carregar("Snd-Bocejo");
         if (bocejo == null)
         {
             Debug.LogWarning("IntroManager: não foi possível carregar Snd-Bocejo em Resources/Sons/AudioClip.", this);
-            return;
+            yield break;
+        }
+
+        bocejo.LoadAudioData();
+        while (bocejo.loadState == AudioDataLoadState.Loading)
+            yield return null;
+
+        if (bocejo.loadState != AudioDataLoadState.Loaded)
+        {
+            Debug.LogWarning("IntroManager: os dados de Snd-Bocejo não foram carregados.", this);
+            yield break;
         }
 
         AudioSource fonte = GetComponent<AudioSource>();
