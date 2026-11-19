@@ -76,20 +76,22 @@ public class IntroManager : MonoBehaviour
         if (volumeVisaoEmbacada == null || profundidadeDeCampo == null || vinhetaVisaoEmbacada == null) yield break;
 
         const float duracao = 5f;
+        const float desfoqueInicial = 0.1f;
+        const float desfoqueDuranteOJogo = 5f;
+        const float vinhetaInicial = 0.55f;
+        const float vinhetaDuranteOJogo = 0.4f;
         float tempo = 0f;
         while (tempo < duracao && volumeVisaoEmbacada != null && profundidadeDeCampo != null && vinhetaVisaoEmbacada != null)
         {
             tempo += Time.unscaledDeltaTime;
             float progresso = Mathf.Clamp01(tempo / duracao);
             float suave = progresso * progresso * (3f - 2f * progresso);
-            profundidadeDeCampo.gaussianEnd.value = Mathf.Lerp(0.1f, 50f, suave);
-            vinhetaVisaoEmbacada.intensity.value = Mathf.Lerp(0.55f, 0f, suave);
+            profundidadeDeCampo.gaussianEnd.value = Mathf.Lerp(desfoqueInicial, desfoqueDuranteOJogo, suave);
+            vinhetaVisaoEmbacada.intensity.value = Mathf.Lerp(vinhetaInicial, vinhetaDuranteOJogo, suave);
             yield return null;
         }
 
-        if (volumeVisaoEmbacada != null) volumeVisaoEmbacada.weight = 0f;
-        if (perfilVisaoEmbacada != null) Destroy(perfilVisaoEmbacada);
-        if (volumeVisaoEmbacada != null) Destroy(volumeVisaoEmbacada.gameObject);
+        // Mantém os dois efeitos ativos no restante do Nivel4 com intensidade reduzida.
     }
 
     private IEnumerator TocarSomDeAcordar()

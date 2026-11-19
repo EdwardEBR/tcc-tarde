@@ -35,7 +35,7 @@ public class TaskManager : MonoBehaviour
 
     private void Awake()
     {
-        if (!EstaNoNivel3()) PrepararCadeiraSentavel();
+        if (!EstaNoNivel3() && !EstaNoNivel1() && !EstaNoNivel4()) PrepararCadeiraSentavel();
         PrepararJanelasBreu();
         PrepararPlateStack(false);
         ConfigurarObjetosPosJantar(false);
@@ -48,6 +48,22 @@ public class TaskManager : MonoBehaviour
         return string.Equals(
             UnityEngine.SceneManagement.SceneManager.GetActiveScene().name,
             "Nivel3",
+            System.StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool EstaNoNivel1()
+    {
+        return string.Equals(
+            UnityEngine.SceneManagement.SceneManager.GetActiveScene().name,
+            "Nivel1",
+            System.StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool EstaNoNivel4()
+    {
+        return string.Equals(
+            UnityEngine.SceneManagement.SceneManager.GetActiveScene().name,
+            "Nivel4",
             System.StringComparison.OrdinalIgnoreCase);
     }
 
@@ -241,7 +257,7 @@ public class TaskManager : MonoBehaviour
                             UnityEngine.SceneManagement.SceneManager.GetActiveScene().name,
                             "Nivel3",
                             System.StringComparison.OrdinalIgnoreCase);
-                        if (!nivel3) TocarTelaPretaFecharRapido();
+                        if (!nivel3 && !EstaNoNivel1() && !EstaNoNivel4()) TocarTelaPretaFecharRapido();
                         StartCoroutine(ConcluirRegarPlantaAposDoisSegundos(task));
                     }
                 }
@@ -310,16 +326,17 @@ public class TaskManager : MonoBehaviour
         AtivarIluminacaoAcesa();
         if (regarPlantaConcluiTodasTarefas)
             ConcluirTodasAsTarefas();
-        if (!EstaNoNivel3()) LiberarCadeiraSentavel();
-        dialogoAguardandoSentar = conversaAposRegar != null;
-        if (conversaAposRegar != null)
+        bool sequenciaCadeiraDisponivel = !EstaNoNivel3() && !EstaNoNivel1() && !EstaNoNivel4();
+        if (sequenciaCadeiraDisponivel) LiberarCadeiraSentavel();
+        dialogoAguardandoSentar = sequenciaCadeiraDisponivel && conversaAposRegar != null;
+        if (sequenciaCadeiraDisponivel && conversaAposRegar != null)
         {
             if (conversaAposRegar.IniciarConversaAguardandoSentar())
                 StartCoroutine(AguardarFimDoDialogoAposRegar());
             else
                 dialogoAguardandoSentar = false;
         }
-        else
+        else if (sequenciaCadeiraDisponivel)
         {
             Debug.LogWarning("TaskManager: atribua a conversa que será iniciada ao sentar após regar a planta.", this);
         }
