@@ -27,6 +27,7 @@ public class TaskManager : MonoBehaviour
     private bool transicaoRegarPlantaIniciada;
     private bool dialogoAguardandoSentar;
     private bool dialogoAposSentarIniciado;
+    private bool sequenciaFinalNivel3Iniciada;
     private GameObject noiteJanelaSala;
     private GameObject noiteJanelaQuarto;
     private GameObject breuJanelaSala;
@@ -34,12 +35,20 @@ public class TaskManager : MonoBehaviour
 
     private void Awake()
     {
-        PrepararCadeiraSentavel();
+        if (!EstaNoNivel3()) PrepararCadeiraSentavel();
         PrepararJanelasBreu();
         PrepararPlateStack(false);
         ConfigurarObjetosPosJantar(false);
         if (alimentacao != null) alimentacao.SetActive(false);
         if (posJantar != null) posJantar.SetActive(false);
+    }
+
+    private static bool EstaNoNivel3()
+    {
+        return string.Equals(
+            UnityEngine.SceneManagement.SceneManager.GetActiveScene().name,
+            "Nivel3",
+            System.StringComparison.OrdinalIgnoreCase);
     }
 
     public bool TodasTarefasConcluidas
@@ -61,6 +70,123 @@ public class TaskManager : MonoBehaviour
     void Start()
     {
         ConfigurarQuadro();
+        if (string.Equals(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, "Nivel3", System.StringComparison.OrdinalIgnoreCase))
+            StartCoroutine(IniciarDialogoFinalNivel3AoChegar());
+    }
+
+    private IEnumerator IniciarDialogoFinalNivel3AoChegar()
+    {
+        while (!TodasTarefasConcluidas)
+            yield return null;
+
+        PlayerFPS jogador = null;
+        while (jogador == null)
+        {
+            jogador = FindAnyObjectByType<PlayerFPS>();
+            if (jogador == null) yield return null;
+        }
+
+        Vector2 destino = new Vector2(5.29f, -25.88f);
+        const float distanciaDeAtivacao = 1.5f;
+        while ((new Vector2(jogador.transform.position.x, jogador.transform.position.z) - destino).sqrMagnitude
+            > distanciaDeAtivacao * distanciaDeAtivacao)
+            yield return null;
+
+        if (sequenciaFinalNivel3Iniciada) yield break;
+        sequenciaFinalNivel3Iniciada = true;
+
+        if (conversaAposRegar == null)
+            conversaAposRegar = FindAnyObjectByType<ConversaTelefonicaUI>();
+        if (conversaAposRegar == null || !conversaAposRegar.IniciarConversaAguardandoSentar())
+        {
+            Debug.LogWarning("TaskManager: não encontrou uma conversa válida para continuar no sofá do Nivel3.", this);
+            yield break;
+        }
+
+        dialogoAguardandoSentar = true;
+        LiberarSofaNivel3();
+
+        while (conversaAposRegar != null && !conversaAposRegar.ConversaConcluida)
+            yield return null;
+
+        if (string.Equals(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, "Nivel3", System.StringComparison.OrdinalIgnoreCase))
+        {
+            TocarTelaPretaFecharRapido();
+            yield return new WaitForSecondsRealtime(2f);
+
+            EncerrarCenaNivel3AposConversa();
+            jogador.TeleportarPara(new Vector3(5.29f, jogador.transform.position.y, -25.88f));
+
+            yield return new WaitForSecondsRealtime(1.5f);
+            if (telaPretaFecharRapido != null)
+                telaPretaFecharRapido.SetActive(false);
+        }
+    }
+
+    private void EncerrarCenaNivel3AposConversa()
+    {
+        GameObject luzDirecional = GameObject.Find("Directional Light");
+        if (luzDirecional != null) luzDirecional.SetActive(false);
+
+        GameObject brilhoSala = GameObject.Find("Brilho-Janela-Sala");
+        if (brilhoSala != null) brilhoSala.SetActive(false);
+
+        GameObject brilhoQuarto = GameObject.Find("Brilho-Janela-Quarto");
+        if (brilhoQuarto != null) brilhoQuarto.SetActive(false);
+
+        Transform luzesApagadasNivel3 = EncontrarFilhoEmCena("Luzes-Apagadas");
+        if (luzesApagadasNivel3 != null) luzesApagadasNivel3.gameObject.SetActive(false);
+
+        Transform luzesAcessasNivel3 = EncontrarFilhoEmCena("Luzes-Acessas");
+        if (luzesAcessasNivel3 != null) luzesAcessasNivel3.gameObject.SetActive(true);
+
+        Transform shadersNivel3 = EncontrarFilhoEmCena("SHADERS");
+        if (shadersNivel3 != null) shadersNivel3.gameObject.SetActive(true);
+
+        Transform sofa = EncontrarFilhoEmCena("Couch_0");
+        if (sofa != null)
+        {
+            CadeiraSentavelInteractable interacao = sofa.GetComponent<CadeiraSentavelInteractable>();
+            if (interacao != null)
+            {
+                interacao.RestaurarColliders();
+                interacao.enabled = false;
+            }
+            else
+                foreach (Collider colisor in sofa.GetComponentsInChildren<Collider>(true))
+                    if (colisor != null) colisor.enabled = true;
+
+            int camadaPadrao = LayerMask.NameToLayer("Default");
+            if (camadaPadrao >= 0) DefinirCamadaRecursiva(sofa, camadaPadrao);
+        }
+    }
+
+    private void LiberarSofaNivel3()
+    {
+        Transform couch = EncontrarFilhoEmCena("Couch_0");
+        if (couch == null)
+        {
+            Debug.LogWarning("TaskManager: não encontrou Couch_0 na cena Nivel3.", this);
+            return;
+        }
+
+        Collider[] colliders = couch.GetComponentsInChildren<Collider>(true);
+        if (colliders.Length == 0)
+        {
+            foreach (MeshFilter malha in couch.GetComponentsInChildren<MeshFilter>(true))
+            {
+                if (malha == null || malha.sharedMesh == null) continue;
+                MeshCollider colisor = malha.gameObject.AddComponent<MeshCollider>();
+                colisor.sharedMesh = malha.sharedMesh;
+            }
+        }
+
+        int camadaInterativa = LayerMask.NameToLayer("Interativel");
+        if (camadaInterativa >= 0) DefinirCamadaRecursiva(couch, camadaInterativa);
+
+        CadeiraSentavelInteractable interacao = couch.GetComponent<CadeiraSentavelInteractable>();
+        if (interacao == null) interacao = couch.gameObject.AddComponent<CadeiraSentavelInteractable>();
+        interacao.Liberar();
     }
 
     void ConfigurarQuadro()
@@ -108,7 +234,11 @@ public class TaskManager : MonoBehaviour
                     if (!transicaoRegarPlantaIniciada)
                     {
                         transicaoRegarPlantaIniciada = true;
-                        TocarTelaPretaFecharRapido();
+                        bool nivel3 = string.Equals(
+                            UnityEngine.SceneManagement.SceneManager.GetActiveScene().name,
+                            "Nivel3",
+                            System.StringComparison.OrdinalIgnoreCase);
+                        if (!nivel3) TocarTelaPretaFecharRapido();
                         StartCoroutine(ConcluirRegarPlantaAposDoisSegundos(task));
                     }
                 }
@@ -124,6 +254,13 @@ public class TaskManager : MonoBehaviour
 
     private void TocarTelaPretaFecharRapido()
     {
+        if (telaPretaFecharRapido == null)
+        {
+            Transform tela = EncontrarFilhoEmCena("TelaPretaFecharRapido")
+                ?? EncontrarFilhoEmCena("TelaPretaFechar");
+            if (tela != null) telaPretaFecharRapido = tela.gameObject;
+        }
+
         if (telaPretaFecharRapido == null)
         {
             Debug.LogWarning("TaskManager: TelaPretaFecharRapido não foi atribuída.", this);
@@ -170,7 +307,7 @@ public class TaskManager : MonoBehaviour
         AtivarIluminacaoAcesa();
         if (regarPlantaConcluiTodasTarefas)
             ConcluirTodasAsTarefas();
-        LiberarCadeiraSentavel();
+        if (!EstaNoNivel3()) LiberarCadeiraSentavel();
         dialogoAguardandoSentar = conversaAposRegar != null;
         if (conversaAposRegar != null)
         {
