@@ -27887,7 +27887,7 @@ MonoBehaviour:
   luzLuminaria: {fileID: 0}
   objetoTelaPretaFechar: {fileID: 0}
   esperaAntesDaTransicao: 0.5
-  proximaCena: Nivel3
+  proximaCena: Nivel4
 --- !u!4 &1248947131
 Transform:
   m_ObjectHideFlags: 0

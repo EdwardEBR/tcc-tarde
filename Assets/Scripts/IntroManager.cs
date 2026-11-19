@@ -1,5 +1,7 @@
 using UnityEngine;
 using System.Collections;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 
 public class IntroManager : MonoBehaviour
 {
@@ -10,8 +12,16 @@ public class IntroManager : MonoBehaviour
     public GameObject telaPretaFechandoObj;
     public GameObject telaPretaFecharRapidoObj;
 
+    private Volume volumeVisaoEmbacada;
+    private VolumeProfile perfilVisaoEmbacada;
+    private DepthOfField profundidadeDeCampo;
+    private Vignette vinhetaVisaoEmbacada;
+
     void Start()
     {
+        if (string.Equals(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, "Nivel4", System.StringComparison.OrdinalIgnoreCase))
+            PrepararVisaoEmbacada();
+
         // Este efeito pertence somente à conclusão da tarefa de regar a planta.
         if (telaPretaFecharRapidoObj != null)
             telaPretaFecharRapidoObj.SetActive(false);
@@ -30,6 +40,56 @@ public class IntroManager : MonoBehaviour
 
         // 2. Inicia a contagem
         StartCoroutine(TrocarParaPlayer());
+    }
+
+    private void PrepararVisaoEmbacada()
+    {
+        GameObject objetoVolume = new GameObject("Volume-VisaoEmbacada-AoAcordar");
+        objetoVolume.layer = LayerMask.NameToLayer("Default");
+        volumeVisaoEmbacada = objetoVolume.AddComponent<Volume>();
+        volumeVisaoEmbacada.isGlobal = true;
+        volumeVisaoEmbacada.priority = 100f;
+        volumeVisaoEmbacada.weight = 1f;
+
+        perfilVisaoEmbacada = ScriptableObject.CreateInstance<VolumeProfile>();
+        perfilVisaoEmbacada.name = "Perfil-VisaoEmbacada-AoAcordar";
+        profundidadeDeCampo = perfilVisaoEmbacada.Add<DepthOfField>(true);
+        profundidadeDeCampo.active = true;
+        profundidadeDeCampo.mode.Override(DepthOfFieldMode.Gaussian);
+        profundidadeDeCampo.gaussianStart.Override(0f);
+        profundidadeDeCampo.gaussianEnd.Override(0.1f);
+        profundidadeDeCampo.gaussianMaxRadius.Override(1.5f);
+        profundidadeDeCampo.highQualitySampling.Override(true);
+
+        vinhetaVisaoEmbacada = perfilVisaoEmbacada.Add<Vignette>(true);
+        vinhetaVisaoEmbacada.active = true;
+        vinhetaVisaoEmbacada.color.Override(Color.black);
+        vinhetaVisaoEmbacada.center.Override(new Vector2(0.5f, 0.5f));
+        vinhetaVisaoEmbacada.intensity.Override(0.55f);
+        vinhetaVisaoEmbacada.smoothness.Override(0.75f);
+        vinhetaVisaoEmbacada.rounded.Override(false);
+        volumeVisaoEmbacada.sharedProfile = perfilVisaoEmbacada;
+    }
+
+    private IEnumerator ClarearVisaoAoAcordar()
+    {
+        if (volumeVisaoEmbacada == null || profundidadeDeCampo == null || vinhetaVisaoEmbacada == null) yield break;
+
+        const float duracao = 5f;
+        float tempo = 0f;
+        while (tempo < duracao && volumeVisaoEmbacada != null && profundidadeDeCampo != null && vinhetaVisaoEmbacada != null)
+        {
+            tempo += Time.unscaledDeltaTime;
+            float progresso = Mathf.Clamp01(tempo / duracao);
+            float suave = progresso * progresso * (3f - 2f * progresso);
+            profundidadeDeCampo.gaussianEnd.value = Mathf.Lerp(0.1f, 50f, suave);
+            vinhetaVisaoEmbacada.intensity.value = Mathf.Lerp(0.55f, 0f, suave);
+            yield return null;
+        }
+
+        if (volumeVisaoEmbacada != null) volumeVisaoEmbacada.weight = 0f;
+        if (perfilVisaoEmbacada != null) Destroy(perfilVisaoEmbacada);
+        if (volumeVisaoEmbacada != null) Destroy(volumeVisaoEmbacada.gameObject);
     }
 
     private IEnumerator TocarSomDeAcordar()
@@ -78,5 +138,7 @@ public class IntroManager : MonoBehaviour
         if (camIntroObj != null) camIntroObj.SetActive(false);
         if (playerObj != null) playerObj.SetActive(true);
         if (telaPretaObj != null) telaPretaObj.SetActive(false);
+        if (volumeVisaoEmbacada != null)
+            StartCoroutine(ClarearVisaoAoAcordar());
     }
 }
