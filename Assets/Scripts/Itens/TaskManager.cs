@@ -143,6 +143,9 @@ public class TaskManager : MonoBehaviour
         Transform shadersNivel3 = EncontrarFilhoEmCena("SHADERS");
         if (shadersNivel3 != null) shadersNivel3.gameObject.SetActive(true);
 
+        MecanicaColagem mecanicaColagem = FindAnyObjectByType<MecanicaColagem>();
+        if (mecanicaColagem != null) mecanicaColagem.MostrarFotosDaSala();
+
         Transform sofa = EncontrarFilhoEmCena("Couch_0");
         if (sofa != null)
         {
