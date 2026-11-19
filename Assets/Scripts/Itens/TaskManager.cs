@@ -36,6 +36,7 @@ public class TaskManager : MonoBehaviour
     {
         PrepararCadeiraSentavel();
         PrepararJanelasBreu();
+        PrepararPlateStack(false);
         ConfigurarObjetosPosJantar(false);
         if (alimentacao != null) alimentacao.SetActive(false);
         if (posJantar != null) posJantar.SetActive(false);
@@ -224,6 +225,7 @@ public class TaskManager : MonoBehaviour
             "Telefone",
             "CanecaOri",
             "LIVROPTESTANTE");
+        PrepararPlateStack(true);
 
         TrocarJanelasParaBreu();
 
@@ -368,6 +370,24 @@ public class TaskManager : MonoBehaviour
             "Cafederramado",
             "CanecaDerrubada",
             "Telefone-ForadeLugar");
+    }
+
+    private static void PrepararPlateStack(bool habilitado)
+    {
+        // PlateStack_0 é o nome do grupo de malha no OBJ; o GameObject da cena é PratoEmpilhado.
+        Transform prato = EncontrarFilhoEmCena("PratoEmpilhado")
+            ?? EncontrarFilhoEmCena("PlateStack_0");
+        if (prato == null)
+        {
+            Debug.LogWarning("TaskManager: não encontrou o objeto 'PratoEmpilhado' na cena de Nivel2.");
+            return;
+        }
+
+        if (habilitado) prato.gameObject.SetActive(true);
+        PlateStackKitchenInteractable interacao = prato.GetComponent<PlateStackKitchenInteractable>();
+        if (interacao == null) interacao = prato.gameObject.AddComponent<PlateStackKitchenInteractable>();
+        interacao.Configurar(habilitado);
+        if (habilitado) PlateStackKitchenInteractable.PrepararPias();
     }
 
     private static void ConfigurarObjetosDaCozinha(bool ativos, params string[] nomes)

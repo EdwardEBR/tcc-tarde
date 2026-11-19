@@ -40,6 +40,7 @@ public class PlayerFPS : MonoBehaviour
     private PortaItemSlot slotDestacadoAtual = null; // Slot azul que o jogador está a olhar
     private MecanicaColagem mecanicaColagemAtual;
     private Outline outlineEstanteLivro;
+    private Outline outlinePiaPratoAtual;
 
     [Header("Sons de passos")]
     public AudioClip somPasso1;
@@ -576,6 +577,7 @@ public class PlayerFPS : MonoBehaviour
         MecanicaColagem mecanicaColagemDetectada = null;
         ItemSeguravel itemSeguravelDetectado = null;
         PortaItemSlot slotDetectado = null;
+        Outline outlinePiaPratoDetectada = null;
 
         // A representação da xícara usa colliders trigger para não empurrar o jogador.
         // Colide com triggers para que ela continue clicável mesmo quando o jogador olha para ela.
@@ -678,6 +680,15 @@ public class PlayerFPS : MonoBehaviour
             }
         }
 
+        PlateStackKitchenInteractable pratoNaMaoMirandoPia = itemNaMao != null
+            ? itemNaMao.GetComponent<PlateStackKitchenInteractable>()
+            : null;
+        if (pratoNaMaoMirandoPia != null
+            && pratoNaMaoMirandoPia.EncontrarPiaMirada(ray, distanciaInteracao, out RaycastHit piaMirada))
+        {
+            outlinePiaPratoDetectada = pratoNaMaoMirandoPia.ObterOutlinePia(piaMirada.collider.transform);
+        }
+
         // Algumas fotos têm colliders muito finos. Se o raycast físico não as
         // encontrou, usa os limites visuais da foto, sem permitir atravessar paredes.
         if (itemNaMao == null && itemSeguravelDetectado == null)
@@ -711,6 +722,13 @@ public class PlayerFPS : MonoBehaviour
         }
 
         AtualizarOutlineEstanteLivro(ray);
+
+        if (outlinePiaPratoAtual != outlinePiaPratoDetectada)
+        {
+            if (outlinePiaPratoAtual != null) outlinePiaPratoAtual.enabled = false;
+            outlinePiaPratoAtual = outlinePiaPratoDetectada;
+        }
+        if (outlinePiaPratoAtual != null) outlinePiaPratoAtual.enabled = true;
 
         // Atualiza o destaque das interações normais.
         if (objetoAtual != interativelDetectado)
@@ -768,6 +786,17 @@ public class PlayerFPS : MonoBehaviour
         // Executa as ações do clique.
         if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
         {
+            PlateStackKitchenInteractable pratoParaPia = itemNaMao != null
+                ? itemNaMao.GetComponent<PlateStackKitchenInteractable>()
+                : null;
+            if (pratoParaPia != null
+                && pratoParaPia.EncontrarPiaMirada(ray, distanciaInteracao, out RaycastHit hitPia))
+            {
+                pratoParaPia.ColocarNaPia(itemNaMao, hitPia.point);
+                itemNaMao = null;
+                return;
+            }
+
             if (itemNaMao != null && EhLivroPT(itemNaMao)
                 && TentarColocarLivroNaEstante(ray))
             {
@@ -809,6 +838,8 @@ public class PlayerFPS : MonoBehaviour
                 {
                     itemNaMao = itemRetirado;
                     itemNaMao.PegarItem(maoDoJogador);
+                    PlateStackKitchenInteractable pratoRetirado = itemNaMao.GetComponent<PlateStackKitchenInteractable>();
+                    if (pratoRetirado != null) pratoRetirado.AoPegar();
                     AoPegarLivroPT();
 
                     if (slotDestacadoAtual != null)
@@ -861,6 +892,8 @@ public class PlayerFPS : MonoBehaviour
 
                 itemNaMao = itemSeguravelDetectado;
                 itemNaMao.PegarItem(maoDoJogador);
+                PlateStackKitchenInteractable pratoPego = itemNaMao.GetComponent<PlateStackKitchenInteractable>();
+                if (pratoPego != null) pratoPego.AoPegar();
                 AoPegarLivroPT();
                 return;
             }
