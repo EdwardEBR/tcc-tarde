@@ -20,7 +20,10 @@ public class IntroManager : MonoBehaviour
     void Start()
     {
         if (string.Equals(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, "Nivel4", System.StringComparison.OrdinalIgnoreCase))
+        {
+            GarantirColisaoMedicos();
             PrepararVisaoEmbacada();
+        }
 
         // Este efeito pertence somente à conclusão da tarefa de regar a planta.
         if (telaPretaFecharRapidoObj != null)
@@ -40,6 +43,31 @@ public class IntroManager : MonoBehaviour
 
         // 2. Inicia a contagem
         StartCoroutine(TrocarParaPlayer());
+    }
+
+    private static void GarantirColisaoMedicos()
+    {
+        string[] nomes = { "Medico1", "Medico2", "Medico3" };
+        foreach (string nome in nomes)
+        {
+            GameObject medico = GameObject.Find(nome);
+            if (medico == null || medico.GetComponent<CapsuleCollider>() != null) continue;
+
+            Renderer[] renderers = medico.GetComponentsInChildren<Renderer>();
+            if (renderers.Length == 0) continue;
+
+            Bounds limites = renderers[0].bounds;
+            for (int i = 1; i < renderers.Length; i++)
+                limites.Encapsulate(renderers[i].bounds);
+
+            Vector3 escala = medico.transform.lossyScale;
+            float escalaY = Mathf.Max(Mathf.Abs(escala.y), 0.001f);
+            float escalaHorizontal = Mathf.Max(Mathf.Abs(escala.x), Mathf.Abs(escala.z), 0.001f);
+            CapsuleCollider colisor = medico.AddComponent<CapsuleCollider>();
+            colisor.center = medico.transform.InverseTransformPoint(limites.center);
+            colisor.height = Mathf.Max(limites.size.y / escalaY, 0.5f);
+            colisor.radius = Mathf.Max(Mathf.Max(limites.size.x, limites.size.z) * 0.3f / escalaHorizontal, 0.2f);
+        }
     }
 
     private void PrepararVisaoEmbacada()
