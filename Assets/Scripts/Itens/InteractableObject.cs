@@ -14,6 +14,9 @@ public class InteractableObject : MonoBehaviour
     public Animator[] animadoresParaDisparar; // Lista de animadores que vão tocar juntos
     
     private Outline outlineScript;
+    private Animator animadorPilulasComXPreservado;
+    private float posicaoLocalXDasPilulas;
+    private bool preservarPosicaoXDasPilulas;
     public bool isDone = false;
 
     void Start()
@@ -22,6 +25,19 @@ public class InteractableObject : MonoBehaviour
         if (outlineScript != null)
         {
             outlineScript.enabled = false; 
+        }
+    }
+
+    private void LateUpdate()
+    {
+        if (!preservarPosicaoXDasPilulas || animadorPilulasComXPreservado == null) return;
+
+        Transform pilulas = animadorPilulasComXPreservado.transform;
+        Vector3 posicaoLocal = pilulas.localPosition;
+        if (!Mathf.Approximately(posicaoLocal.x, posicaoLocalXDasPilulas))
+        {
+            posicaoLocal.x = posicaoLocalXDasPilulas;
+            pilulas.localPosition = posicaoLocal;
         }
     }
 
@@ -77,6 +93,11 @@ public class InteractableObject : MonoBehaviour
             Animator animadorPilulas = EncontrarAnimadorPilulas();
             if (jogador != null && jogador.cameraPlayer != null && animadorPilulas != null)
             {
+                // A animação compartilhada tem uma curva horizontal própria.
+                // Preserva o X configurado para cada nível durante a subida.
+                animadorPilulasComXPreservado = animadorPilulas;
+                posicaoLocalXDasPilulas = animadorPilulas.transform.localPosition.x;
+                preservarPosicaoXDasPilulas = true;
                 StartCoroutine(LevarPilulasAteJogador(animadorPilulas.transform, animadorPilulas, jogador));
             }
         }
@@ -99,7 +120,9 @@ public class InteractableObject : MonoBehaviour
     {
         foreach (Animator animador in animadoresParaDisparar)
         {
-            if (animador != null && animador.name.Equals("Pilulas", System.StringComparison.OrdinalIgnoreCase))
+            if (animador != null
+                && (animador.name.Equals("Pilulas", System.StringComparison.OrdinalIgnoreCase)
+                    || animador.name.StartsWith("Pilulas (", System.StringComparison.OrdinalIgnoreCase)))
                 return animador;
         }
 
@@ -116,6 +139,8 @@ public class InteractableObject : MonoBehaviour
         // Congela a animação antes do trecho que empurraria as pílulas para um
         // ponto fixo; a posição atual já é a posição elevada após a caixa abrir.
         animadorPilulas.enabled = false;
+        if (animadorPilulasComXPreservado == animadorPilulas)
+            preservarPosicaoXDasPilulas = false;
         Vector3 inicio = pilulas.position;
         float tempo = 0f;
 

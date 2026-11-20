@@ -119,6 +119,7 @@ public class TaskManager : MonoBehaviour
             yield break;
         }
 
+        AtivarPessoasNivel3();
         dialogoAguardandoSentar = true;
         LiberarSofaNivel3();
 
@@ -137,6 +138,30 @@ public class TaskManager : MonoBehaviour
             if (telaPretaFecharRapido != null)
                 telaPretaFecharRapido.SetActive(false);
         }
+    }
+
+    private void AtivarPessoasNivel3()
+    {
+        Transform pessoas = EncontrarFilhoEmCena("Pessoas");
+        if (pessoas != null)
+        {
+            pessoas.gameObject.SetActive(true);
+            return;
+        }
+
+        bool encontrouPersonagens = false;
+        string[] nomesPersonagens = { "Homem", "Mulher" };
+        foreach (string nome in nomesPersonagens)
+        {
+            Transform personagem = EncontrarFilhoEmCena(nome);
+            if (personagem == null) continue;
+
+            personagem.gameObject.SetActive(true);
+            encontrouPersonagens = true;
+        }
+
+        if (!encontrouPersonagens)
+            Debug.LogWarning("TaskManager: não encontrou Pessoas, Homem ou Mulher para ativar no Nivel3.", this);
     }
 
     private void EncerrarCenaNivel3AposConversa()
