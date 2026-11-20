@@ -565,6 +565,11 @@ public class PlayerFPS : MonoBehaviour
 
     void GerenciarInteracao()
     {
+        if (string.Equals(
+            UnityEngine.SceneManagement.SceneManager.GetActiveScene().name,
+            "Nivel4",
+            System.StringComparison.OrdinalIgnoreCase)) return;
+
         if (cameraPlayer == null) return;
 
         Ray ray = new Ray(cameraPlayer.position, cameraPlayer.forward);
