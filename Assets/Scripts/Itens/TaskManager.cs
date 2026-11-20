@@ -119,12 +119,14 @@ public class TaskManager : MonoBehaviour
             yield break;
         }
 
-        AtivarPessoasNivel3();
+        DefinirPessoasNivel3(true);
         dialogoAguardandoSentar = true;
         LiberarSofaNivel3();
 
         while (conversaAposRegar != null && !conversaAposRegar.ConversaConcluida)
             yield return null;
+
+        DefinirPessoasNivel3(false);
 
         if (string.Equals(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, "Nivel3", System.StringComparison.OrdinalIgnoreCase))
         {
@@ -140,12 +142,12 @@ public class TaskManager : MonoBehaviour
         }
     }
 
-    private void AtivarPessoasNivel3()
+    private void DefinirPessoasNivel3(bool ativo)
     {
         Transform pessoas = EncontrarFilhoEmCena("Pessoas");
         if (pessoas != null)
         {
-            pessoas.gameObject.SetActive(true);
+            pessoas.gameObject.SetActive(ativo);
             return;
         }
 
@@ -156,7 +158,7 @@ public class TaskManager : MonoBehaviour
             Transform personagem = EncontrarFilhoEmCena(nome);
             if (personagem == null) continue;
 
-            personagem.gameObject.SetActive(true);
+            personagem.gameObject.SetActive(ativo);
             encontrouPersonagens = true;
         }
 
