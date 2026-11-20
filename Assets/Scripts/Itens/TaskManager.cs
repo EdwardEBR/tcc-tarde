@@ -119,14 +119,14 @@ public class TaskManager : MonoBehaviour
             yield break;
         }
 
-        DefinirPessoasNivel3(true);
+        DefinirPessoas(true);
         dialogoAguardandoSentar = true;
         LiberarSofaNivel3();
 
         while (conversaAposRegar != null && !conversaAposRegar.ConversaConcluida)
             yield return null;
 
-        DefinirPessoasNivel3(false);
+        DefinirPessoas(false);
 
         if (string.Equals(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, "Nivel3", System.StringComparison.OrdinalIgnoreCase))
         {
@@ -142,7 +142,7 @@ public class TaskManager : MonoBehaviour
         }
     }
 
-    private void DefinirPessoasNivel3(bool ativo)
+    private void DefinirPessoas(bool ativo)
     {
         Transform pessoas = EncontrarFilhoEmCena("Pessoas");
         if (pessoas != null)
@@ -163,7 +163,7 @@ public class TaskManager : MonoBehaviour
         }
 
         if (!encontrouPersonagens)
-            Debug.LogWarning("TaskManager: não encontrou Pessoas, Homem ou Mulher para ativar no Nivel3.", this);
+            Debug.LogWarning("TaskManager: não encontrou Pessoas, Homem ou Mulher na cena para alterar o estado.", this);
     }
 
     private void EncerrarCenaNivel3AposConversa()
@@ -351,6 +351,12 @@ public class TaskManager : MonoBehaviour
 
         RegistrarTarefaConcluida(tarefaPlanta);
         AtivarIluminacaoAcesa();
+        if (string.Equals(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, "Nivel2", System.StringComparison.OrdinalIgnoreCase))
+        {
+            DefinirPessoas(true);
+            DefinirEstadoDoObjetoEmCena("CadeiraDentro", false);
+            DefinirEstadoDoObjetoEmCena("CadeiraFora", true);
+        }
         if (regarPlantaConcluiTodasTarefas)
             ConcluirTodasAsTarefas();
         bool sequenciaCadeiraDisponivel = !EstaNoNivel3() && !EstaNoNivel1() && !EstaNoNivel4();
@@ -401,6 +407,13 @@ public class TaskManager : MonoBehaviour
                 ? cadeiraSentavel.GetComponent<CadeiraSentavelInteractable>()
                 : null;
             if (cadeira != null) cadeira.RestaurarColliders();
+        }
+
+        if (string.Equals(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, "Nivel2", System.StringComparison.OrdinalIgnoreCase))
+        {
+            DefinirPessoas(false);
+            DefinirEstadoDoObjetoEmCena("CadeiraDentro", true);
+            DefinirEstadoDoObjetoEmCena("CadeiraFora", false);
         }
 
         if (alimentacao != null) alimentacao.SetActive(false);
@@ -545,6 +558,13 @@ public class TaskManager : MonoBehaviour
             if (encontrado != null) return encontrado;
         }
         return null;
+    }
+
+    private static void DefinirEstadoDoObjetoEmCena(string nome, bool ativo)
+    {
+        Transform objeto = EncontrarFilhoEmCena(nome);
+        if (objeto != null)
+            objeto.gameObject.SetActive(ativo);
     }
 
     private static void ConfigurarObjetosPosJantar(bool ativos)
