@@ -6177,6 +6177,7 @@ MonoBehaviour:
   - {fileID: 1817689456}
   - {fileID: 1464517840}
   alimentacao: {fileID: 1873710146}
+  pessoasNivel2: {fileID: 577298175}
   regarPlantaConcluiTodasTarefas: 1
   telaPretaFecharRapido: {fileID: 1800235769}
   cadeiraSentavel: {fileID: 0}
@@ -17260,7 +17261,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &577298176
 Transform:
   m_ObjectHideFlags: 0
