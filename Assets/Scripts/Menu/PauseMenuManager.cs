@@ -10,6 +10,8 @@ using TMPro;
 public sealed class PauseMenuManager : MonoBehaviour
 {
     private const string PrefixoSave = "Checkpoint_";
+    private static readonly Color CorDestaqueSlimUI = new Color(1f, 0.6862745f, 0f, 1f);
+    private static TMP_FontAsset fonteSlimUI;
 
     public static bool JogoPausado { get; private set; }
 
@@ -85,8 +87,20 @@ public sealed class PauseMenuManager : MonoBehaviour
         scaler.referenceResolution = new Vector2(1920f, 1080f);
         scaler.matchWidthOrHeight = 0.5f;
 
+        GameObject fundoEscuro = CriarImagemUI(canvasMenu.transform, "Fundo_Escurecido", new Color(0f, 0f, 0f, 0.62f));
+        RectTransform fundoRect = fundoEscuro.GetComponent<RectTransform>();
+        fundoRect.anchorMin = Vector2.zero;
+        fundoRect.anchorMax = Vector2.one;
+        fundoRect.offsetMin = Vector2.zero;
+        fundoRect.offsetMax = Vector2.zero;
+
         painelPrincipal = CriarPainel(canvasMenu.transform, "Painel_Pausa", new Vector2(600f, 620f));
-        CriarTexto(painelPrincipal.transform, "Título", "PAUSADO", 42f, new Vector2(0f, 240f), new Vector2(500f, 70f));
+        painelPrincipal.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0f);
+        painelPrincipal.GetComponent<Image>().raycastTarget = false;
+        painelPrincipal.GetComponent<RectTransform>().anchoredPosition = new Vector2(-570f, 0f);
+        TextMeshProUGUI tituloPausa = CriarTexto(painelPrincipal.transform, "Título", "PAUSADO", 42f, new Vector2(0f, 240f), new Vector2(500f, 70f));
+        tituloPausa.color = Color.white;
+        tituloPausa.fontStyle = FontStyles.Normal;
         CriarBotao(painelPrincipal.transform, "Continuar", new Vector2(0f, 130f), RetomarJogo);
         CriarBotao(painelPrincipal.transform, "Salvar jogo", new Vector2(0f, 40f), SalvarJogo);
         CriarBotao(painelPrincipal.transform, "Configurações", new Vector2(0f, -50f), MostrarOpcoes);
@@ -137,7 +151,7 @@ public sealed class PauseMenuManager : MonoBehaviour
         rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
         rect.pivot = new Vector2(0.5f, 0.5f);
         rect.sizeDelta = tamanho;
-        painel.GetComponent<Image>().color = new Color(0.035f, 0.045f, 0.065f, 0.96f);
+        painel.GetComponent<Image>().color = new Color(0.035f, 0.035f, 0.035f, 0.94f);
         return painel;
     }
 
@@ -151,10 +165,12 @@ public sealed class PauseMenuManager : MonoBehaviour
         rect.anchoredPosition = posicao;
         rect.sizeDelta = tamanho;
         TextMeshProUGUI texto = objeto.GetComponent<TextMeshProUGUI>();
-        texto.font = TMP_Settings.defaultFontAsset;
+        if (fonteSlimUI == null)
+            fonteSlimUI = Resources.Load<TMP_FontAsset>("SlimUI/RUBIK-LIGHT-SDF");
+        texto.font = fonteSlimUI != null ? fonteSlimUI : TMP_Settings.defaultFontAsset;
         texto.text = conteudo;
         texto.fontSize = tamanhoFonte;
-        texto.fontStyle = FontStyles.Bold;
+        texto.fontStyle = FontStyles.Normal;
         texto.color = Color.white;
         texto.alignment = TextAlignmentOptions.Center;
         return texto;
@@ -162,24 +178,69 @@ public sealed class PauseMenuManager : MonoBehaviour
 
     private static Button CriarBotao(Transform pai, string rotulo, Vector2 posicao, Action acao)
     {
-        GameObject objeto = new GameObject("Botão_" + rotulo, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
+        GameObject prefabSlimUI = Resources.Load<GameObject>("SlimUI/Btn_MainMenu");
+        GameObject objeto = prefabSlimUI != null
+            ? Instantiate(prefabSlimUI)
+            : new GameObject("Botão_" + rotulo, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
+        objeto.name = "Botão_" + rotulo;
         objeto.transform.SetParent(pai, false);
         RectTransform rect = objeto.GetComponent<RectTransform>();
         rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
         rect.pivot = new Vector2(0.5f, 0.5f);
         rect.anchoredPosition = posicao;
-        rect.sizeDelta = new Vector2(390f, 64f);
+        // Usa o mesmo sprite do Btn_MainMenu, ampliado para os rótulos em português.
+        rect.sizeDelta = new Vector2(520f, 82f);
         Image imagem = objeto.GetComponent<Image>();
-        imagem.color = new Color(0.16f, 0.24f, 0.34f, 1f);
+        if (imagem != null) imagem.color = prefabSlimUI != null ? Color.white : CorDestaqueSlimUI;
         Button botao = objeto.GetComponent<Button>();
         botao.targetGraphic = imagem;
+        botao.onClick.RemoveAllListeners();
         botao.onClick.AddListener(() => acao());
 
-        ColorBlock cores = botao.colors;
-        cores.highlightedColor = new Color(0.25f, 0.45f, 0.62f, 1f);
-        cores.pressedColor = new Color(0.1f, 0.19f, 0.28f, 1f);
-        botao.colors = cores;
-        CriarTexto(objeto.transform, "Rótulo", rotulo, 24f, Vector2.zero, new Vector2(370f, 58f));
+        if (prefabSlimUI == null)
+        {
+            ColorBlock cores = botao.colors;
+            cores.normalColor = Color.white;
+            cores.highlightedColor = new Color(1f, 0.86f, 0.55f, 1f);
+            cores.pressedColor = new Color(0.78f, 0.78f, 0.78f, 1f);
+            botao.colors = cores;
+            CriarTexto(objeto.transform, "Rótulo", rotulo, 24f, Vector2.zero, new Vector2(370f, 58f));
+        }
+        else
+        {
+            TMP_Text textoSlimUI = objeto.GetComponentInChildren<TMP_Text>(true);
+            if (textoSlimUI != null) textoSlimUI.gameObject.SetActive(false);
+
+            GameObject fundoBotao = new GameObject("Fundo", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+            fundoBotao.transform.SetParent(objeto.transform, false);
+            fundoBotao.transform.SetAsFirstSibling();
+            RectTransform fundoBotaoRect = fundoBotao.GetComponent<RectTransform>();
+            fundoBotaoRect.anchorMin = Vector2.zero;
+            fundoBotaoRect.anchorMax = Vector2.one;
+            fundoBotaoRect.offsetMin = new Vector2(7f, 6f);
+            fundoBotaoRect.offsetMax = new Vector2(-7f, -6f);
+            Image fundoBotaoImagem = fundoBotao.GetComponent<Image>();
+            fundoBotaoImagem.color = new Color(0.035f, 0.035f, 0.035f, 0.84f);
+            fundoBotaoImagem.raycastTarget = false;
+
+            GameObject rotuloObjeto = new GameObject("Rótulo", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+            rotuloObjeto.transform.SetParent(objeto.transform, false);
+            RectTransform rotuloRect = rotuloObjeto.GetComponent<RectTransform>();
+            rotuloRect.anchorMin = Vector2.zero;
+            rotuloRect.anchorMax = Vector2.one;
+            rotuloRect.offsetMin = new Vector2(14f, 4f);
+            rotuloRect.offsetMax = new Vector2(-14f, -4f);
+            TextMeshProUGUI rotuloTexto = rotuloObjeto.GetComponent<TextMeshProUGUI>();
+            if (fonteSlimUI == null)
+                fonteSlimUI = Resources.Load<TMP_FontAsset>("SlimUI/RUBIK-LIGHT-SDF");
+            rotuloTexto.font = fonteSlimUI != null ? fonteSlimUI : TMP_Settings.defaultFontAsset;
+            rotuloTexto.text = rotulo;
+            rotuloTexto.fontSize = 32f;
+            rotuloTexto.fontStyle = FontStyles.Normal;
+            rotuloTexto.color = Color.white;
+            rotuloTexto.alignment = TextAlignmentOptions.Center;
+            rotuloTexto.raycastTarget = false;
+        }
         return botao;
     }
 
@@ -194,7 +255,7 @@ public sealed class PauseMenuManager : MonoBehaviour
         raizRect.sizeDelta = new Vector2(largura, 24f);
         raiz.GetComponent<Image>().color = new Color(0.12f, 0.15f, 0.2f, 1f);
 
-        GameObject preenchimento = CriarImagemUI(raiz.transform, "Preenchimento", new Color(0.2f, 0.62f, 0.9f, 1f));
+        GameObject preenchimento = CriarImagemUI(raiz.transform, "Preenchimento", CorDestaqueSlimUI);
         RectTransform preenchimentoRect = preenchimento.GetComponent<RectTransform>();
         preenchimentoRect.anchorMin = Vector2.zero;
         preenchimentoRect.anchorMax = Vector2.one;
@@ -254,12 +315,10 @@ public sealed class PauseMenuManager : MonoBehaviour
         Time.timeScale = 1f;
         canvasMenu.SetActive(false);
         canvasOpcoes.SetActive(false);
-        if (jogador != null) jogador.RestaurarCursorAposPausa();
-        else
-        {
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-        }
+        // Mantém o estado interno do PlayerFPS sincronizado com o cursor da UI.
+        if (jogador != null) jogador.TravarCursorAposFecharMenu();
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
     private void SalvarJogo()

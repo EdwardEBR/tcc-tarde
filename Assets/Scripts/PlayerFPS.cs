@@ -442,6 +442,11 @@ public class PlayerFPS : MonoBehaviour
             TravarMouse();
     }
 
+    public void TravarCursorAposFecharMenu()
+    {
+        TravarMouse();
+    }
+
     void AlternarCursor()
     {
         if (mouseLivre)
