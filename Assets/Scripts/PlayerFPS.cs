@@ -2,6 +2,8 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Rendering;
+using UnityEngine.UI;
+using TMPro;
 
 public class PlayerFPS : MonoBehaviour
 {
@@ -39,8 +41,10 @@ public class PlayerFPS : MonoBehaviour
     private ItemSeguravel itemDestacadoAtual = null; // Item segurável que o jogador está a olhar
     private PortaItemSlot slotDestacadoAtual = null; // Slot azul que o jogador está a olhar
     private MecanicaColagem mecanicaColagemAtual;
-    private Outline outlineEstanteLivro;
     private Outline outlinePiaPratoAtual;
+    private GameObject indicadorEstanteLivro;
+    private TextMeshProUGUI textoIndicadorEstanteLivro;
+    private Transform livroNaEstanteVisual;
 
     [Header("Sons de passos")]
     public AudioClip somPasso1;
@@ -124,7 +128,11 @@ public class PlayerFPS : MonoBehaviour
         ConfigurarSomAmbiente();
         ConfigurarSomGeladeira();
         ConfigurarPontoDaMao();
+        ConfigurarIndicadorEstanteLivro();
+        DesativarOutlineDaEstanteNivel2();
         TravarMouse();
+        if (GetComponent<PauseMenuManager>() == null)
+            gameObject.AddComponent<PauseMenuManager>();
     }
 
     private void DesativarSombrasDoJogador()
@@ -194,18 +202,15 @@ public class PlayerFPS : MonoBehaviour
 
     void Update()
     {
+        if (PauseMenuManager.JogoPausado) return;
+
         AtualizarTecladoCheatCamera();
 
         if (cameraLivreAtiva)
         {
+            if (indicadorEstanteLivro != null) indicadorEstanteLivro.SetActive(false);
             AtualizarCameraLivre();
             return;
-        }
-
-        // Alterna entre soltar e prender o mouse com ESC
-        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
-        {
-            if (!modoConversaAtivo) AlternarCursor();
         }
 
         if (sentandoNaCadeira) return;
@@ -376,6 +381,7 @@ public class PlayerFPS : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
         mouseLivre = true;
+        if (indicadorEstanteLivro != null) indicadorEstanteLivro.SetActive(false);
 
         if (objetoAtual != null)
         {
@@ -423,6 +429,14 @@ public class PlayerFPS : MonoBehaviour
     public void DefinirModoConversa(bool ativo)
     {
         modoConversaAtivo = ativo;
+    }
+
+    public void RestaurarCursorAposPausa()
+    {
+        if (modoConversaAtivo && !cameraLivreAtiva)
+            LiberarMouse();
+        else
+            TravarMouse();
     }
 
     void AlternarCursor()
@@ -883,7 +897,7 @@ public class PlayerFPS : MonoBehaviour
             }
         }
 
-        AtualizarOutlineEstanteLivro(ray);
+        AtualizarIndicadorEstanteLivro(ray);
 
         if (outlinePiaPratoAtual != outlinePiaPratoDetectada)
         {
@@ -1098,11 +1112,7 @@ public class PlayerFPS : MonoBehaviour
         livroDaMao.SoltarItem();
         livroDaMao.gameObject.SetActive(false);
         itemNaMao = null;
-        if (outlineEstanteLivro != null)
-        {
-            outlineEstanteLivro.enabled = false;
-            outlineEstanteLivro = null;
-        }
+        if (indicadorEstanteLivro != null) indicadorEstanteLivro.SetActive(false);
 
         if (itemDestacadoAtual == livroDaMao)
             itemDestacadoAtual = null;
@@ -1145,39 +1155,97 @@ public class PlayerFPS : MonoBehaviour
             Debug.LogWarning("PlayerFPS: não encontrou Louça dentro de PósJantar para desativar.", this);
     }
 
-    private void AtualizarOutlineEstanteLivro(Ray ray)
+    private void ConfigurarIndicadorEstanteLivro()
     {
-        Outline novoOutline = null;
-        if (EhLivroPT(itemNaMao)
+        if (!string.Equals(
+            UnityEngine.SceneManagement.SceneManager.GetActiveScene().name,
+            "Nivel2",
+            System.StringComparison.OrdinalIgnoreCase)) return;
+
+        livroNaEstanteVisual = EncontrarObjetoNaCena("LIVROPTESTANTE");
+
+        GameObject canvasObjeto = new GameObject(
+            "IndicadorInteracaoEstante", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler));
+        Canvas canvas = canvasObjeto.GetComponent<Canvas>();
+        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        canvas.sortingOrder = 50;
+        CanvasScaler escalador = canvasObjeto.GetComponent<CanvasScaler>();
+        escalador.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        escalador.referenceResolution = new Vector2(1920f, 1080f);
+        escalador.matchWidthOrHeight = 0.5f;
+
+        indicadorEstanteLivro = new GameObject(
+            "AvisoGuardarLivro", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        indicadorEstanteLivro.transform.SetParent(canvasObjeto.transform, false);
+        RectTransform painel = indicadorEstanteLivro.GetComponent<RectTransform>();
+        painel.anchorMin = new Vector2(0.5f, 0f);
+        painel.anchorMax = new Vector2(0.5f, 0f);
+        painel.pivot = new Vector2(0.5f, 0f);
+        painel.anchoredPosition = new Vector2(0f, 86f);
+        painel.sizeDelta = new Vector2(520f, 58f);
+        indicadorEstanteLivro.GetComponent<Image>().color = new Color(0.05f, 0.04f, 0.03f, 0.82f);
+
+        GameObject textoObjeto = new GameObject(
+            "TextoAvisoGuardarLivro", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+        textoObjeto.transform.SetParent(indicadorEstanteLivro.transform, false);
+        RectTransform areaTexto = textoObjeto.GetComponent<RectTransform>();
+        areaTexto.anchorMin = Vector2.zero;
+        areaTexto.anchorMax = Vector2.one;
+        areaTexto.offsetMin = new Vector2(12f, 4f);
+        areaTexto.offsetMax = new Vector2(-12f, -4f);
+        textoIndicadorEstanteLivro = textoObjeto.GetComponent<TextMeshProUGUI>();
+        textoIndicadorEstanteLivro.font = TMP_Settings.defaultFontAsset;
+        textoIndicadorEstanteLivro.text = "CLIQUE ESQUERDO  •  GUARDAR LIVRO";
+        textoIndicadorEstanteLivro.fontSize = 24f;
+        textoIndicadorEstanteLivro.fontStyle = FontStyles.Bold;
+        textoIndicadorEstanteLivro.color = Color.white;
+        textoIndicadorEstanteLivro.alignment = TextAlignmentOptions.Center;
+        indicadorEstanteLivro.SetActive(false);
+    }
+
+    private static void DesativarOutlineDaEstanteNivel2()
+    {
+        if (!string.Equals(
+            UnityEngine.SceneManagement.SceneManager.GetActiveScene().name,
+            "Nivel2",
+            System.StringComparison.OrdinalIgnoreCase)) return;
+
+        GameObject estante = GameObject.Find("Bookcase_0");
+        if (estante == null) return;
+
+        Outline outline = estante.GetComponent<Outline>();
+        if (outline != null) outline.enabled = false;
+    }
+
+    private void AtualizarIndicadorEstanteLivro(Ray ray)
+    {
+        bool olhandoParaEstante = string.Equals(
+                UnityEngine.SceneManagement.SceneManager.GetActiveScene().name,
+                "Nivel2",
+                System.StringComparison.OrdinalIgnoreCase)
             && Physics.Raycast(ray, out RaycastHit hit, distanciaInteracao, ~0, QueryTriggerInteraction.Ignore)
-            && EhEstante(hit.collider.transform))
+            && EhEstante(hit.collider.transform);
+
+        if (indicadorEstanteLivro == null) return;
+        if (!olhandoParaEstante)
         {
-            Transform raizVisual = EncontrarRaizVisualEstante(hit.collider.transform);
-            if (raizVisual != null)
-            {
-                if (raizVisual.GetComponentsInChildren<Renderer>(true).Length == 0)
-                {
-                    Renderer renderizadorPai = raizVisual.GetComponentInParent<Renderer>();
-                    if (renderizadorPai != null) raizVisual = renderizadorPai.transform;
-                }
-
-                novoOutline = raizVisual.GetComponent<Outline>();
-                if (novoOutline == null)
-                    novoOutline = raizVisual.gameObject.AddComponent<Outline>();
-
-                novoOutline.OutlineMode = Outline.Mode.OutlineVisible;
-                novoOutline.OutlineColor = new Color(1f, 0.28f, 0f, 1f);
-                novoOutline.OutlineWidth = 4f;
-                novoOutline.enabled = true;
-            }
+            indicadorEstanteLivro.SetActive(false);
+            return;
         }
 
-        if (outlineEstanteLivro != novoOutline)
-        {
-            if (outlineEstanteLivro != null)
-                outlineEstanteLivro.enabled = false;
-            outlineEstanteLivro = novoOutline;
-        }
+        bool livroJaGuardado = livroNaEstanteVisual != null && livroNaEstanteVisual.gameObject.activeSelf;
+        string instrucao = livroJaGuardado
+            ? "LIVRO JÁ GUARDADO"
+            : itemNaMao == null
+                ? "PEGUE O LIVRO PARA INTERAGIR COM A ESTANTE"
+                : EhLivroPT(itemNaMao)
+                    ? "CLIQUE ESQUERDO  •  GUARDAR LIVRO"
+                    : "ESTANTE  •  SÓ ACEITA O LIVRO AZUL";
+
+        if (textoIndicadorEstanteLivro.text != instrucao)
+            textoIndicadorEstanteLivro.text = instrucao;
+        if (!indicadorEstanteLivro.activeSelf)
+            indicadorEstanteLivro.SetActive(true);
     }
 
     private static bool EhEstante(Transform alvo)
@@ -1190,20 +1258,6 @@ public class PlayerFPS : MonoBehaviour
             alvo = alvo.parent;
         }
         return false;
-    }
-
-    private static Transform EncontrarRaizVisualEstante(Transform alvo)
-    {
-        Transform prateleira = null;
-        while (alvo != null)
-        {
-            if (string.Equals(alvo.name, "Bookcase_0", System.StringComparison.OrdinalIgnoreCase))
-                return alvo;
-            if (string.Equals(alvo.name, "Prateleira", System.StringComparison.OrdinalIgnoreCase))
-                prateleira = alvo;
-            alvo = alvo.parent;
-        }
-        return prateleira;
     }
 
     private static bool EhLivroPT(ItemSeguravel item)

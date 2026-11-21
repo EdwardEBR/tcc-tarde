@@ -142,8 +142,16 @@ namespace SlimUI.ModernMenu{
 
 		public void LoadScene(string scene){
 			if(scene != ""){
+				SaveGameDatabase.SaveData save = SaveGameDatabase.Load();
+				if (save != null && Application.CanStreamedLevelBeLoaded(save.sceneName))
+					scene = save.sceneName;
 				StartCoroutine(LoadAsynchronously(scene));
 			}
+		}
+
+		public void NewGame(string scene){
+			SaveGameDatabase.Delete();
+			if (scene != "") StartCoroutine(LoadAsynchronously(scene));
 		}
 
 		public void  DisablePlayCampaign(){
