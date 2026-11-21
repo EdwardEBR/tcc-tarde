@@ -18,6 +18,7 @@ public sealed class PauseMenuManager : MonoBehaviour
     private GameObject canvasOpcoes;
     private GameObject painelPrincipal;
     private GameObject painelOpcoes;
+    private GameObject painelConfirmacaoSaida;
     private TextMeshProUGUI textoStatus;
     private Slider sliderVolume;
     private Slider sliderSensibilidade;
@@ -45,6 +46,8 @@ public sealed class PauseMenuManager : MonoBehaviour
             AbrirMenu();
         else if (canvasOpcoes != null && canvasOpcoes.activeSelf)
             MostrarMenuPrincipal();
+        else if (painelConfirmacaoSaida != null && painelConfirmacaoSaida.activeSelf)
+            CancelarSaidaSemSalvar();
         else
             RetomarJogo();
     }
@@ -84,9 +87,9 @@ public sealed class PauseMenuManager : MonoBehaviour
 
         painelPrincipal = CriarPainel(canvasMenu.transform, "Painel_Pausa", new Vector2(600f, 620f));
         CriarTexto(painelPrincipal.transform, "Título", "PAUSADO", 42f, new Vector2(0f, 240f), new Vector2(500f, 70f));
-        CriarBotao(painelPrincipal.transform, "Salvar jogo", new Vector2(0f, 130f), SalvarJogo);
-        CriarBotao(painelPrincipal.transform, "Configurações", new Vector2(0f, 40f), MostrarOpcoes);
-        CriarBotao(painelPrincipal.transform, "Resume", new Vector2(0f, -50f), RetomarJogo);
+        CriarBotao(painelPrincipal.transform, "Continuar", new Vector2(0f, 130f), RetomarJogo);
+        CriarBotao(painelPrincipal.transform, "Salvar jogo", new Vector2(0f, 40f), SalvarJogo);
+        CriarBotao(painelPrincipal.transform, "Configurações", new Vector2(0f, -50f), MostrarOpcoes);
         CriarBotao(painelPrincipal.transform, "Sair para o menu", new Vector2(0f, -140f), SairParaOMenu);
         textoStatus = CriarTexto(painelPrincipal.transform, "Status", string.Empty, 20f, new Vector2(0f, -245f), new Vector2(500f, 38f));
 
@@ -109,6 +112,18 @@ public sealed class PauseMenuManager : MonoBehaviour
         sliderSensibilidade = CriarSlider(painelOpcoes.transform, "SliderSensibilidade", new Vector2(150f, -25f), 300f, 0.05f, 1f, sensibilidadeAtual);
         sliderSensibilidade.onValueChanged.AddListener(AtualizarSensibilidade);
         CriarBotao(painelOpcoes.transform, "Voltar", new Vector2(0f, -180f), MostrarMenuPrincipal);
+
+        painelConfirmacaoSaida = CriarPainel(canvasMenu.transform, "Painel_ConfirmarSaidaSemSalvar", new Vector2(680f, 390f));
+        CriarTexto(
+            painelConfirmacaoSaida.transform,
+            "AvisoProgresso",
+            "Lembre-se de salvar seu progresso antes de sair.\nDeseja voltar ao menu principal?",
+            26f,
+            new Vector2(0f, 105f),
+            new Vector2(600f, 115f));
+        CriarBotao(painelConfirmacaoSaida.transform, "Continuar jogando", new Vector2(0f, 5f), CancelarSaidaSemSalvar);
+        CriarBotao(painelConfirmacaoSaida.transform, "Voltar ao menu principal", new Vector2(0f, -85f), ConfirmarSaidaSemSalvar);
+        painelConfirmacaoSaida.SetActive(false);
 
         canvasOpcoes.SetActive(false);
         canvasMenu.SetActive(false);
@@ -249,23 +264,85 @@ public sealed class PauseMenuManager : MonoBehaviour
 
     private void SalvarJogo()
     {
-        if (jogador == null) return;
+        if (InteracaoEmAndamento())
+        {
+            MostrarStatus("Termine a conversa ou a interação antes de salvar.");
+            return;
+        }
+
+        if (!GravarSaveAtual())
+        {
+            MostrarStatus("Não foi possível salvar o jogo.");
+            return;
+        }
+
+        MostrarStatus("Jogo salvo nesta cena.");
+    }
+
+    private bool GravarSaveAtual()
+    {
+        if (jogador == null || InteracaoEmAndamento()) return false;
 
         string cena = SceneManager.GetActiveScene().name;
         Vector3 posicao = jogador.transform.position;
         Vector3 rotacao = jogador.transform.eulerAngles;
-        SaveGameDatabase.Save(new SaveGameDatabase.SaveData
+        TaskManager gerenciadorTarefas = FindAnyObjectByType<TaskManager>();
+        ConversaTelefonicaUI conversaSalva = null;
+        foreach (ConversaTelefonicaUI conversa in FindObjectsByType<ConversaTelefonicaUI>(FindObjectsSortMode.None))
         {
-            sceneName = cena,
-            x = posicao.x, y = posicao.y, z = posicao.z,
-            rotX = rotacao.x, rotY = rotacao.y, rotZ = rotacao.z,
-            sensitivity = jogador.sensibilidade,
-            volume = AudioListener.volume
-        });
-        PlayerPrefs.Save();
+            if (conversa != null && conversa.ConversaAtiva)
+            {
+                conversaSalva = conversa;
+                break;
+            }
+        }
+        try
+        {
+            SaveGameDatabase.Save(new SaveGameDatabase.SaveData
+            {
+                sceneName = cena,
+                x = posicao.x, y = posicao.y, z = posicao.z,
+                rotX = rotacao.x, rotY = rotacao.y, rotZ = rotacao.z,
+                sensitivity = jogador.sensibilidade,
+                volume = AudioListener.volume,
+                completedTasks = gerenciadorTarefas != null
+                    ? gerenciadorTarefas.ObterTarefasConcluidas()
+                    : System.Array.Empty<string>(),
+                conversationActive = conversaSalva != null,
+                conversationObjectName = conversaSalva != null ? conversaSalva.gameObject.name : string.Empty,
+                conversationNode = conversaSalva != null ? conversaSalva.IndiceNoAtual : 0
+            });
+            PlayerPrefs.Save();
+            return true;
+        }
+        catch (System.Exception exception)
+        {
+            Debug.LogError("PauseMenuManager: falha ao salvar antes de sair para o menu: " + exception.Message, this);
+            return false;
+        }
+    }
 
-        textoStatus.text = "Jogo salvo nesta cena.";
+    private void MostrarStatus(string mensagem)
+    {
+        textoStatus.text = mensagem;
         proximoStatus = Time.unscaledTime + 3f;
+    }
+
+    private bool InteracaoEmAndamento()
+    {
+        if (jogador != null && jogador.InteracaoEmAndamento) return true;
+        TaskManager gerenciadorTarefas = FindAnyObjectByType<TaskManager>();
+        if (gerenciadorTarefas != null && gerenciadorTarefas.InteracaoEmAndamento) return true;
+        foreach (ConversaTelefonicaUI conversa in FindObjectsByType<ConversaTelefonicaUI>(FindObjectsSortMode.None))
+            if (conversa != null && conversa.ConversaAtiva) return true;
+        return false;
+    }
+
+    public static bool TentarAutosave()
+    {
+        PauseMenuManager menu = FindAnyObjectByType<PauseMenuManager>();
+        if (menu == null || menu.InteracaoEmAndamento()) return false;
+        return menu.GravarSaveAtual();
     }
 
     private void RestaurarCheckpointSeDisponivel()
@@ -291,6 +368,18 @@ public sealed class PauseMenuManager : MonoBehaviour
     }
 
     private void SairParaOMenu()
+    {
+        painelPrincipal.SetActive(false);
+        painelConfirmacaoSaida.SetActive(true);
+    }
+
+    private void CancelarSaidaSemSalvar()
+    {
+        painelConfirmacaoSaida.SetActive(false);
+        painelPrincipal.SetActive(true);
+    }
+
+    private void ConfirmarSaidaSemSalvar()
     {
         JogoPausado = false;
         Time.timeScale = 1f;

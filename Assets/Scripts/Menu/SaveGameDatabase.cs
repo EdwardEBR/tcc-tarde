@@ -13,6 +13,10 @@ public static class SaveGameDatabase
         public float rotX, rotY, rotZ;
         public float sensitivity;
         public float volume;
+        public string[] completedTasks;
+        public bool conversationActive;
+        public string conversationObjectName;
+        public int conversationNode;
     }
 
     private static string SavePath => Path.Combine(Application.persistentDataPath, "savegame.json");

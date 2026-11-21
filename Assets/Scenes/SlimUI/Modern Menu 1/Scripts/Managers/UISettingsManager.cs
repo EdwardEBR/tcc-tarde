@@ -155,11 +155,10 @@ namespace SlimUI.ModernMenu{
 			}
 
 			// check mouse inverse
-			if(PlayerPrefs.GetInt("Inverted")==0){
-				invertmousetext.GetComponent<TMP_Text>().text = "off";
-			}
-			else if(PlayerPrefs.GetInt("Inverted")==1){
-				invertmousetext.GetComponent<TMP_Text>().text = "on";
+			if(invertmousetext != null){
+				TMP_Text invertMouseLabel = invertmousetext.GetComponent<TMP_Text>();
+				if(invertMouseLabel != null)
+					invertMouseLabel.text = PlayerPrefs.GetInt("Inverted") == 1 ? "on" : "off";
 			}
 
 			// check motion blur
@@ -362,13 +361,16 @@ namespace SlimUI.ModernMenu{
 		}
 
 		public void InvertMouse (){
+			if(invertmousetext == null) return;
+			TMP_Text invertMouseLabel = invertmousetext.GetComponent<TMP_Text>();
+			if(invertMouseLabel == null) return;
 			if(PlayerPrefs.GetInt("Inverted")==0){
 				PlayerPrefs.SetInt("Inverted",1);
-				invertmousetext.GetComponent<TMP_Text>().text = "on";
+				invertMouseLabel.text = "on";
 			}
 			else if(PlayerPrefs.GetInt("Inverted")==1){
 				PlayerPrefs.SetInt("Inverted",0);
-				invertmousetext.GetComponent<TMP_Text>().text = "off";
+				invertMouseLabel.text = "off";
 			}
 		}
 

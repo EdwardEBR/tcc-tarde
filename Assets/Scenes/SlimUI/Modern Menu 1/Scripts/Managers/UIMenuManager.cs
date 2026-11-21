@@ -92,7 +92,25 @@ namespace SlimUI.ModernMenu{
 			firstMenu.SetActive(true);
 			mainMenu.SetActive(true);
 
+			ConfigurarBotoesDeSave();
 			SetThemeColors();
+		}
+
+		private void ConfigurarBotoesDeSave(){
+			if(playMenu == null) return;
+			Button[] botoes = playMenu.GetComponentsInChildren<Button>(true);
+			foreach(Button botao in botoes){
+				TMP_Text rotulo = botao.GetComponentInChildren<TMP_Text>(true);
+				if(rotulo == null) continue;
+				string texto = rotulo.text.Trim().ToLowerInvariant();
+				if(texto == "continuar" || texto == "carregar jogo"){
+					botao.onClick.RemoveAllListeners();
+					botao.onClick.AddListener(() => LoadScene("Nivel1"));
+				}else if(texto == "novo jogo"){
+					botao.onClick.RemoveAllListeners();
+					botao.onClick.AddListener(() => NewGame("Nivel1"));
+				}
+			}
 		}
 
 		void SetThemeColors()
@@ -141,17 +159,30 @@ namespace SlimUI.ModernMenu{
 		}
 
 		public void LoadScene(string scene){
-			if(scene != ""){
-				SaveGameDatabase.SaveData save = SaveGameDatabase.Load();
-				if (save != null && Application.CanStreamedLevelBeLoaded(save.sceneName))
-					scene = save.sceneName;
-				StartCoroutine(LoadAsynchronously(scene));
+			SaveGameDatabase.SaveData save = SaveGameDatabase.Load();
+			if (save != null && !string.IsNullOrWhiteSpace(save.sceneName)
+				&& Application.CanStreamedLevelBeLoaded(save.sceneName))
+			{
+				SceneManager.LoadScene(save.sceneName);
+				return;
 			}
+
+			if (string.IsNullOrWhiteSpace(scene) || !Application.CanStreamedLevelBeLoaded(scene))
+			{
+				Debug.LogError("Não foi possível carregar o jogo: não há um save válido e a cena inicial não está nas Build Settings.");
+				return;
+			}
+			SceneManager.LoadScene(scene);
 		}
 
 		public void NewGame(string scene){
 			SaveGameDatabase.Delete();
-			if (scene != "") StartCoroutine(LoadAsynchronously(scene));
+			if (string.IsNullOrWhiteSpace(scene) || !Application.CanStreamedLevelBeLoaded(scene))
+			{
+				Debug.LogError("Não foi possível iniciar um novo jogo: a cena inicial não está nas Build Settings.");
+				return;
+			}
+			SceneManager.LoadScene(scene);
 		}
 
 		public void  DisablePlayCampaign(){

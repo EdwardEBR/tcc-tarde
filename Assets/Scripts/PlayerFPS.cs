@@ -98,6 +98,9 @@ public class PlayerFPS : MonoBehaviour
     public float MeiaAlturaMundialDoPersonagem => controller != null
         ? controller.bounds.extents.y
         : Mathf.Max(0.5f, transform.lossyScale.y);
+    public bool InteracaoEmAndamento =>
+        modoConversaAtivo || sentadoNaCadeira || sentandoNaCadeira || itemNaMao != null
+        || mouseLivre || cameraLivreAtiva;
 
     void Start()
     {
@@ -970,18 +973,21 @@ public class PlayerFPS : MonoBehaviour
             {
                 pratoParaPia.ColocarNaPia(itemNaMao, hitPia.point);
                 itemNaMao = null;
+                PauseMenuManager.TentarAutosave();
                 return;
             }
 
             if (itemNaMao != null && EhLivroPT(itemNaMao)
                 && TentarColocarLivroNaEstante(ray))
             {
+                PauseMenuManager.TentarAutosave();
                 return;
             }
 
             if (itemNaMao == null && mecanicaColagemDetectada != null
                 && mecanicaColagemDetectada.TentarMontarColagem())
             {
+                PauseMenuManager.TentarAutosave();
                 return;
             }
 
@@ -996,6 +1002,7 @@ public class PlayerFPS : MonoBehaviour
                 if (itemNaMao != null && carregadorAtual.TentarDevolver(itemNaMao))
                 {
                     itemNaMao = null;
+                    PauseMenuManager.TentarAutosave();
                     return;
                 }
             }
@@ -1053,6 +1060,7 @@ public class PlayerFPS : MonoBehaviour
                     }
 
                     Debug.Log("Item devolvido ao slot de origem com sucesso!");
+                    PauseMenuManager.TentarAutosave();
                     return;
                 }
             }
@@ -1078,6 +1086,7 @@ public class PlayerFPS : MonoBehaviour
             if (cafeteiraAtual != null)
             {
                 cafeteiraAtual.Interact();
+                PauseMenuManager.TentarAutosave();
                 return;
             }
 
@@ -1085,6 +1094,7 @@ public class PlayerFPS : MonoBehaviour
             if (objetoAtual != null)
             {
                 objetoAtual.Interact();
+                PauseMenuManager.TentarAutosave();
                 return;
             }
 

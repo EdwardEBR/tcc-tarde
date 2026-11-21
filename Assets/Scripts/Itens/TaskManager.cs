@@ -29,6 +29,7 @@ public class TaskManager : MonoBehaviour
     private Dictionary<string, GameObject> dicionarioX3D = new Dictionary<string, GameObject>();
     private HashSet<string> tarefasConcluidas = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
     private bool transicaoRegarPlantaIniciada;
+    private bool transicaoRegarPlantaEmAndamento;
     private bool dialogoAguardandoSentar;
     private bool dialogoAposSentarIniciado;
     private bool sequenciaFinalNivel3Iniciada;
@@ -36,6 +37,9 @@ public class TaskManager : MonoBehaviour
     private GameObject noiteJanelaQuarto;
     private GameObject breuJanelaSala;
     private GameObject breuJanelaQuarto;
+
+    public bool InteracaoEmAndamento =>
+        transicaoRegarPlantaEmAndamento || dialogoAguardandoSentar || dialogoAposSentarIniciado;
 
     private void Awake()
     {
@@ -99,6 +103,13 @@ public class TaskManager : MonoBehaviour
     public bool IsTaskCompleted(string nomeDaTarefa)
     {
         return !string.IsNullOrWhiteSpace(nomeDaTarefa) && tarefasConcluidas.Contains(nomeDaTarefa);
+    }
+
+    public string[] ObterTarefasConcluidas()
+    {
+        string[] resultado = new string[tarefasConcluidas.Count];
+        tarefasConcluidas.CopyTo(resultado);
+        return resultado;
     }
 
     void Start()
@@ -282,27 +293,68 @@ public class TaskManager : MonoBehaviour
         dicionarioX3D.Clear();
         tarefasConcluidas.Clear();
 
-        if (dailyTasks == null || quadroObjeto == null) return;
+        if (dailyTasks != null && quadroObjeto != null)
+        {
+            foreach (var task in dailyTasks)
+            {
+                if (task == null || string.IsNullOrWhiteSpace(task.taskName)) continue;
 
-        foreach (var task in dailyTasks)
+                Transform marcaX = quadroObjeto.Find(task.taskName);
+                if (marcaX != null)
+                {
+                    marcaX.gameObject.SetActive(false);
+                    dicionarioX3D[task.taskName] = marcaX.gameObject;
+                    Debug.Log("Mapeado com sucesso: " + task.taskName);
+                }
+                else
+                {
+                    Debug.LogWarning("Não encontrou o objeto filho com o nome '" + task.taskName + "' dentro do Quadro-Tarefas!");
+                }
+            }
+        }
+
+        RestaurarTarefasSalvas();
+    }
+
+    private void RestaurarTarefasSalvas()
+    {
+        SaveGameDatabase.SaveData save = SaveGameDatabase.Load();
+        if (save == null
+            || !string.Equals(save.sceneName,
+                UnityEngine.SceneManagement.SceneManager.GetActiveScene().name,
+                System.StringComparison.OrdinalIgnoreCase)
+            || save.completedTasks == null
+            || dailyTasks == null) return;
+
+        bool plantaJaRegada = false;
+        foreach (TaskData task in dailyTasks)
         {
             if (task == null || string.IsNullOrWhiteSpace(task.taskName)) continue;
+            bool salvaComoConcluida = System.Array.Exists(
+                save.completedTasks,
+                nome => string.Equals(nome, task.taskName, System.StringComparison.OrdinalIgnoreCase));
+            if (!salvaComoConcluida || !tarefasConcluidas.Add(task.taskName)) continue;
 
-            // Procura o objeto filho exatamente pelo nome da tarefa (ex: "Make Coffee", etc.)
-            Transform marcaX = quadroObjeto.Find(task.taskName);
-
-            if (marcaX != null)
+            AtivarXNoQuadro(task.taskName);
+            if (task.taskName.IndexOf("cafe", System.StringComparison.OrdinalIgnoreCase) >= 0
+                || task.taskName.IndexOf("coffee", System.StringComparison.OrdinalIgnoreCase) >= 0)
             {
-                // Deixa o X invisível no início do jogo
-                marcaX.gameObject.SetActive(false);
-                
-                // Guarda no dicionário
-                dicionarioX3D.Add(task.taskName, marcaX.gameObject);
-                Debug.Log("Mapeado com sucesso: " + task.taskName);
+                TrocarXicaraAoDesviarOlhar xicara = Object.FindAnyObjectByType<TrocarXicaraAoDesviarOlhar>();
+                if (xicara != null) xicara.ConcluirTarefaCafe();
             }
-            else
+            if (string.Equals(task.taskName, "TarefaPlanta", System.StringComparison.OrdinalIgnoreCase)
+                || string.Equals(task.taskName, "RegarPlanta", System.StringComparison.OrdinalIgnoreCase))
+                plantaJaRegada = true;
+        }
+
+        if (plantaJaRegada)
+        {
+            AtivarIluminacaoAcesa();
+            if (EstaNoNivel2())
             {
-                Debug.LogWarning("Não encontrou o objeto filho com o nome '" + task.taskName + "' dentro do Quadro-Tarefas!");
+                DefinirPessoasNivel2(true);
+                DefinirEstadoDoObjetoEmCena("CadeiraDentro", false);
+                DefinirEstadoDoObjetoEmCena("CadeiraFora", true);
             }
         }
     }
@@ -322,6 +374,7 @@ public class TaskManager : MonoBehaviour
                     if (!transicaoRegarPlantaIniciada)
                     {
                         transicaoRegarPlantaIniciada = true;
+                        transicaoRegarPlantaEmAndamento = true;
                         bool nivel3 = string.Equals(
                             UnityEngine.SceneManagement.SceneManager.GetActiveScene().name,
                             "Nivel3",
@@ -420,6 +473,10 @@ public class TaskManager : MonoBehaviour
         yield return new WaitForSecondsRealtime(DuracaoAnimacaoTelaPretaRapida - DuracaoFechamentoTelaPretaRapida);
         if (telaPretaFecharRapido != null)
             telaPretaFecharRapido.SetActive(false);
+
+        transicaoRegarPlantaEmAndamento = false;
+        if (!InteracaoEmAndamento)
+            PauseMenuManager.TentarAutosave();
     }
 
     public void IniciarDialogoAposSentar()
@@ -539,6 +596,10 @@ public class TaskManager : MonoBehaviour
         yield return new WaitForSecondsRealtime(DuracaoAnimacaoTelaPretaRapida - DuracaoFechamentoTelaPretaRapida);
         if (telaPretaFecharRapido != null)
             telaPretaFecharRapido.SetActive(false);
+
+        dialogoAposSentarIniciado = false;
+        transicaoRegarPlantaEmAndamento = false;
+        PauseMenuManager.TentarAutosave();
     }
 
     private void LiberarCadeiraSentavel()
@@ -777,6 +838,8 @@ public class TaskManager : MonoBehaviour
             TrocarXicaraAoDesviarOlhar xicara = Object.FindAnyObjectByType<TrocarXicaraAoDesviarOlhar>();
             if (xicara != null) xicara.ConcluirTarefaCafe();
         }
+
+        PauseMenuManager.TentarAutosave();
     }
 
     private void AtivarIluminacaoAcesa()

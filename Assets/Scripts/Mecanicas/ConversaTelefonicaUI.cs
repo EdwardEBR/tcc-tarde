@@ -45,6 +45,9 @@ public class ConversaTelefonicaUI : MonoBehaviour
     [SerializeField, HideInInspector] private int versaoDoRoteiroExemplo;
     private const int VersaoAtualDoRoteiroExemplo = 6;
 
+    public bool ConversaAtiva => conversaAtiva;
+    public int IndiceNoAtual => indiceDoNoAtual;
+
     private void Reset()
     {
         CriarConversaDeExemplo();
@@ -67,6 +70,49 @@ public class ConversaTelefonicaUI : MonoBehaviour
                 if (objeto != null) objeto.SetActive(false);
             }
         }
+    }
+
+    private void Start()
+    {
+        StartCoroutine(RestaurarConversaSalvaAposInicializacao());
+    }
+
+    private IEnumerator RestaurarConversaSalvaAposInicializacao()
+    {
+        // Aguarda PlayerFPS.Start e a inicialização dos outros componentes da cena.
+        yield return null;
+
+        SaveGameDatabase.SaveData save = SaveGameDatabase.Load();
+        if (save == null || !save.conversationActive
+            || !string.Equals(save.sceneName,
+                UnityEngine.SceneManagement.SceneManager.GetActiveScene().name,
+                System.StringComparison.OrdinalIgnoreCase)
+            || !string.Equals(save.conversationObjectName, gameObject.name,
+                System.StringComparison.Ordinal))
+            yield break;
+
+        RestaurarConversaSalva(save.conversationNode);
+    }
+
+    private void RestaurarConversaSalva(int indice)
+    {
+        if (conversa == null || indice < 0 || indice >= conversa.Count) return;
+
+        if (jogador == null) jogador = FindAnyObjectByType<PlayerFPS>();
+        if (jogador == null)
+        {
+            Debug.LogWarning("ConversaTelefonicaUI: não foi possível restaurar a conversa porque o jogador não foi encontrado.", this);
+            return;
+        }
+
+        if (painel != null) painel.SetActive(true);
+        conversaAtiva = true;
+        aguardandoSentarParaContinuar = false;
+        ConversaConcluida = false;
+        indiceDoNoAtual = indice;
+        jogador.DefinirModoConversa(true);
+        MostrarNo(indiceDoNoAtual);
+        Debug.Log("ConversaTelefonicaUI: conversa restaurada no nó " + indiceDoNoAtual + ".", this);
     }
 
     private void CriarConversaDeExemplo()
@@ -380,6 +426,7 @@ public class ConversaTelefonicaUI : MonoBehaviour
         rotinaDeEncerramento = null;
         if (painel != null) painel.SetActive(false);
         if (jogador != null) jogador.DefinirModoConversa(false);
+        PauseMenuManager.TentarAutosave();
     }
 
     private void MostrarNo(int indice)

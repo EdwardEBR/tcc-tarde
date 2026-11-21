@@ -66,6 +66,14 @@ public class IntroManager : MonoBehaviour
             StartCoroutine(AguardarAproximacaoDosMedicos());
         }
 
+        SaveGameDatabase.SaveData save = SaveGameDatabase.Load();
+        if (save != null
+            && string.Equals(save.sceneName, cenaAtual, System.StringComparison.OrdinalIgnoreCase))
+        {
+            IniciarDoSaveSemAnimacao();
+            return;
+        }
+
         // Este efeito pertence somente à conclusão da tarefa de regar a planta.
         if (telaPretaFecharRapidoObj != null)
             telaPretaFecharRapidoObj.SetActive(false);
@@ -84,6 +92,39 @@ public class IntroManager : MonoBehaviour
 
         // 2. Inicia a contagem
         StartCoroutine(TrocarParaPlayer());
+    }
+
+    // Restaura o jogo carregado sem ativar câmera, painel ou áudio da introdução.
+    private void IniciarDoSaveSemAnimacao()
+    {
+        if (camIntroObj == null) camIntroObj = GameObject.Find("CamIntro");
+        if (telaPretaObj == null) telaPretaObj = EncontrarObjetoNaCena("TelaPreta");
+        if (telaPretaFechandoObj == null) telaPretaFechandoObj = EncontrarObjetoNaCena("TelaPretaFechar");
+        if (telaPretaFecharRapidoObj == null) telaPretaFecharRapidoObj = EncontrarObjetoNaCena("TelaPretaFecharRapido");
+
+        if (camIntroObj != null) camIntroObj.SetActive(false);
+        if (telaPretaObj != null) telaPretaObj.SetActive(false);
+        if (telaPretaFechandoObj != null) telaPretaFechandoObj.SetActive(false);
+        if (telaPretaFecharRapidoObj != null) telaPretaFecharRapidoObj.SetActive(false);
+
+        if (playerObj == null) return;
+        playerObj.SetActive(true);
+        PlayerFPS jogador = playerObj.GetComponent<PlayerFPS>();
+        if (jogador == null) return;
+
+        Camera cameraDoJogador = jogador.cameraPlayer != null
+            ? jogador.cameraPlayer.GetComponent<Camera>()
+            : null;
+        if (cameraDoJogador != null)
+        {
+            foreach (Camera cameraNaCena in FindObjectsByType<Camera>(FindObjectsSortMode.None))
+                cameraNaCena.enabled = cameraNaCena == cameraDoJogador;
+            cameraDoJogador.enabled = true;
+        }
+
+        // PauseMenuManager restaura posição e rotação após PlayerFPS.Start
+        // capturar a posição local original da câmera.
+        Debug.Log("IntroManager: introdução ignorada; posição será restaurada pelo menu de pausa.", this);
     }
 
     private void IniciarNivel5SemIntro()
@@ -117,6 +158,8 @@ public class IntroManager : MonoBehaviour
             vinhetaVisaoEmbacada.intensity.value = vinhetaNivel5;
             manterVisaoEmbacadaNoNivel5 = false;
         }
+
+        StartCoroutine(SalvarDepoisDeLiberarJogador());
 
         GameObject telaRapida = telaPretaFecharRapidoObj != null
             ? telaPretaFecharRapidoObj
@@ -369,5 +412,20 @@ public class IntroManager : MonoBehaviour
         if (telaPretaObj != null) telaPretaObj.SetActive(false);
         if (volumeVisaoEmbacada != null)
             StartCoroutine(ClarearVisaoAoAcordar());
+
+        yield return SalvarDepoisDeLiberarJogador();
+    }
+
+    private IEnumerator SalvarDepoisDeLiberarJogador()
+    {
+        if (playerObj == null || playerObj.GetComponent<PlayerFPS>() == null)
+            yield break;
+
+        // O PlayerFPS adiciona o PauseMenuManager no Start; aguarde essa inicialização.
+        yield return null;
+        while (FindAnyObjectByType<PauseMenuManager>() == null)
+            yield return null;
+
+        PauseMenuManager.TentarAutosave();
     }
 }
