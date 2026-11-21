@@ -54,7 +54,7 @@ public class PlateStackKitchenInteractable : MonoBehaviour
 
     private IEnumerator TeleportarDurantePiscada(PlayerFPS player)
     {
-        yield return new WaitForSecondsRealtime(TaskManager.DuracaoFechamentoTelaPretaRapida);
+        yield return new WaitForSeconds(TaskManager.DuracaoFechamentoTelaPretaRapida);
         if (player != null) player.TeleportarPara(DestinoBanheiroNivel2);
     }
 

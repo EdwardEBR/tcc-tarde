@@ -158,6 +158,15 @@ public class IntroManager : MonoBehaviour
             vinhetaVisaoEmbacada.intensity.value = vinhetaNivel5;
             manterVisaoEmbacadaNoNivel5 = false;
         }
+        else if (!veioDoNivel4)
+        {
+            // Entradas diretas e carregamentos do Nivel5 devem ter a mesma
+            // visão persistente que sobra após a transição vinda do Nivel4.
+            PrepararVisaoEmbacada();
+            profundidadeDeCampo.gaussianEnd.value = desfoqueNivel5;
+            profundidadeDeCampo.gaussianMaxRadius.value = raioDesfoqueNivel5;
+            vinhetaVisaoEmbacada.intensity.value = vinhetaNivel5;
+        }
 
         StartCoroutine(SalvarDepoisDeLiberarJogador());
 
@@ -193,7 +202,7 @@ public class IntroManager : MonoBehaviour
 
     private IEnumerator OcultarTelaRapidaAposAbertura(GameObject telaRapida)
     {
-        yield return new WaitForSecondsRealtime(
+        yield return new WaitForSeconds(
             TaskManager.DuracaoAnimacaoTelaPretaRapida - TaskManager.DuracaoFechamentoTelaPretaRapida);
         if (telaRapida != null) telaRapida.SetActive(false);
     }
@@ -238,7 +247,7 @@ public class IntroManager : MonoBehaviour
         float tempo = 0f;
         while (tempo < DuracaoEfeitoFinalNivel4)
         {
-            tempo += Time.unscaledDeltaTime;
+            tempo += Time.deltaTime;
             float progresso = Mathf.Clamp01(tempo / DuracaoEfeitoFinalNivel4);
             float suave = progresso * progresso * (3f - 2f * progresso);
             profundidadeDeCampo.gaussianEnd.value = Mathf.Lerp(desfoqueInicial, 0.1f, suave);
@@ -259,7 +268,7 @@ public class IntroManager : MonoBehaviour
         else
             Debug.LogWarning("IntroManager: não encontrou TaskManager para iniciar TelaPretaFecharRapido.", this);
 
-        yield return new WaitForSecondsRealtime(DuracaoFechamentoTransicao);
+        yield return new WaitForSeconds(DuracaoFechamentoTransicao);
         PrepararEntradaDiretaNivel5(PosicaoEntradaNivel5Padrao);
         SceneManager.LoadScene("Nivel5");
     }
@@ -330,7 +339,7 @@ public class IntroManager : MonoBehaviour
         float tempo = 0f;
         while (tempo < duracao && volumeVisaoEmbacada != null && profundidadeDeCampo != null && vinhetaVisaoEmbacada != null)
         {
-            tempo += Time.unscaledDeltaTime;
+            tempo += Time.deltaTime;
             float progresso = Mathf.Clamp01(tempo / duracao);
             float suave = progresso * progresso * (3f - 2f * progresso);
             profundidadeDeCampo.gaussianEnd.value = Mathf.Lerp(desfoqueInicial, desfoqueDuranteOJogo, suave);

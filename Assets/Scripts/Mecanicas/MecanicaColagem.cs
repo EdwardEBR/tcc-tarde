@@ -180,7 +180,7 @@ public class MecanicaColagem : MonoBehaviour
             if (animadores.Length == 0)
                 Debug.LogWarning("MecanicaColagem: TelaPretaFechar não tem Animator nos filhos; carregando Nivel2 após uma espera curta.", objetoTelaPretaFechar);
 
-            yield return new WaitForSecondsRealtime(Mathf.Max(maiorDuracao - 1f, 0f));
+            yield return new WaitForSeconds(Mathf.Max(maiorDuracao - 1f, 0f));
         }
         else
         {

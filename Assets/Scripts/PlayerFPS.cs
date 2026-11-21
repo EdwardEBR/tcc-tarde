@@ -98,6 +98,7 @@ public class PlayerFPS : MonoBehaviour
     public float MeiaAlturaMundialDoPersonagem => controller != null
         ? controller.bounds.extents.y
         : Mathf.Max(0.5f, transform.lossyScale.y);
+    public bool CameraLivreAtiva => cameraLivreAtiva;
     public bool InteracaoEmAndamento =>
         modoConversaAtivo || sentadoNaCadeira || sentandoNaCadeira || itemNaMao != null
         || mouseLivre || cameraLivreAtiva;
@@ -272,6 +273,11 @@ public class PlayerFPS : MonoBehaviour
         if (cameraPlayer == null) return;
 
         cameraLivreAtiva = !cameraLivreAtiva;
+        foreach (ConversaTelefonicaUI conversa in FindObjectsByType<ConversaTelefonicaUI>(FindObjectsSortMode.None))
+        {
+            if (conversa != null) conversa.DefinirCameraLivreAtiva(cameraLivreAtiva);
+        }
+
         if (cameraLivreAtiva)
         {
             posicaoLocalCameraAntesDoModoLivre = cameraPlayer.localPosition;
@@ -359,7 +365,7 @@ public class PlayerFPS : MonoBehaviour
 
         if (direcao.sqrMagnitude > 1f) direcao.Normalize();
         float multiplicador = Keyboard.current.leftShiftKey.isPressed ? 3f : 1f;
-        cameraPlayer.position += direcao * velocidadeAtualCameraLivre * multiplicador * Time.unscaledDeltaTime;
+        cameraPlayer.position += direcao * velocidadeAtualCameraLivre * multiplicador * Time.deltaTime;
     }
 
     private void OnApplicationFocus(bool ganhouFoco)
@@ -643,7 +649,7 @@ public class PlayerFPS : MonoBehaviour
 
         while (tempo < duracao)
         {
-            tempo += Time.unscaledDeltaTime;
+            tempo += Time.deltaTime;
             float progresso = Mathf.Clamp01(tempo / duracao);
             float suavizado = progresso * progresso * (3f - 2f * progresso);
             transform.position = Vector3.Lerp(posicaoInicial, posicaoFinal, suavizado);
@@ -1151,7 +1157,7 @@ public class PlayerFPS : MonoBehaviour
         else
             Debug.LogWarning("PlayerFPS: não encontrou TaskManager para tocar TelaPretaFecharRapido.", this);
 
-        yield return new WaitForSecondsRealtime(TaskManager.DuracaoFechamentoTelaPretaRapida);
+        yield return new WaitForSeconds(TaskManager.DuracaoFechamentoTelaPretaRapida);
 
         // Reutiliza a posição da cozinha, mantendo a altura normal atual do Player.
         // O teleporte após a conversa preserva essa altura quando ele está sentado.

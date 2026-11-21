@@ -39706,7 +39706,7 @@ MonoBehaviour:
   pausaEntrePessoas: 3
   esperaAntesDosCreditos: 4
   duracaoTelaPreta: 1.5
-  duracaoRolagemCreditos: 20
+  duracaoRolagemCreditos: 40
 --- !u!1 &1879671895
 GameObject:
   m_ObjectHideFlags: 0

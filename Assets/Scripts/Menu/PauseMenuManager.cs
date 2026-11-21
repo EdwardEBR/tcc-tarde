@@ -12,6 +12,7 @@ public sealed class PauseMenuManager : MonoBehaviour
     private const string PrefixoSave = "Checkpoint_";
     private static readonly Color CorDestaqueSlimUI = new Color(1f, 0.6862745f, 0f, 1f);
     private static TMP_FontAsset fonteSlimUI;
+    private static Texture2D cursorTransparente;
 
     public static bool JogoPausado { get; private set; }
 
@@ -25,6 +26,9 @@ public sealed class PauseMenuManager : MonoBehaviour
     private Slider sliderVolume;
     private Slider sliderSensibilidade;
     private float proximoStatus;
+    private int framesForcarCursorBloqueado;
+    private float timeScaleAntesDaPausa = 1f;
+    private bool audioPausadoAntesDaPausa;
 
     private void Awake()
     {
@@ -54,13 +58,20 @@ public sealed class PauseMenuManager : MonoBehaviour
             RetomarJogo();
     }
 
+    private void LateUpdate()
+    {
+        if (framesForcarCursorBloqueado <= 0) return;
+
+        if (jogador != null) jogador.TravarCursorAposFecharMenu();
+        OcultarCursorDoJogo();
+        framesForcarCursorBloqueado--;
+    }
+
     private void OnDestroy()
     {
+        Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
         if (JogoPausado)
-        {
-            JogoPausado = false;
-            Time.timeScale = 1f;
-        }
+            RestaurarTempoEAudio();
     }
 
     private void OnApplicationQuit()
@@ -288,11 +299,15 @@ public sealed class PauseMenuManager : MonoBehaviour
 
     private void AbrirMenu()
     {
+        timeScaleAntesDaPausa = Time.timeScale;
+        audioPausadoAntesDaPausa = AudioListener.pause;
         JogoPausado = true;
         Time.timeScale = 0f;
+        AudioListener.pause = true;
         painelPrincipal.SetActive(true);
         canvasOpcoes.SetActive(false);
         canvasMenu.SetActive(true);
+        Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
     }
@@ -311,12 +326,36 @@ public sealed class PauseMenuManager : MonoBehaviour
 
     private void RetomarJogo()
     {
-        JogoPausado = false;
-        Time.timeScale = 1f;
+        RestaurarTempoEAudio();
         canvasMenu.SetActive(false);
         canvasOpcoes.SetActive(false);
         // Mantém o estado interno do PlayerFPS sincronizado com o cursor da UI.
         if (jogador != null) jogador.TravarCursorAposFecharMenu();
+        OcultarCursorDoJogo();
+        framesForcarCursorBloqueado = 30;
+    }
+
+    private void RestaurarTempoEAudio()
+    {
+        JogoPausado = false;
+        Time.timeScale = timeScaleAntesDaPausa;
+        AudioListener.pause = audioPausadoAntesDaPausa;
+    }
+
+    private static void OcultarCursorDoJogo()
+    {
+        if (cursorTransparente == null)
+        {
+            cursorTransparente = new Texture2D(1, 1, TextureFormat.RGBA32, false, true)
+            {
+                name = "CursorTransparenteGameplay",
+                hideFlags = HideFlags.HideAndDontSave
+            };
+            cursorTransparente.SetPixel(0, 0, Color.clear);
+            cursorTransparente.Apply(false, false);
+        }
+
+        Cursor.SetCursor(cursorTransparente, Vector2.zero, CursorMode.ForceSoftware);
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
@@ -440,8 +479,7 @@ public sealed class PauseMenuManager : MonoBehaviour
 
     private void ConfirmarSaidaSemSalvar()
     {
-        JogoPausado = false;
-        Time.timeScale = 1f;
+        RestaurarTempoEAudio();
         SceneManager.LoadScene("Demo1");
     }
 }

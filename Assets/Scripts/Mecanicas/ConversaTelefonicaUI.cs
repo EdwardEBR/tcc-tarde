@@ -36,6 +36,7 @@ public class ConversaTelefonicaUI : MonoBehaviour
     private Coroutine rotinaDeEncerramento;
     private bool conversaAtiva;
     private bool aguardandoSentarParaContinuar;
+    private bool cameraLivreAtiva;
     private Keyboard tecladoInscrito;
     private string bufferComandoAdmin = string.Empty;
     private const string ComandoPularConversa = "PULAR";
@@ -47,6 +48,13 @@ public class ConversaTelefonicaUI : MonoBehaviour
 
     public bool ConversaAtiva => conversaAtiva;
     public int IndiceNoAtual => indiceDoNoAtual;
+
+    public void DefinirCameraLivreAtiva(bool ativa)
+    {
+        cameraLivreAtiva = ativa;
+        if (painel != null && conversaAtiva)
+            painel.SetActive(!cameraLivreAtiva);
+    }
 
     private void Reset()
     {
@@ -366,7 +374,7 @@ public class ConversaTelefonicaUI : MonoBehaviour
     private void Update()
     {
         AtualizarTecladoInscrito();
-        if (!conversaAtiva || rotinaDeTexto != null || Keyboard.current == null) return;
+        if (PauseMenuManager.JogoPausado || cameraLivreAtiva || !conversaAtiva || rotinaDeTexto != null || Keyboard.current == null) return;
 
         if (Keyboard.current.digit1Key.wasPressedThisFrame || Keyboard.current.numpad1Key.wasPressedThisFrame)
             EscolherResposta(0);
@@ -455,8 +463,11 @@ public class ConversaTelefonicaUI : MonoBehaviour
         textoPessoa.text = string.Empty;
         foreach (char caractere in no.falaDaPessoa)
         {
+            while (cameraLivreAtiva || PauseMenuManager.JogoPausado)
+                yield return null;
+
             textoPessoa.text += caractere;
-            if (intervaloEntreLetras > 0f) yield return new WaitForSecondsRealtime(intervaloEntreLetras);
+            if (intervaloEntreLetras > 0f) yield return new WaitForSeconds(intervaloEntreLetras);
         }
         rotinaDeTexto = null;
         MostrarRespostas(no);
@@ -516,7 +527,14 @@ public class ConversaTelefonicaUI : MonoBehaviour
 
     private IEnumerator EncerrarDepoisDaDespedida()
     {
-        yield return new WaitForSecondsRealtime(2.5f);
+        float tempo = 0f;
+        while (tempo < 2.5f)
+        {
+            if (!cameraLivreAtiva && !PauseMenuManager.JogoPausado)
+                tempo += Time.deltaTime;
+            yield return null;
+        }
+
         rotinaDeEncerramento = null;
         ConversaConcluida = true;
         EncerrarConversa();

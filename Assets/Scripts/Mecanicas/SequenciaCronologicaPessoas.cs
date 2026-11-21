@@ -13,7 +13,7 @@ public class SequenciaCronologicaPessoas : MonoBehaviour
     [Min(0f)] public float pausaEntrePessoas = 3f;
     [Min(0f)] public float esperaAntesDosCreditos = 4f;
     [Min(0.05f)] public float duracaoTelaPreta = 1.5f;
-    [Min(0.1f)] public float duracaoRolagemCreditos = 20f;
+    [Min(0.1f)] public float duracaoRolagemCreditos = 40f;
 
     private readonly List<Renderer[]> pessoas = new();
     private readonly List<ShadowCastingMode[]> sombras = new();
@@ -58,7 +58,7 @@ public class SequenciaCronologicaPessoas : MonoBehaviour
     private IEnumerator ExibirEmOrdem()
     {
         if (atrasoInicial > 0f)
-            yield return new WaitForSecondsRealtime(atrasoInicial);
+            yield return new WaitForSeconds(atrasoInicial);
 
         for (int i = 0; i < pessoas.Count; i++)
         {
@@ -72,11 +72,11 @@ public class SequenciaCronologicaPessoas : MonoBehaviour
                 pessoas[i][r].shadowCastingMode = sombras[i][r];
 
             if (i < pessoas.Count - 1 && pausaEntrePessoas > 0f)
-                yield return new WaitForSecondsRealtime(pausaEntrePessoas);
+                yield return new WaitForSeconds(pausaEntrePessoas);
         }
 
         if (esperaAntesDosCreditos > 0f)
-            yield return new WaitForSecondsRealtime(esperaAntesDosCreditos);
+            yield return new WaitForSeconds(esperaAntesDosCreditos);
         yield return StartCoroutine(ExibirCreditos());
     }
 
@@ -108,21 +108,42 @@ public class SequenciaCronologicaPessoas : MonoBehaviour
         textRect.anchorMin = new Vector2(0.08f, 0f);
         textRect.anchorMax = new Vector2(0.92f, 0f);
         textRect.pivot = new Vector2(0.5f, 0f);
-        textRect.sizeDelta = new Vector2(0f, 900f);
-        textRect.anchoredPosition = new Vector2(0f, -1000f);
+        textRect.sizeDelta = new Vector2(0f, 0f);
 
         TextMeshProUGUI creditText = textObject.GetComponent<TextMeshProUGUI>();
         creditText.font = TMP_Settings.defaultFontAsset;
-        creditText.fontSize = 52f;
+        creditText.fontSize = 44f;
         creditText.color = Color.white;
         creditText.alignment = TextAlignmentOptions.Center;
         creditText.enableWordWrapping = true;
-        creditText.text = "CRÉDITOS\n\nProjeto de Trabalho de Conclusão de Curso\n\nObrigado por jogar";
+        creditText.lineSpacing = 8f;
+        string destaque = ColorUtility.ToHtmlStringRGB(new Color(1f, 0.686f, 0f));
+        creditText.text =
+            "<size=64><b>CRÉDITOS</b></size>\n\n" +
+            "<color=#" + destaque + "><b>DIREÇÃO E PRODUÇÃO</b></color>\n" +
+            "Gerente de Projeto / Produção: Eduardo\nGame Design: Eduardo\nLevel Design: Eduardo\n\n" +
+            "<color=#" + destaque + "><b>ROTEIRO E DOCUMENTAÇÃO</b></color>\n" +
+            "Roteiro e Narrativa: Diogo, Eduardo, Felipe, Gabriel e Gabriely\nDocumentação Técnica / GDD: Felipe\n\n" +
+            "<color=#" + destaque + "><b>PROGRAMAÇÃO</b></color>\n" +
+            "Programação de Gameplay: Eduardo\nProgramação de UI / HUD: Eduardo\nArte Técnica / Iluminação / Otimização: Eduardo\n\n" +
+            "<color=#" + destaque + "><b>ARTE 3D E VISUAL</b></color>\n" +
+            "Modelagem 3D: Diogo, Eduardo e Gabriely\nTexturização e Materiais: Eduardo\nRigging e Animação: Eduardo\nDesign de UI / UX: Diogo, Eduardo e Gabriely\n\n" +
+            "<color=#" + destaque + "><b>ÁUDIO</b></color>\n" +
+            "Trilha Sonora / Composição: Gabriel\nSound Design / SFX: Gabriel\n\n" +
+            "<color=#" + destaque + "><b>QUALIDADE E TESTES</b></color>\n" +
+            "QA / Testes: Eduardo\n\n" +
+            "<color=#" + destaque + "><b>AGRADECIMENTOS ESPECIAIS</b></color>\n" +
+            "Professores Daniel e Mario\nOrientadora Andressa";
+        creditText.ForceMeshUpdate();
+        float alturaCreditos = creditText.preferredHeight;
+        textRect.sizeDelta = new Vector2(0f, alturaCreditos);
+        float alturaTela = scaler.referenceResolution.y;
+        textRect.anchoredPosition = new Vector2(0f, -alturaCreditos);
 
         float tempoFade = 0f;
         while (tempoFade < duracaoTelaPreta)
         {
-            tempoFade += Time.unscaledDeltaTime;
+            tempoFade += Time.deltaTime;
             Color cor = background.color;
             cor.a = Mathf.Clamp01(tempoFade / duracaoTelaPreta);
             background.color = cor;
@@ -134,12 +155,13 @@ public class SequenciaCronologicaPessoas : MonoBehaviour
         float tempoRolagem = 0f;
         while (tempoRolagem < duracao)
         {
-            tempoRolagem += Time.unscaledDeltaTime;
+            tempoRolagem += Time.deltaTime;
             float progresso = Mathf.Clamp01(tempoRolagem / duracao);
-            textRect.anchoredPosition = new Vector2(0f, Mathf.Lerp(-1000f, 1300f, progresso));
+            textRect.anchoredPosition = new Vector2(0f, Mathf.Lerp(-alturaCreditos, alturaTela, progresso));
             yield return null;
         }
-        textRect.anchoredPosition = new Vector2(0f, 1300f);
+        textRect.anchoredPosition = new Vector2(0f, alturaTela);
+        SaveGameDatabase.Delete();
         SceneManager.LoadScene("Demo1");
     }
 
@@ -154,7 +176,7 @@ public class SequenciaCronologicaPessoas : MonoBehaviour
         float tempo = 0f;
         while (tempo < duracao)
         {
-            tempo += Time.unscaledDeltaTime;
+            tempo += Time.deltaTime;
             float alpha = Mathf.Lerp(inicio, fim, Mathf.Clamp01(tempo / duracao));
             foreach (MaterialFadeState estado in materiaisPessoa) DefinirAlpha(estado.material, alpha);
             yield return null;

@@ -171,13 +171,13 @@ public class TaskManager : MonoBehaviour
         if (string.Equals(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, "Nivel3", System.StringComparison.OrdinalIgnoreCase))
         {
             TocarTelaPretaFecharRapido();
-            yield return new WaitForSecondsRealtime(DuracaoFechamentoTelaPretaRapida);
+            yield return new WaitForSeconds(DuracaoFechamentoTelaPretaRapida);
 
             DefinirPessoas(false);
             EncerrarCenaNivel3AposConversa();
             jogador.TeleportarPara(new Vector3(5.29f, jogador.transform.position.y, -25.88f));
 
-            yield return new WaitForSecondsRealtime(DuracaoAnimacaoTelaPretaRapida - DuracaoFechamentoTelaPretaRapida);
+            yield return new WaitForSeconds(DuracaoAnimacaoTelaPretaRapida - DuracaoFechamentoTelaPretaRapida);
             if (telaPretaFecharRapido != null)
                 telaPretaFecharRapido.SetActive(false);
         }
@@ -435,14 +435,14 @@ public class TaskManager : MonoBehaviour
 
     private IEnumerator OcultarTelaPretaQuandoAnimacaoTerminar()
     {
-        yield return new WaitForSecondsRealtime(DuracaoAnimacaoTelaPretaRapida);
+        yield return new WaitForSeconds(DuracaoAnimacaoTelaPretaRapida);
         if (telaPretaFecharRapido != null)
             telaPretaFecharRapido.SetActive(false);
     }
 
     private IEnumerator ConcluirRegarPlantaAposFechamento(TaskData tarefaPlanta)
     {
-        yield return new WaitForSecondsRealtime(DuracaoFechamentoTelaPretaRapida);
+        yield return new WaitForSeconds(DuracaoFechamentoTelaPretaRapida);
 
         RegistrarTarefaConcluida(tarefaPlanta);
         AtivarIluminacaoAcesa();
@@ -470,7 +470,7 @@ public class TaskManager : MonoBehaviour
         }
 
         // Mantém o painel até a animação terminar de abrir após o fechamento em 0,8 s.
-        yield return new WaitForSecondsRealtime(DuracaoAnimacaoTelaPretaRapida - DuracaoFechamentoTelaPretaRapida);
+        yield return new WaitForSeconds(DuracaoAnimacaoTelaPretaRapida - DuracaoFechamentoTelaPretaRapida);
         if (telaPretaFecharRapido != null)
             telaPretaFecharRapido.SetActive(false);
 
@@ -496,7 +496,7 @@ public class TaskManager : MonoBehaviour
         if (posJantar != null) posJantar.SetActive(true);
 
         TocarTelaPretaFecharRapido();
-        yield return new WaitForSecondsRealtime(DuracaoFechamentoTelaPretaRapida);
+        yield return new WaitForSeconds(DuracaoFechamentoTelaPretaRapida);
 
         PlayerFPS jogador = FindAnyObjectByType<PlayerFPS>();
         if (jogador != null)
@@ -593,7 +593,7 @@ public class TaskManager : MonoBehaviour
     private IEnumerator DesativarTelaPretaRapidaDepoisDaTransicao()
     {
         // A transição fecha aos 0,8 s e termina de abrir aos 1,3 s.
-        yield return new WaitForSecondsRealtime(DuracaoAnimacaoTelaPretaRapida - DuracaoFechamentoTelaPretaRapida);
+        yield return new WaitForSeconds(DuracaoAnimacaoTelaPretaRapida - DuracaoFechamentoTelaPretaRapida);
         if (telaPretaFecharRapido != null)
             telaPretaFecharRapido.SetActive(false);
 
