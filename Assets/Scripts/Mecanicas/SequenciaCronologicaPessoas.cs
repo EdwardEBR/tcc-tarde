@@ -2,12 +2,18 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+using TMPro;
 
 public class SequenciaCronologicaPessoas : MonoBehaviour
 {
     [Min(0.05f)] public float duracaoEsmaecimento = 0.8f;
     [Min(0f)] public float atrasoInicial = 3f;
     [Min(0f)] public float pausaEntrePessoas = 3f;
+    [Min(0f)] public float esperaAntesDosCreditos = 4f;
+    [Min(0.05f)] public float duracaoTelaPreta = 1.5f;
+    [Min(0.1f)] public float duracaoRolagemCreditos = 20f;
 
     private readonly List<Renderer[]> pessoas = new();
     private readonly List<ShadowCastingMode[]> sombras = new();
@@ -68,6 +74,73 @@ public class SequenciaCronologicaPessoas : MonoBehaviour
             if (i < pessoas.Count - 1 && pausaEntrePessoas > 0f)
                 yield return new WaitForSecondsRealtime(pausaEntrePessoas);
         }
+
+        if (esperaAntesDosCreditos > 0f)
+            yield return new WaitForSecondsRealtime(esperaAntesDosCreditos);
+        yield return StartCoroutine(ExibirCreditos());
+    }
+
+    private IEnumerator ExibirCreditos()
+    {
+        GameObject canvasObject = new GameObject("CanvasCreditosFinal", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler));
+        Canvas canvas = canvasObject.GetComponent<Canvas>();
+        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        canvas.sortingOrder = 1000;
+
+        CanvasScaler scaler = canvasObject.GetComponent<CanvasScaler>();
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        scaler.referenceResolution = new Vector2(1920f, 1080f);
+
+        GameObject backgroundObject = new GameObject("TelaPretaCreditos", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        backgroundObject.transform.SetParent(canvasObject.transform, false);
+        RectTransform backgroundRect = backgroundObject.GetComponent<RectTransform>();
+        backgroundRect.anchorMin = Vector2.zero;
+        backgroundRect.anchorMax = Vector2.one;
+        backgroundRect.offsetMin = Vector2.zero;
+        backgroundRect.offsetMax = Vector2.zero;
+        Image background = backgroundObject.GetComponent<Image>();
+        background.color = new Color(0f, 0f, 0f, 0f);
+        background.raycastTarget = true;
+
+        GameObject textObject = new GameObject("Creditos", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+        textObject.transform.SetParent(canvasObject.transform, false);
+        RectTransform textRect = textObject.GetComponent<RectTransform>();
+        textRect.anchorMin = new Vector2(0.08f, 0f);
+        textRect.anchorMax = new Vector2(0.92f, 0f);
+        textRect.pivot = new Vector2(0.5f, 0f);
+        textRect.sizeDelta = new Vector2(0f, 900f);
+        textRect.anchoredPosition = new Vector2(0f, -1000f);
+
+        TextMeshProUGUI creditText = textObject.GetComponent<TextMeshProUGUI>();
+        creditText.font = TMP_Settings.defaultFontAsset;
+        creditText.fontSize = 52f;
+        creditText.color = Color.white;
+        creditText.alignment = TextAlignmentOptions.Center;
+        creditText.enableWordWrapping = true;
+        creditText.text = "CRÉDITOS\n\nProjeto de Trabalho de Conclusão de Curso\n\nObrigado por jogar";
+
+        float tempoFade = 0f;
+        while (tempoFade < duracaoTelaPreta)
+        {
+            tempoFade += Time.unscaledDeltaTime;
+            Color cor = background.color;
+            cor.a = Mathf.Clamp01(tempoFade / duracaoTelaPreta);
+            background.color = cor;
+            yield return null;
+        }
+        background.color = Color.black;
+
+        float duracao = Mathf.Max(duracaoRolagemCreditos, 0.1f);
+        float tempoRolagem = 0f;
+        while (tempoRolagem < duracao)
+        {
+            tempoRolagem += Time.unscaledDeltaTime;
+            float progresso = Mathf.Clamp01(tempoRolagem / duracao);
+            textRect.anchoredPosition = new Vector2(0f, Mathf.Lerp(-1000f, 1300f, progresso));
+            yield return null;
+        }
+        textRect.anchoredPosition = new Vector2(0f, 1300f);
+        SceneManager.LoadScene("Demo1");
     }
 
     private static IEnumerator Esmaecer(MaterialFadeState[] materiaisPessoa, float inicio, float fim, float duracao)

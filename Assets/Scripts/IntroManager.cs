@@ -1,10 +1,25 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
 public class IntroManager : MonoBehaviour
 {
+    private static bool entradaNivel5Preparada;
+    private static Vector3 posicaoEntradaNivel5;
+    private static bool manterVisaoEmbacadaNoNivel5;
+    private static float desfoqueNivel5 = 5f;
+    private static float raioDesfoqueNivel5 = 1.5f;
+    private static float vinhetaNivel5 = 0.4f;
+
+    private const float DistanciaParaAproximarMedico = 3f;
+    private const float DuracaoAteTeleporteNivel4 = 7f;
+    private const float DuracaoFechamentoTransicao = TaskManager.DuracaoFechamentoTelaPretaRapida;
+    private const float DuracaoEfeitoFinalNivel4 = DuracaoAteTeleporteNivel4 - DuracaoFechamentoTransicao;
+    private static readonly Vector3 PosicaoEntradaNivel5Padrao = new Vector3(11.4799995f, 4.67500019f, -31.3330002f);
+
     [Header("Referências")]
     public GameObject camIntroObj;      // Arraste a CamIntro aqui
     public GameObject playerObj;        // Arraste o Player aqui
@@ -16,13 +31,39 @@ public class IntroManager : MonoBehaviour
     private VolumeProfile perfilVisaoEmbacada;
     private DepthOfField profundidadeDeCampo;
     private Vignette vinhetaVisaoEmbacada;
+    private Transform[] medicosNivel4;
+    private readonly HashSet<int> medicosVisitados = new();
+    private bool visaoInicialNivel4Concluida;
+    private bool transicaoNivel4Iniciada;
+
+    public static void PrepararEntradaDiretaNivel5(Vector3 posicao)
+    {
+        posicaoEntradaNivel5 = posicao;
+        entradaNivel5Preparada = true;
+    }
 
     void Start()
     {
-        if (string.Equals(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, "Nivel4", System.StringComparison.OrdinalIgnoreCase))
+        string cenaAtual = SceneManager.GetActiveScene().name;
+        if (string.Equals(cenaAtual, "Nivel5", System.StringComparison.OrdinalIgnoreCase))
+        {
+            IniciarNivel5SemIntro();
+            return;
+        }
+
+        if (string.Equals(cenaAtual, "Nivel4", System.StringComparison.OrdinalIgnoreCase))
         {
             GarantirColisaoMedicos();
             PrepararVisaoEmbacada();
+            medicosNivel4 = new Transform[3];
+            string[] nomesMedicos = { "Medico1", "Medico2", "Medico3" };
+            for (int i = 0; i < nomesMedicos.Length; i++)
+            {
+                GameObject medico = GameObject.Find(nomesMedicos[i]);
+                if (medico != null) medicosNivel4[i] = medico.transform;
+                else Debug.LogWarning($"IntroManager: não encontrou {nomesMedicos[i]} no Nivel4.", this);
+            }
+            StartCoroutine(AguardarAproximacaoDosMedicos());
         }
 
         // Este efeito pertence somente à conclusão da tarefa de regar a planta.
@@ -43,6 +84,141 @@ public class IntroManager : MonoBehaviour
 
         // 2. Inicia a contagem
         StartCoroutine(TrocarParaPlayer());
+    }
+
+    private void IniciarNivel5SemIntro()
+    {
+        bool veioDoNivel4 = entradaNivel5Preparada;
+        if (telaPretaObj == null) telaPretaObj = EncontrarObjetoNaCena("TelaPreta");
+        if (telaPretaFechandoObj == null) telaPretaFechandoObj = EncontrarObjetoNaCena("TelaPretaFechar");
+
+        if (camIntroObj != null) camIntroObj.SetActive(false);
+        if (telaPretaObj != null) telaPretaObj.SetActive(false);
+        if (telaPretaFechandoObj != null) telaPretaFechandoObj.SetActive(false);
+
+        if (playerObj != null)
+        {
+            playerObj.SetActive(true);
+            if (entradaNivel5Preparada)
+            {
+                CharacterController controlador = playerObj.GetComponent<CharacterController>();
+                if (controlador != null) controlador.enabled = false;
+                playerObj.transform.position = posicaoEntradaNivel5;
+                Physics.SyncTransforms();
+                if (controlador != null) controlador.enabled = true;
+            }
+        }
+
+        if (veioDoNivel4 && manterVisaoEmbacadaNoNivel5)
+        {
+            PrepararVisaoEmbacada();
+            profundidadeDeCampo.gaussianEnd.value = desfoqueNivel5;
+            profundidadeDeCampo.gaussianMaxRadius.value = raioDesfoqueNivel5;
+            vinhetaVisaoEmbacada.intensity.value = vinhetaNivel5;
+            manterVisaoEmbacadaNoNivel5 = false;
+        }
+
+        GameObject telaRapida = telaPretaFecharRapidoObj != null
+            ? telaPretaFecharRapidoObj
+            : EncontrarObjetoNaCena("TelaPretaFecharRapido");
+        if (telaRapida != null)
+        {
+            if (veioDoNivel4)
+            {
+                telaRapida.SetActive(true);
+                foreach (Animator animator in telaRapida.GetComponentsInChildren<Animator>(true))
+                {
+                    string estado = animator.name == "Cima" ? "FecharRapidoCima"
+                        : animator.name == "Baixo" ? "FecharRapidoBaixo" : null;
+                    if (estado == null) continue;
+
+                    animator.enabled = true;
+                    animator.Play(estado, 0,
+                        TaskManager.DuracaoFechamentoTelaPretaRapida / TaskManager.DuracaoAnimacaoTelaPretaRapida);
+                    animator.Update(0f);
+                }
+                StartCoroutine(OcultarTelaRapidaAposAbertura(telaRapida));
+            }
+            else
+            {
+                telaRapida.SetActive(false);
+            }
+        }
+
+        entradaNivel5Preparada = false;
+    }
+
+    private IEnumerator OcultarTelaRapidaAposAbertura(GameObject telaRapida)
+    {
+        yield return new WaitForSecondsRealtime(
+            TaskManager.DuracaoAnimacaoTelaPretaRapida - TaskManager.DuracaoFechamentoTelaPretaRapida);
+        if (telaRapida != null) telaRapida.SetActive(false);
+    }
+
+    private IEnumerator AguardarAproximacaoDosMedicos()
+    {
+        while (!visaoInicialNivel4Concluida)
+            yield return null;
+
+        PlayerFPS jogador = playerObj != null ? playerObj.GetComponent<PlayerFPS>() : null;
+        if (jogador == null || medicosNivel4 == null) yield break;
+
+        while (!transicaoNivel4Iniciada)
+        {
+            for (int i = 0; i < medicosNivel4.Length; i++)
+            {
+                Transform medico = medicosNivel4[i];
+                if (medico == null || medicosVisitados.Contains(i)) continue;
+
+                Vector2 jogadorXZ = new Vector2(jogador.transform.position.x, jogador.transform.position.z);
+                Vector2 medicoXZ = new Vector2(medico.position.x, medico.position.z);
+                if (Vector2.Distance(jogadorXZ, medicoXZ) <= DistanciaParaAproximarMedico)
+                    medicosVisitados.Add(i);
+            }
+
+            if (medicosVisitados.Count == medicosNivel4.Length)
+            {
+                transicaoNivel4Iniciada = true;
+                yield return StartCoroutine(ConcluirNivel4AposVisitarMedicos());
+                yield break;
+            }
+
+            yield return null;
+        }
+    }
+
+    private IEnumerator ConcluirNivel4AposVisitarMedicos()
+    {
+        float desfoqueInicial = profundidadeDeCampo.gaussianEnd.value;
+        float vinhetaInicial = vinhetaVisaoEmbacada.intensity.value;
+        float raioInicial = profundidadeDeCampo.gaussianMaxRadius.value;
+        float tempo = 0f;
+        while (tempo < DuracaoEfeitoFinalNivel4)
+        {
+            tempo += Time.unscaledDeltaTime;
+            float progresso = Mathf.Clamp01(tempo / DuracaoEfeitoFinalNivel4);
+            float suave = progresso * progresso * (3f - 2f * progresso);
+            profundidadeDeCampo.gaussianEnd.value = Mathf.Lerp(desfoqueInicial, 0.1f, suave);
+            profundidadeDeCampo.gaussianMaxRadius.value = Mathf.Lerp(raioInicial, 2f, suave);
+            vinhetaVisaoEmbacada.intensity.value = Mathf.Lerp(vinhetaInicial, 0.85f, suave);
+            yield return null;
+        }
+
+        // No Nivel5, retoma a visão leve que permanece após a sequência de acordar.
+        desfoqueNivel5 = 5f;
+        raioDesfoqueNivel5 = 1.5f;
+        vinhetaNivel5 = 0.4f;
+        manterVisaoEmbacadaNoNivel5 = true;
+
+        TaskManager tarefas = FindAnyObjectByType<TaskManager>();
+        if (tarefas != null)
+            tarefas.ReproduzirTelaPretaFecharRapido();
+        else
+            Debug.LogWarning("IntroManager: não encontrou TaskManager para iniciar TelaPretaFecharRapido.", this);
+
+        yield return new WaitForSecondsRealtime(DuracaoFechamentoTransicao);
+        PrepararEntradaDiretaNivel5(PosicaoEntradaNivel5Padrao);
+        SceneManager.LoadScene("Nivel5");
     }
 
     private static void GarantirColisaoMedicos()
@@ -120,6 +296,29 @@ public class IntroManager : MonoBehaviour
         }
 
         // Mantém os dois efeitos ativos no restante do Nivel4 com intensidade reduzida.
+        visaoInicialNivel4Concluida = true;
+    }
+
+    private static GameObject EncontrarObjetoNaCena(string nome)
+    {
+        foreach (GameObject raiz in SceneManager.GetActiveScene().GetRootGameObjects())
+        {
+            Transform encontrado = EncontrarDescendente(raiz.transform, nome);
+            if (encontrado != null) return encontrado.gameObject;
+        }
+        return null;
+    }
+
+    private static Transform EncontrarDescendente(Transform raiz, string nome)
+    {
+        if (raiz == null) return null;
+        if (raiz.name == nome) return raiz;
+        for (int i = 0; i < raiz.childCount; i++)
+        {
+            Transform encontrado = EncontrarDescendente(raiz.GetChild(i), nome);
+            if (encontrado != null) return encontrado;
+        }
+        return null;
     }
 
     private IEnumerator TocarSomDeAcordar()

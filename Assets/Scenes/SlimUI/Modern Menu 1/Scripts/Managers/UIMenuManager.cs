@@ -81,6 +81,9 @@ namespace SlimUI.ModernMenu{
         public AudioSource swooshSound;
 
 		void Start(){
+			Cursor.lockState = CursorLockMode.None;
+			Cursor.visible = true;
+
 			CameraObject = transform.GetComponent<Animator>();
 
 			playMenu.SetActive(false);

@@ -5413,7 +5413,7 @@ MonoBehaviour:
   alimentacao: {fileID: 0}
   pessoasNivel2: {fileID: 0}
   regarPlantaConcluiTodasTarefas: 0
-  telaPretaFecharRapido: {fileID: 0}
+  telaPretaFecharRapido: {fileID: 1789524719}
   cadeiraSentavel: {fileID: 0}
   conversaAposRegar: {fileID: 0}
   posJantar: {fileID: 0}
@@ -5670,7 +5670,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8f4f497f11cea781bae410160dcaf835, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerFPS
-  velocidade: 3
+  velocidade: 2
   gravidade: -20
   cameraPlayer: {fileID: 330585546}
   sensibilidade: 0.2
@@ -28630,7 +28630,7 @@ MonoBehaviour:
   luzLuminaria: {fileID: 0}
   objetoTelaPretaFechar: {fileID: 0}
   esperaAntesDaTransicao: 0.5
-  proximaCena: Nivel3
+  proximaCena: Nivel5
 --- !u!4 &1248947131
 Transform:
   m_ObjectHideFlags: 0

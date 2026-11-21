@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class TaskManager : MonoBehaviour
 {
+    public const float DuracaoFechamentoTelaPretaRapida = 0.8f;
+    public const float DuracaoAnimacaoTelaPretaRapida = 1.3f;
+
     [Header("Quadro na Parede")]
     public Transform quadroObjeto; // Arraste o objeto "Quadro-Tarefas" aqui
 
@@ -101,8 +104,21 @@ public class TaskManager : MonoBehaviour
     void Start()
     {
         ConfigurarQuadro();
+        if (EstaNoNivel4()) MarcarTarefasDoNivel4ComoConcluidas();
         if (string.Equals(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, "Nivel3", System.StringComparison.OrdinalIgnoreCase))
             StartCoroutine(IniciarDialogoFinalNivel3AoChegar());
+    }
+
+    private void MarcarTarefasDoNivel4ComoConcluidas()
+    {
+        if (dailyTasks == null) return;
+
+        foreach (TaskData task in dailyTasks)
+        {
+            if (task == null || string.IsNullOrWhiteSpace(task.taskName)) continue;
+            if (tarefasConcluidas.Add(task.taskName))
+                AtivarXNoQuadro(task.taskName);
+        }
     }
 
     private IEnumerator IniciarDialogoFinalNivel3AoChegar()
@@ -141,17 +157,16 @@ public class TaskManager : MonoBehaviour
         while (conversaAposRegar != null && !conversaAposRegar.ConversaConcluida)
             yield return null;
 
-        DefinirPessoas(false);
-
         if (string.Equals(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, "Nivel3", System.StringComparison.OrdinalIgnoreCase))
         {
             TocarTelaPretaFecharRapido();
-            yield return new WaitForSecondsRealtime(2f);
+            yield return new WaitForSecondsRealtime(DuracaoFechamentoTelaPretaRapida);
 
+            DefinirPessoas(false);
             EncerrarCenaNivel3AposConversa();
             jogador.TeleportarPara(new Vector3(5.29f, jogador.transform.position.y, -25.88f));
 
-            yield return new WaitForSecondsRealtime(1.5f);
+            yield return new WaitForSecondsRealtime(DuracaoAnimacaoTelaPretaRapida - DuracaoFechamentoTelaPretaRapida);
             if (telaPretaFecharRapido != null)
                 telaPretaFecharRapido.SetActive(false);
         }
@@ -312,7 +327,7 @@ public class TaskManager : MonoBehaviour
                             "Nivel3",
                             System.StringComparison.OrdinalIgnoreCase);
                         if (!nivel3 && !EstaNoNivel1() && !EstaNoNivel4()) TocarTelaPretaFecharRapido();
-                        StartCoroutine(ConcluirRegarPlantaAposDoisSegundos(task));
+                        StartCoroutine(ConcluirRegarPlantaAposFechamento(task));
                     }
                 }
                 else
@@ -367,14 +382,14 @@ public class TaskManager : MonoBehaviour
 
     private IEnumerator OcultarTelaPretaQuandoAnimacaoTerminar()
     {
-        yield return new WaitForSecondsRealtime(3.5f);
+        yield return new WaitForSecondsRealtime(DuracaoAnimacaoTelaPretaRapida);
         if (telaPretaFecharRapido != null)
             telaPretaFecharRapido.SetActive(false);
     }
 
-    private IEnumerator ConcluirRegarPlantaAposDoisSegundos(TaskData tarefaPlanta)
+    private IEnumerator ConcluirRegarPlantaAposFechamento(TaskData tarefaPlanta)
     {
-        yield return new WaitForSecondsRealtime(2f);
+        yield return new WaitForSecondsRealtime(DuracaoFechamentoTelaPretaRapida);
 
         RegistrarTarefaConcluida(tarefaPlanta);
         AtivarIluminacaoAcesa();
@@ -401,8 +416,8 @@ public class TaskManager : MonoBehaviour
             Debug.LogWarning("TaskManager: atribua a conversa que será iniciada ao sentar após regar a planta.", this);
         }
 
-        // Deixa a animação completar a abertura depois de aplicar as mudanças.
-        yield return new WaitForSecondsRealtime(1.5f);
+        // Mantém o painel até a animação terminar de abrir após o fechamento em 0,8 s.
+        yield return new WaitForSecondsRealtime(DuracaoAnimacaoTelaPretaRapida - DuracaoFechamentoTelaPretaRapida);
         if (telaPretaFecharRapido != null)
             telaPretaFecharRapido.SetActive(false);
     }
@@ -424,7 +439,7 @@ public class TaskManager : MonoBehaviour
         if (posJantar != null) posJantar.SetActive(true);
 
         TocarTelaPretaFecharRapido();
-        yield return new WaitForSecondsRealtime(2f);
+        yield return new WaitForSecondsRealtime(DuracaoFechamentoTelaPretaRapida);
 
         PlayerFPS jogador = FindAnyObjectByType<PlayerFPS>();
         if (jogador != null)
@@ -520,9 +535,8 @@ public class TaskManager : MonoBehaviour
 
     private IEnumerator DesativarTelaPretaRapidaDepoisDaTransicao()
     {
-        // O clipe tem 3,5 s e começa 2 s antes do teleporte; espera apenas
-        // os 1,5 s restantes para não deixar o clipe em loop reiniciar.
-        yield return new WaitForSecondsRealtime(1.5f);
+        // A transição fecha aos 0,8 s e termina de abrir aos 1,3 s.
+        yield return new WaitForSecondsRealtime(DuracaoAnimacaoTelaPretaRapida - DuracaoFechamentoTelaPretaRapida);
         if (telaPretaFecharRapido != null)
             telaPretaFecharRapido.SetActive(false);
     }

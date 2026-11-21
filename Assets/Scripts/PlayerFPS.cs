@@ -73,6 +73,19 @@ public class PlayerFPS : MonoBehaviour
     private bool mouseLivre = false;
     private bool modoConversaAtivo = false;
     private bool descartarDeltaMouse;
+    private bool cameraLivreAtiva;
+    private string bufferCheatCamera = string.Empty;
+    private Keyboard tecladoCheatCamera;
+    private Vector3 posicaoLocalCameraAntesDoModoLivre;
+    private Quaternion rotacaoLocalCameraAntesDoModoLivre;
+    private float rotacaoVerticalCameraLivre;
+    private float velocidadeAtualCameraLivre = VelocidadeCameraLivre;
+    private MiraCircularUI miraCameraLivre;
+    private bool miraEstavaAtiva;
+    private Renderer[] renderizadoresCorpoCameraLivre;
+    private bool[] estadosRenderizadoresCorpoCameraLivre;
+    private const string ComandoCameraLivre = "livre";
+    private const float VelocidadeCameraLivre = 8f;
     private bool sentandoNaCadeira;
     private bool sentadoNaCadeira;
     private Vector3 posicaoNormalAntesDeSentar;
@@ -181,6 +194,14 @@ public class PlayerFPS : MonoBehaviour
 
     void Update()
     {
+        AtualizarTecladoCheatCamera();
+
+        if (cameraLivreAtiva)
+        {
+            AtualizarCameraLivre();
+            return;
+        }
+
         // Alterna entre soltar e prender o mouse com ESC
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
@@ -198,6 +219,139 @@ public class PlayerFPS : MonoBehaviour
         if (!sentadoNaCadeira) Movimento();
         Camera();
         if (!modoConversaAtivo) GerenciarInteracao();
+    }
+
+    private void AtualizarTecladoCheatCamera()
+    {
+        Keyboard tecladoAtual = Keyboard.current;
+        if (tecladoAtual == tecladoCheatCamera) return;
+
+        if (tecladoCheatCamera != null)
+            tecladoCheatCamera.onTextInput -= ReceberTextoCheatCamera;
+
+        tecladoCheatCamera = tecladoAtual;
+        if (tecladoCheatCamera != null)
+            tecladoCheatCamera.onTextInput += ReceberTextoCheatCamera;
+    }
+
+    private void OnDisable()
+    {
+        if (tecladoCheatCamera != null)
+            tecladoCheatCamera.onTextInput -= ReceberTextoCheatCamera;
+        tecladoCheatCamera = null;
+    }
+
+    private void ReceberTextoCheatCamera(char caractere)
+    {
+        if (!char.IsLetter(caractere) || char.ToLowerInvariant(caractere) != caractere)
+        {
+            bufferCheatCamera = string.Empty;
+            return;
+        }
+
+        bufferCheatCamera += caractere;
+        if (!ComandoCameraLivre.StartsWith(bufferCheatCamera, System.StringComparison.Ordinal))
+            bufferCheatCamera = caractere == 'l' ? "l" : string.Empty;
+
+        if (bufferCheatCamera != ComandoCameraLivre) return;
+
+        bufferCheatCamera = string.Empty;
+        AlternarCameraLivre();
+    }
+
+    private void AlternarCameraLivre()
+    {
+        if (cameraPlayer == null) return;
+
+        cameraLivreAtiva = !cameraLivreAtiva;
+        if (cameraLivreAtiva)
+        {
+            posicaoLocalCameraAntesDoModoLivre = cameraPlayer.localPosition;
+            rotacaoLocalCameraAntesDoModoLivre = cameraPlayer.localRotation;
+            float anguloVertical = cameraPlayer.eulerAngles.x;
+            rotacaoVerticalCameraLivre = anguloVertical > 180f ? anguloVertical - 360f : anguloVertical;
+            miraCameraLivre = FindAnyObjectByType<MiraCircularUI>();
+            if (miraCameraLivre != null)
+            {
+                miraEstavaAtiva = miraCameraLivre.enabled;
+                miraCameraLivre.enabled = false;
+            }
+            renderizadoresCorpoCameraLivre = GetComponents<Renderer>();
+            estadosRenderizadoresCorpoCameraLivre = new bool[renderizadoresCorpoCameraLivre.Length];
+            for (int i = 0; i < renderizadoresCorpoCameraLivre.Length; i++)
+            {
+                estadosRenderizadoresCorpoCameraLivre[i] = renderizadoresCorpoCameraLivre[i].enabled;
+                renderizadoresCorpoCameraLivre[i].enabled = false;
+            }
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+            descartarDeltaMouse = true;
+            Debug.Log("Cheat 'livre': câmera livre ativada. Digite 'livre' novamente para voltar.", this);
+            return;
+        }
+
+        cameraPlayer.localPosition = posicaoLocalCameraAntesDoModoLivre;
+        cameraPlayer.localRotation = rotacaoLocalCameraAntesDoModoLivre;
+        if (miraCameraLivre != null)
+        {
+            miraCameraLivre.enabled = miraEstavaAtiva;
+            miraCameraLivre = null;
+        }
+        if (renderizadoresCorpoCameraLivre != null)
+        {
+            for (int i = 0; i < renderizadoresCorpoCameraLivre.Length; i++)
+            {
+                if (renderizadoresCorpoCameraLivre[i] != null)
+                    renderizadoresCorpoCameraLivre[i].enabled = estadosRenderizadoresCorpoCameraLivre[i];
+            }
+            renderizadoresCorpoCameraLivre = null;
+            estadosRenderizadoresCorpoCameraLivre = null;
+        }
+        TravarMouse();
+        Debug.Log("Cheat 'livre': câmera normal restaurada.", this);
+    }
+
+    private void AtualizarCameraLivre()
+    {
+        if (cameraPlayer == null || Keyboard.current == null || Mouse.current == null) return;
+
+        Vector2 deltaMouse = descartarDeltaMouse ? Vector2.zero : Mouse.current.delta.ReadValue();
+        descartarDeltaMouse = false;
+        if (!ValorFinito(deltaMouse.x) || !ValorFinito(deltaMouse.y))
+            deltaMouse = Vector2.zero;
+        else
+            deltaMouse = Vector2.ClampMagnitude(deltaMouse, 100f);
+
+        float scroll = Mouse.current.scroll.ReadValue().y;
+        if (!float.IsNaN(scroll) && !float.IsInfinity(scroll) && Mathf.Abs(scroll) > 0.01f)
+            velocidadeAtualCameraLivre = Mathf.Clamp(
+                velocidadeAtualCameraLivre + Mathf.Clamp(scroll / 120f, -3f, 3f), 1f, 40f);
+
+        if (!ValorFinito(rotacaoHorizontalAlvo))
+            rotacaoHorizontalAlvo = transform.eulerAngles.y;
+        if (!ValorFinito(rotacaoVerticalCameraLivre))
+        {
+            float inclinacaoAtual = cameraPlayer.eulerAngles.x;
+            rotacaoVerticalCameraLivre = inclinacaoAtual > 180f ? inclinacaoAtual - 360f : inclinacaoAtual;
+        }
+
+        float sensibilidadeSegura = ValorFinito(sensibilidade) ? sensibilidade : 0f;
+        rotacaoHorizontalAlvo = Mathf.Repeat(rotacaoHorizontalAlvo + deltaMouse.x * sensibilidadeSegura, 360f);
+        rotacaoVerticalCameraLivre = Mathf.Clamp(
+            rotacaoVerticalCameraLivre - deltaMouse.y * sensibilidadeSegura, -85f, 85f);
+        cameraPlayer.rotation = Quaternion.Euler(rotacaoVerticalCameraLivre, rotacaoHorizontalAlvo, 0f);
+
+        Vector3 direcao = Vector3.zero;
+        if (Keyboard.current.wKey.isPressed) direcao += cameraPlayer.forward;
+        if (Keyboard.current.sKey.isPressed) direcao -= cameraPlayer.forward;
+        if (Keyboard.current.dKey.isPressed) direcao += cameraPlayer.right;
+        if (Keyboard.current.aKey.isPressed) direcao -= cameraPlayer.right;
+        if (Keyboard.current.eKey.isPressed || Keyboard.current.spaceKey.isPressed) direcao += Vector3.up;
+        if (Keyboard.current.qKey.isPressed || Keyboard.current.leftCtrlKey.isPressed) direcao -= Vector3.up;
+
+        if (direcao.sqrMagnitude > 1f) direcao.Normalize();
+        float multiplicador = Keyboard.current.leftShiftKey.isPressed ? 3f : 1f;
+        cameraPlayer.position += direcao * velocidadeAtualCameraLivre * multiplicador * Time.unscaledDeltaTime;
     }
 
     private void OnApplicationFocus(bool ganhouFoco)
@@ -972,7 +1126,7 @@ public class PlayerFPS : MonoBehaviour
         else
             Debug.LogWarning("PlayerFPS: não encontrou TaskManager para tocar TelaPretaFecharRapido.", this);
 
-        yield return new WaitForSecondsRealtime(1.5f);
+        yield return new WaitForSecondsRealtime(TaskManager.DuracaoFechamentoTelaPretaRapida);
 
         // Reutiliza a posição da cozinha, mantendo a altura normal atual do Player.
         // O teleporte após a conversa preserva essa altura quando ele está sentado.
@@ -1011,9 +1165,9 @@ public class PlayerFPS : MonoBehaviour
                 if (novoOutline == null)
                     novoOutline = raizVisual.gameObject.AddComponent<Outline>();
 
-                novoOutline.OutlineMode = Outline.Mode.OutlineAndSilhouette;
+                novoOutline.OutlineMode = Outline.Mode.OutlineVisible;
                 novoOutline.OutlineColor = new Color(1f, 0.28f, 0f, 1f);
-                novoOutline.OutlineWidth = 22f;
+                novoOutline.OutlineWidth = 4f;
                 novoOutline.enabled = true;
             }
         }
