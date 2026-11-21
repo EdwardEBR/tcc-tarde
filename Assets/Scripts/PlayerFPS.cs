@@ -498,6 +498,9 @@ public class PlayerFPS : MonoBehaviour
         sentadoNaCadeira = true;
         sentandoNaCadeira = false;
 
+        SequenciaCronologicaPessoas sequenciaPessoas = FindAnyObjectByType<SequenciaCronologicaPessoas>();
+        if (sequenciaPessoas != null) sequenciaPessoas.Iniciar();
+
         TaskManager gerenciadorTarefas = FindAnyObjectByType<TaskManager>();
         if (gerenciadorTarefas != null)
             gerenciadorTarefas.IniciarDialogoAposSentar();
