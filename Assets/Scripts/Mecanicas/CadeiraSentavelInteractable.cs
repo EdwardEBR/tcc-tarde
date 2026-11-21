@@ -6,6 +6,8 @@ public class CadeiraSentavelInteractable : MonoBehaviour
     [Header("Altura do assento")]
     [Range(0.2f, 0.8f)] public float alturaRelativaDoAssento = 0.45f;
     public float rotacaoSentado;
+    public bool interacaoDisponivelAoIniciar;
+    public bool frenteNoEixoZNegativo;
 
     private Outline[] outlines;
     private bool liberada;
@@ -13,6 +15,7 @@ public class CadeiraSentavelInteractable : MonoBehaviour
 
     private void Awake()
     {
+        liberada = interacaoDisponivelAoIniciar;
         outlines = GetComponentsInChildren<Outline>(true);
         if (outlines.Length == 0)
             outlines = new[] { gameObject.AddComponent<Outline>() };
@@ -82,7 +85,7 @@ public class CadeiraSentavelInteractable : MonoBehaviour
             limites.center.x,
             alturaAssento + jogador.MeiaAlturaMundialDoPersonagem,
             limites.center.z);
-        Vector3 frenteDaCadeira = transform.right;
+        Vector3 frenteDaCadeira = frenteNoEixoZNegativo ? -transform.forward : transform.right;
         frenteDaCadeira.y = 0f;
         if (frenteDaCadeira.sqrMagnitude < 0.001f)
             frenteDaCadeira = transform.forward;
