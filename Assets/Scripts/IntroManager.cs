@@ -16,6 +16,7 @@ public class IntroManager : MonoBehaviour
 
     private const float DistanciaParaAproximarMedico = 3f;
     private const float TempoMaximoParaVisitarMedicos = 40f;
+    private const float AtrasoAntesDaTransicaoNivel5 = 3f;
     private const float DuracaoAteTeleporteNivel4 = 7f;
     private const float DuracaoFechamentoTransicao = TaskManager.DuracaoFechamentoTelaPretaRapida;
     private const float DuracaoEfeitoFinalNivel4 = DuracaoAteTeleporteNivel4 - DuracaoFechamentoTransicao;
@@ -260,20 +261,59 @@ public class IntroManager : MonoBehaviour
 
     private IEnumerator ConcluirNivel4AposVisitarMedicos()
     {
+        yield return new WaitForSeconds(AtrasoAntesDaTransicaoNivel5);
+
+        float duracaoEfeitoFinal = DuracaoEfeitoFinalNivel4;
+        AudioClip zumbido = Resources.Load<AudioClip>("Sons/AudioClip/Snd-ZumbidoTeleporteNivel5");
+        if (zumbido != null)
+        {
+            zumbido.LoadAudioData();
+            while (zumbido.loadState == AudioDataLoadState.Loading)
+                yield return null;
+
+            if (zumbido.loadState == AudioDataLoadState.Loaded)
+            {
+                AudioSource fonteZumbido = GetComponent<AudioSource>();
+                if (fonteZumbido == null) fonteZumbido = gameObject.AddComponent<AudioSource>();
+                fonteZumbido.playOnAwake = false;
+                fonteZumbido.loop = false;
+                fonteZumbido.spatialBlend = 0f;
+                fonteZumbido.volume = 1f;
+                fonteZumbido.clip = zumbido;
+                fonteZumbido.Play();
+                duracaoEfeitoFinal = Mathf.Max(0.1f, zumbido.length - DuracaoFechamentoTransicao);
+            }
+            else
+            {
+                Debug.LogWarning("IntroManager: não foi possível carregar o zumbido para a transição ao Nivel5.", this);
+            }
+        }
+        else
+        {
+            Debug.LogWarning("IntroManager: não encontrou Snd-ZumbidoTeleporteNivel5 em Resources/Sons/AudioClip.", this);
+        }
+
         float desfoqueInicial = profundidadeDeCampo.gaussianEnd.value;
         float vinhetaInicial = vinhetaVisaoEmbacada.intensity.value;
+        float suavidadeVinhetaInicial = vinhetaVisaoEmbacada.smoothness.value;
         float raioInicial = profundidadeDeCampo.gaussianMaxRadius.value;
         float tempo = 0f;
-        while (tempo < DuracaoEfeitoFinalNivel4)
+        while (tempo < duracaoEfeitoFinal)
         {
             tempo += Time.deltaTime;
-            float progresso = Mathf.Clamp01(tempo / DuracaoEfeitoFinalNivel4);
+            float progresso = Mathf.Clamp01(tempo / duracaoEfeitoFinal);
             float suave = progresso * progresso * (3f - 2f * progresso);
             profundidadeDeCampo.gaussianEnd.value = Mathf.Lerp(desfoqueInicial, 0.1f, suave);
             profundidadeDeCampo.gaussianMaxRadius.value = Mathf.Lerp(raioInicial, 2f, suave);
             vinhetaVisaoEmbacada.intensity.value = Mathf.Lerp(vinhetaInicial, 1f, suave);
+            vinhetaVisaoEmbacada.smoothness.value = Mathf.Lerp(suavidadeVinhetaInicial, 1f, suave);
             yield return null;
         }
+
+        profundidadeDeCampo.gaussianEnd.value = 0.1f;
+        profundidadeDeCampo.gaussianMaxRadius.value = 2f;
+        vinhetaVisaoEmbacada.intensity.value = 1f;
+        vinhetaVisaoEmbacada.smoothness.value = 1f;
 
         // No Nivel5, retoma a visão leve que permanece após a sequência de acordar.
         desfoqueNivel5 = 5f;

@@ -56,6 +56,9 @@ public class PlayerFPS : MonoBehaviour
     private AudioSource audioPassos;
     private float proximoPasso;
     private bool alternarPasso;
+    private AudioSource audioAmbienciaJantar;
+    private AudioClip clipAmbienciaJantar;
+    private Coroutine rotinaFadeAmbienciaJantar;
     private AudioSource somGeladeira;
     private AudioSource somAmbiente;
 
@@ -130,6 +133,20 @@ public class PlayerFPS : MonoBehaviour
         audioPassos.playOnAwake = false;
         if (somPasso1 == null) somPasso1 = Resources.Load<AudioClip>("Sons/AudioClip/Snd-Passo1");
         if (somPasso2 == null) somPasso2 = Resources.Load<AudioClip>("Sons/AudioClip/Snd-Passo2");
+        if (EstaNoNivel2())
+        {
+            clipAmbienciaJantar = Resources.Load<AudioClip>("Sons/AudioClip/DinnerAmbience");
+            if (clipAmbienciaJantar == null)
+                Debug.LogWarning("PlayerFPS: não foi possível carregar DinnerAmbience em Resources/Sons/AudioClip.", this);
+            else
+            {
+                audioAmbienciaJantar = gameObject.AddComponent<AudioSource>();
+                audioAmbienciaJantar.playOnAwake = false;
+                audioAmbienciaJantar.loop = true;
+                audioAmbienciaJantar.spatialBlend = 0f;
+                audioAmbienciaJantar.volume = 0.65f;
+            }
+        }
         ConfigurarSomAmbiente();
         ConfigurarSomGeladeira();
         ConfigurarPontoDaMao();
@@ -683,6 +700,7 @@ public class PlayerFPS : MonoBehaviour
         velocidadeVertical = Vector3.zero;
         sentadoNaCadeira = true;
         sentandoNaCadeira = false;
+        IniciarAmbienciaJantar();
 
         SequenciaCronologicaPessoas sequenciaPessoas = FindAnyObjectByType<SequenciaCronologicaPessoas>();
         if (sequenciaPessoas != null) sequenciaPessoas.Iniciar();
@@ -694,6 +712,9 @@ public class PlayerFPS : MonoBehaviour
 
     public void TeleportarPara(Vector3 posicao)
     {
+        if (EhTeleporteParaCozinhaNivel2(posicao))
+            PararAmbienciaJantarComFade();
+
         bool estavaSentado = sentadoNaCadeira || sentandoNaCadeira;
         Vector3 destino = posicao;
         Quaternion rotacaoDestino = transform.rotation;
@@ -1178,6 +1199,65 @@ public class PlayerFPS : MonoBehaviour
             louca.gameObject.SetActive(false);
         else
             Debug.LogWarning("PlayerFPS: não encontrou Louça dentro de PósJantar para desativar.", this);
+    }
+
+    private void IniciarAmbienciaJantar()
+    {
+        if (audioAmbienciaJantar == null || clipAmbienciaJantar == null) return;
+        if (rotinaFadeAmbienciaJantar != null)
+        {
+            StopCoroutine(rotinaFadeAmbienciaJantar);
+            rotinaFadeAmbienciaJantar = null;
+        }
+
+        audioAmbienciaJantar.clip = clipAmbienciaJantar;
+        audioAmbienciaJantar.volume = 0.65f;
+        if (!audioAmbienciaJantar.isPlaying)
+            audioAmbienciaJantar.Play();
+    }
+
+    private void PararAmbienciaJantarComFade()
+    {
+        if (audioAmbienciaJantar == null || !audioAmbienciaJantar.isPlaying) return;
+        if (rotinaFadeAmbienciaJantar != null)
+            StopCoroutine(rotinaFadeAmbienciaJantar);
+        rotinaFadeAmbienciaJantar = StartCoroutine(FadeSaidaAmbienciaJantar());
+    }
+
+    private IEnumerator FadeSaidaAmbienciaJantar()
+    {
+        float volumeInicial = audioAmbienciaJantar.volume;
+        const float duracao = 0.75f;
+        float tempo = 0f;
+        while (tempo < duracao && audioAmbienciaJantar != null)
+        {
+            tempo += Time.unscaledDeltaTime;
+            audioAmbienciaJantar.volume = Mathf.Lerp(volumeInicial, 0f, Mathf.Clamp01(tempo / duracao));
+            yield return null;
+        }
+
+        if (audioAmbienciaJantar != null)
+        {
+            audioAmbienciaJantar.Stop();
+            audioAmbienciaJantar.volume = 0.65f;
+        }
+        rotinaFadeAmbienciaJantar = null;
+    }
+
+    private static bool EstaNoNivel2()
+    {
+        return string.Equals(
+            UnityEngine.SceneManagement.SceneManager.GetActiveScene().name,
+            "Nivel2",
+            System.StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool EhTeleporteParaCozinhaNivel2(Vector3 destino)
+    {
+        const float tolerancia = 0.75f;
+        return EstaNoNivel2()
+            && Mathf.Abs(destino.x + 7.661f) <= tolerancia
+            && Mathf.Abs(destino.z + 32.293f) <= tolerancia;
     }
 
     private void ConfigurarIndicadorEstanteLivro()
