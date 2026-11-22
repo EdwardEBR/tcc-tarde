@@ -117,7 +117,7 @@ public class IntroManager : MonoBehaviour
             : null;
         if (cameraDoJogador != null)
         {
-            foreach (Camera cameraNaCena in FindObjectsByType<Camera>(FindObjectsSortMode.None))
+            foreach (Camera cameraNaCena in FindObjectsByType<Camera>())
                 cameraNaCena.enabled = cameraNaCena == cameraDoJogador;
             cameraDoJogador.enabled = true;
         }

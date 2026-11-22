@@ -115,7 +115,7 @@ public class SequenciaCronologicaPessoas : MonoBehaviour
         creditText.fontSize = 44f;
         creditText.color = Color.white;
         creditText.alignment = TextAlignmentOptions.Center;
-        creditText.enableWordWrapping = true;
+        creditText.textWrappingMode = TextWrappingModes.Normal;
         creditText.lineSpacing = 8f;
         string destaque = ColorUtility.ToHtmlStringRGB(new Color(1f, 0.686f, 0f));
         creditText.text =

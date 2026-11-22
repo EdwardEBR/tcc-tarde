@@ -474,7 +474,6 @@ GameObject:
   - component: {fileID: 351642386389050803}
   - component: {fileID: 351642386389050807}
   - component: {fileID: 351642386389050800}
-  - component: {fileID: 351642386389050801}
   - component: {fileID: 351642386389050802}
   m_Layer: 0
   m_Name: HeaderBold
@@ -559,14 +558,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!222 &351642386389050801
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 351642386389050812}
-  m_CullTransparentMesh: 0
 --- !u!114 &351642386389050802
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1433,7 +1424,6 @@ GameObject:
   - component: {fileID: 351642387682386970}
   - component: {fileID: 351642387682386974}
   - component: {fileID: 351642387682386975}
-  - component: {fileID: 351642387682386968}
   - component: {fileID: 351642387682386969}
   m_Layer: 0
   m_Name: Header
@@ -1519,14 +1509,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!222 &351642387682386968
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 351642387682386971}
-  m_CullTransparentMesh: 0
 --- !u!114 &351642387682386969
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1633,7 +1615,6 @@ GameObject:
   - component: {fileID: 351642387760220686}
   - component: {fileID: 351642387760220674}
   - component: {fileID: 351642387760220675}
-  - component: {fileID: 351642387760220684}
   - component: {fileID: 351642387760220685}
   m_Layer: 0
   m_Name: TextTooltip
@@ -1718,14 +1699,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!222 &351642387760220684
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 351642387760220687}
-  m_CullTransparentMesh: 0
 --- !u!114 &351642387760220685
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -34139,10 +34112,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5388222474218088325, guid: 817319833dd713d45af5c2121e9649c7, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.size
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 5388222474218088325, guid: 817319833dd713d45af5c2121e9649c7, type: 3}
-      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_Mode
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5388222474218088325, guid: 817319833dd713d45af5c2121e9649c7, type: 3}
@@ -34150,24 +34119,8 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 393194567867878790}
     - target: {fileID: 5388222474218088325, guid: 817319833dd713d45af5c2121e9649c7, type: 3}
-      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_Target
-      value: 
-      objectReference: {fileID: 393194567867878790}
-    - target: {fileID: 5388222474218088325, guid: 817319833dd713d45af5c2121e9649c7, type: 3}
-      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_CallState
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 5388222474218088325, guid: 817319833dd713d45af5c2121e9649c7, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
       value: Position2
-      objectReference: {fileID: 0}
-    - target: {fileID: 5388222474218088325, guid: 817319833dd713d45af5c2121e9649c7, type: 3}
-      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_MethodName
-      value: ReturnMenu
-      objectReference: {fileID: 0}
-    - target: {fileID: 5388222474218088325, guid: 817319833dd713d45af5c2121e9649c7, type: 3}
-      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_Arguments.m_ObjectArgumentAssemblyTypeName
-      value: UnityEngine.Object, UnityEngine
       objectReference: {fileID: 0}
     - target: {fileID: 5388246411556146967, guid: 817319833dd713d45af5c2121e9649c7, type: 3}
       propertyPath: m_Color.g

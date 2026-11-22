@@ -7,6 +7,7 @@ using UnityEngine.SceneManagement;
 namespace SlimUI.ModernMenu{
 	public class UIMenuManager : MonoBehaviour {
 		private Animator CameraObject;
+	private MainMenuPhotoSlideshow photoSlideshow;
 
 		// campaign button sub menu
         [Header("MENUS")]
@@ -24,7 +25,6 @@ namespace SlimUI.ModernMenu{
         public enum Theme {custom1, custom2, custom3};
         [Header("THEME SETTINGS")]
         public Theme theme;
-        private int themeIndex;
         public ThemedUIData themeController;
 
         [Header("PANELS")]
@@ -94,6 +94,44 @@ namespace SlimUI.ModernMenu{
 
 			ConfigurarBotoesDeSave();
 			SetThemeColors();
+			// O objeto referenciado por mainMenu pode ser a raiz Canvas_DefaultTemplate1
+			// no Demo1. Não amarre a criação do fundo a um nome específico de GameObject.
+			if(mainMenu != null && Camera.main != null){
+				GameObject slideshow = new GameObject("Main_Menu_PhotoSlideshow");
+				photoSlideshow = slideshow.AddComponent<MainMenuPhotoSlideshow>();
+				Canvas canvasMenu = mainMenu.GetComponentInParent<Canvas>();
+				if(canvasMenu == null)
+					canvasMenu = mainMenu.GetComponentInChildren<Canvas>(true);
+				photoSlideshow.Inicializar(Camera.main, canvasMenu);
+				photoSlideshow.DefinirContrasteAtivo(true);
+				AplicarLegibilidadeMenuPrincipal();
+			}
+		}
+
+		private void AplicarLegibilidadeMenuPrincipal(){
+			if(mainMenu == null) return;
+
+			Button[] botoes = mainMenu.GetComponentsInChildren<Button>(true);
+			foreach(Button botao in botoes){
+				TMP_Text rotulo = botao.GetComponentInChildren<TMP_Text>(true);
+				if(rotulo != null){
+					rotulo.color = Color.white;
+					rotulo.fontSize = Mathf.Max(rotulo.fontSize, 30f);
+					rotulo.fontStyle |= FontStyles.Bold;
+					rotulo.enableAutoSizing = false;
+				}
+
+				ColorBlock cores = botao.colors;
+				cores.highlightedColor = new Color(1f, 0.84f, 0.54f, 1f);
+				cores.selectedColor = cores.highlightedColor;
+				cores.pressedColor = new Color(1f, 0.65f, 0.24f, 1f);
+				cores.fadeDuration = 0.12f;
+				botao.colors = cores;
+			}
+		}
+
+		private void DefinirContrasteDoFundo(bool ativo){
+			if(photoSlideshow != null) photoSlideshow.DefinirContrasteAtivo(ativo);
 		}
 
 		private void ConfigurarBotoesDeSave(){
@@ -120,17 +158,14 @@ namespace SlimUI.ModernMenu{
 				case Theme.custom1:
 					themeController.currentColor = themeController.custom1.graphic1;
 					themeController.textColor = themeController.custom1.text1;
-					themeIndex = 0;
 					break;
 				case Theme.custom2:
 					themeController.currentColor = themeController.custom2.graphic2;
 					themeController.textColor = themeController.custom2.text2;
-					themeIndex = 1;
 					break;
 				case Theme.custom3:
 					themeController.currentColor = themeController.custom3.graphic3;
 					themeController.textColor = themeController.custom3.text3;
-					themeIndex = 2;
 					break;
 				default:
 					Debug.Log("Invalid theme selected.");
@@ -139,12 +174,14 @@ namespace SlimUI.ModernMenu{
 		}
 
 		public void PlayCampaign(){
+			DefinirContrasteDoFundo(false);
 			exitMenu.SetActive(false);
 			if(extrasMenu) extrasMenu.SetActive(false);
 			playMenu.SetActive(true);
 		}
 		
 		public void PlayCampaignMobile(){
+			DefinirContrasteDoFundo(false);
 			exitMenu.SetActive(false);
 			if(extrasMenu) extrasMenu.SetActive(false);
 			playMenu.SetActive(true);
@@ -152,6 +189,7 @@ namespace SlimUI.ModernMenu{
 		}
 
 		public void ReturnMenu(){
+			DefinirContrasteDoFundo(true);
 			playMenu.SetActive(false);
 			if(extrasMenu) extrasMenu.SetActive(false);
 			exitMenu.SetActive(false);
@@ -190,15 +228,18 @@ namespace SlimUI.ModernMenu{
 		}
 
 		public void Position2(){
+			DefinirContrasteDoFundo(false);
 			DisablePlayCampaign();
 			CameraObject.SetFloat("Animate",1);
 		}
 
 		public void Position1(){
+			DefinirContrasteDoFundo(true);
 			CameraObject.SetFloat("Animate",0);
 		}
 
 		void DisablePanels(){
+			DefinirContrasteDoFundo(false);
 			PanelControls.SetActive(false);
 			PanelVideo.SetActive(false);
 			PanelGame.SetActive(false);
@@ -277,12 +318,14 @@ namespace SlimUI.ModernMenu{
 
 		// Are You Sure - Quit Panel Pop Up
 		public void AreYouSure(){
+			DefinirContrasteDoFundo(false);
 			exitMenu.SetActive(true);
 			if(extrasMenu) extrasMenu.SetActive(false);
 			DisablePlayCampaign();
 		}
 
 		public void AreYouSureMobile(){
+			DefinirContrasteDoFundo(false);
 			exitMenu.SetActive(true);
 			if(extrasMenu) extrasMenu.SetActive(false);
 			mainMenu.SetActive(false);
@@ -290,6 +333,7 @@ namespace SlimUI.ModernMenu{
 		}
 
 		public void ExtrasMenu(){
+			DefinirContrasteDoFundo(false);
 			playMenu.SetActive(false);
 			if(extrasMenu) extrasMenu.SetActive(true);
 			exitMenu.SetActive(false);

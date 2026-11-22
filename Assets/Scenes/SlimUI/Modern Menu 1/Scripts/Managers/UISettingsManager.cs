@@ -50,7 +50,6 @@ namespace SlimUI.ModernMenu{
 		public GameObject sensitivityYSlider;
 		public GameObject mouseSmoothSlider;
 
-		private float sliderValue = 0.0f;
 		private float sliderValueXSensitivity = 0.0f;
 		private float sliderValueYSensitivity = 0.0f;
 		private float sliderValueSmoothing = 0.0f;
@@ -199,7 +198,6 @@ namespace SlimUI.ModernMenu{
 		}
 
 		public void Update (){
-			//sliderValue = musicSlider.GetComponent<Slider>().value;
 			sliderValueXSensitivity = sensitivityXSlider.GetComponent<Slider>().value;
 			sliderValueYSensitivity = sensitivityYSlider.GetComponent<Slider>().value;
 			sliderValueSmoothing = mouseSmoothSlider.GetComponent<Slider>().value;
@@ -217,7 +215,6 @@ namespace SlimUI.ModernMenu{
 		}
 
 		public void MusicSlider (){
-			//PlayerPrefs.SetFloat("MusicVolume", sliderValue);
 			PlayerPrefs.SetFloat("MusicVolume", musicSlider.GetComponent<Slider>().value);
 		}
 

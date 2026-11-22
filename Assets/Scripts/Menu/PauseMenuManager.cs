@@ -377,16 +377,30 @@ public sealed class PauseMenuManager : MonoBehaviour
         MostrarStatus("Jogo salvo nesta cena.");
     }
 
-    private bool GravarSaveAtual()
+    private bool GravarSaveAtual(bool preservarSessaoParaContinuar = false)
     {
         if (jogador == null || InteracaoEmAndamento()) return false;
 
-        string cena = SceneManager.GetActiveScene().name;
+        try
+        {
+            SaveGameDatabase.Save(CriarDadosDeSaveAtual(), preservarSessaoParaContinuar);
+            PlayerPrefs.Save();
+            return true;
+        }
+        catch (System.Exception exception)
+        {
+            Debug.LogError("PauseMenuManager: falha ao salvar antes de sair para o menu: " + exception.Message, this);
+            return false;
+        }
+    }
+
+    private SaveGameDatabase.SaveData CriarDadosDeSaveAtual()
+    {
         Vector3 posicao = jogador.transform.position;
         Vector3 rotacao = jogador.transform.eulerAngles;
         TaskManager gerenciadorTarefas = FindAnyObjectByType<TaskManager>();
         ConversaTelefonicaUI conversaSalva = null;
-        foreach (ConversaTelefonicaUI conversa in FindObjectsByType<ConversaTelefonicaUI>(FindObjectsSortMode.None))
+        foreach (ConversaTelefonicaUI conversa in FindObjectsByType<ConversaTelefonicaUI>())
         {
             if (conversa != null && conversa.ConversaAtiva)
             {
@@ -394,28 +408,35 @@ public sealed class PauseMenuManager : MonoBehaviour
                 break;
             }
         }
+
+        return new SaveGameDatabase.SaveData
+        {
+            sceneName = SceneManager.GetActiveScene().name,
+            x = posicao.x, y = posicao.y, z = posicao.z,
+            rotX = rotacao.x, rotY = rotacao.y, rotZ = rotacao.z,
+            sensitivity = jogador.sensibilidade,
+            volume = AudioListener.volume,
+            completedTasks = gerenciadorTarefas != null
+                ? gerenciadorTarefas.ObterTarefasConcluidas()
+                : System.Array.Empty<string>(),
+            conversationActive = conversaSalva != null,
+            conversationObjectName = conversaSalva != null ? conversaSalva.gameObject.name : string.Empty,
+            conversationNode = conversaSalva != null ? conversaSalva.IndiceNoAtual : 0
+        };
+    }
+
+    private bool CapturarSessaoParaContinuar()
+    {
+        if (jogador == null) return false;
+
         try
         {
-            SaveGameDatabase.Save(new SaveGameDatabase.SaveData
-            {
-                sceneName = cena,
-                x = posicao.x, y = posicao.y, z = posicao.z,
-                rotX = rotacao.x, rotY = rotacao.y, rotZ = rotacao.z,
-                sensitivity = jogador.sensibilidade,
-                volume = AudioListener.volume,
-                completedTasks = gerenciadorTarefas != null
-                    ? gerenciadorTarefas.ObterTarefasConcluidas()
-                    : System.Array.Empty<string>(),
-                conversationActive = conversaSalva != null,
-                conversationObjectName = conversaSalva != null ? conversaSalva.gameObject.name : string.Empty,
-                conversationNode = conversaSalva != null ? conversaSalva.IndiceNoAtual : 0
-            });
-            PlayerPrefs.Save();
+            SaveGameDatabase.DefinirSessaoParaContinuar(CriarDadosDeSaveAtual());
             return true;
         }
         catch (System.Exception exception)
         {
-            Debug.LogError("PauseMenuManager: falha ao salvar antes de sair para o menu: " + exception.Message, this);
+            Debug.LogError("PauseMenuManager: falha ao guardar a sessão para continuar: " + exception.Message, this);
             return false;
         }
     }
@@ -431,7 +452,7 @@ public sealed class PauseMenuManager : MonoBehaviour
         if (jogador != null && jogador.InteracaoEmAndamento) return true;
         TaskManager gerenciadorTarefas = FindAnyObjectByType<TaskManager>();
         if (gerenciadorTarefas != null && gerenciadorTarefas.InteracaoEmAndamento) return true;
-        foreach (ConversaTelefonicaUI conversa in FindObjectsByType<ConversaTelefonicaUI>(FindObjectsSortMode.None))
+        foreach (ConversaTelefonicaUI conversa in FindObjectsByType<ConversaTelefonicaUI>())
             if (conversa != null && conversa.ConversaAtiva) return true;
         return false;
     }
@@ -440,7 +461,13 @@ public sealed class PauseMenuManager : MonoBehaviour
     {
         PauseMenuManager menu = FindAnyObjectByType<PauseMenuManager>();
         if (menu == null || menu.InteracaoEmAndamento()) return false;
-        return menu.GravarSaveAtual();
+        return menu.GravarSaveAtual(preservarSessaoParaContinuar: true);
+    }
+
+    public static bool PrepararContinuacaoAposRetornoAoMenu()
+    {
+        PauseMenuManager menu = FindAnyObjectByType<PauseMenuManager>();
+        return menu != null && menu.CapturarSessaoParaContinuar();
     }
 
     private void RestaurarCheckpointSeDisponivel()
@@ -479,6 +506,8 @@ public sealed class PauseMenuManager : MonoBehaviour
 
     private void ConfirmarSaidaSemSalvar()
     {
+        if (!PrepararContinuacaoAposRetornoAoMenu())
+            Debug.LogWarning("PauseMenuManager: não foi possível guardar a sessão temporária para continuar.", this);
         RestaurarTempoEAudio();
         SceneManager.LoadScene("Demo1");
     }

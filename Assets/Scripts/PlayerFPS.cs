@@ -273,7 +273,7 @@ public class PlayerFPS : MonoBehaviour
         if (cameraPlayer == null) return;
 
         cameraLivreAtiva = !cameraLivreAtiva;
-        foreach (ConversaTelefonicaUI conversa in FindObjectsByType<ConversaTelefonicaUI>(FindObjectsSortMode.None))
+        foreach (ConversaTelefonicaUI conversa in FindObjectsByType<ConversaTelefonicaUI>())
         {
             if (conversa != null) conversa.DefinirCameraLivreAtiva(cameraLivreAtiva);
         }
@@ -786,7 +786,7 @@ public class PlayerFPS : MonoBehaviour
                 ItemSeguravel itemMirado = hit.collider.GetComponentInParent<ItemSeguravel>();
                 if (itemMirado != null)
                 {
-                    TelefoneCarregadorInteractable[] carregadores = FindObjectsByType<TelefoneCarregadorInteractable>(FindObjectsSortMode.None);
+                    TelefoneCarregadorInteractable[] carregadores = FindObjectsByType<TelefoneCarregadorInteractable>();
                     foreach (TelefoneCarregadorInteractable carregador in carregadores)
                     {
                         if (carregador.telefone == itemMirado)
@@ -883,7 +883,7 @@ public class PlayerFPS : MonoBehaviour
         // encontrou, usa os limites visuais da foto, sem permitir atravessar paredes.
         if (itemNaMao == null && itemSeguravelDetectado == null)
         {
-            MecanicaColagem[] mecanicasColagem = FindObjectsByType<MecanicaColagem>(FindObjectsSortMode.None);
+            MecanicaColagem[] mecanicasColagem = FindObjectsByType<MecanicaColagem>();
             foreach (MecanicaColagem mecanica in mecanicasColagem)
             {
                 ItemSeguravel fotoMirada = mecanica.EncontrarFotoNaMira(ray, distanciaInteracao, out float distanciaFoto);

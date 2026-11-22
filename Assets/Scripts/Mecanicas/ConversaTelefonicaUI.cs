@@ -346,7 +346,7 @@ public class ConversaTelefonicaUI : MonoBehaviour
         texto.fontSize = tamanho;
         texto.color = Color.white;
         texto.alignment = alinhamento;
-        texto.enableWordWrapping = true;
+        texto.textWrappingMode = TextWrappingModes.Normal;
         texto.raycastTarget = false;
         return texto;
     }

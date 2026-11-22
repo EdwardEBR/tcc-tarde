@@ -5,6 +5,8 @@ using UnityEngine;
 /// <summary>Save local do jogo armazenado em JSON no computador.</summary>
 public static class SaveGameDatabase
 {
+    private static SaveData sessaoParaContinuar;
+
     [Serializable]
     public sealed class SaveData
     {
@@ -21,11 +23,24 @@ public static class SaveGameDatabase
 
     private static string SavePath => Path.Combine(Application.persistentDataPath, "savegame.json");
 
-    public static bool HasSave => File.Exists(SavePath) && Load() != null;
+    public static bool HasSave => Load() != null;
 
-    public static void Save(SaveData data)
+    public static void DefinirSessaoParaContinuar(SaveData data)
+    {
+        sessaoParaContinuar = data != null && !string.IsNullOrWhiteSpace(data.sceneName) ? data : null;
+    }
+
+    public static void Save(SaveData data, bool preservarSessaoParaContinuar = false)
     {
         if (data == null || string.IsNullOrWhiteSpace(data.sceneName)) return;
+        if (!preservarSessaoParaContinuar)
+        {
+            sessaoParaContinuar = null;
+        }
+        else if (!(sessaoParaContinuar != null && sessaoParaContinuar.conversationActive && !data.conversationActive))
+        {
+            sessaoParaContinuar = data;
+        }
         string path = SavePath;
         string temporaryPath = path + ".tmp";
         File.WriteAllText(temporaryPath, JsonUtility.ToJson(data, true));
@@ -35,6 +50,8 @@ public static class SaveGameDatabase
 
     public static SaveData Load()
     {
+        if (sessaoParaContinuar != null) return sessaoParaContinuar;
+
         try
         {
             if (!File.Exists(SavePath)) return null;
@@ -50,6 +67,7 @@ public static class SaveGameDatabase
 
     public static void Delete()
     {
+        sessaoParaContinuar = null;
         if (File.Exists(SavePath)) File.Delete(SavePath);
     }
 }
