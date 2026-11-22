@@ -199,7 +199,7 @@ public class CafeteiraInteractable : MonoBehaviour
         }
 
         isDone = true;
-        SomJogo.Tocar(transform, "Snd-Coffe", 0.25f);
+        SomJogo.Tocar(transform, "Snd-Coffe");
         aguardandoFimDaAnimacao = true;
         animacaoDeEncherIniciou = false;
 

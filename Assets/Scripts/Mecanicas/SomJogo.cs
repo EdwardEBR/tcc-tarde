@@ -10,6 +10,7 @@ public static class SomJogo
         AudioSource fonte = alvo.GetComponent<AudioSource>();
         if (fonte == null) fonte = alvo.gameObject.AddComponent<AudioSource>();
         fonte.playOnAwake = false;
+        fonte.volume = 1f;
         fonte.spatialBlend = espacial ? 1f : 0f;
         fonte.rolloffMode = AudioRolloffMode.Linear;
         fonte.minDistance = 1f;

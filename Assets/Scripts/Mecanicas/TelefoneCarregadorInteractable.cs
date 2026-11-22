@@ -43,6 +43,7 @@ public class TelefoneCarregadorInteractable : MonoBehaviour
         // O telefone deve ser ouvido em qualquer ponto da casa.
         audioToque.spatialBlend = 0f;
         audioToque.loop = true;
+        audioToque.volume = 0.8f;
         audioToque.clip = SomJogo.Carregar("Snd-Telefone");
 
         if (fotosParaMostrarAoDevolver != null)
@@ -109,7 +110,7 @@ public class TelefoneCarregadorInteractable : MonoBehaviour
         CancelInvoke(nameof(IniciarToque));
         if (audioToque != null) audioToque.Stop();
         AudioClip somAtender = SomJogo.Carregar("Snd-Atender");
-        if (audioToque != null && somAtender != null) audioToque.PlayOneShot(somAtender);
+        if (audioToque != null && somAtender != null) audioToque.PlayOneShot(somAtender, 0.8f);
         telefone.PegarItem(mao);
         // O jogador para de atualizar os alvos enquanto a conversa está ativa;
         // apague o destaque agora para ele não ficar preso no carregador.
@@ -124,7 +125,7 @@ public class TelefoneCarregadorInteractable : MonoBehaviour
         if (telefone == null || itemNaMao != telefone
             || (!PodeInteragir && !devolvendoTelefoneForaDeLugar)) return false;
         AudioClip somAtender = SomJogo.Carregar("Snd-Atender");
-        if (audioToque != null && somAtender != null) audioToque.PlayOneShot(somAtender);
+        if (audioToque != null && somAtender != null) audioToque.PlayOneShot(somAtender, 0.8f);
 
         Transform destino = pontoDeRetorno != null ? pontoDeRetorno : transform;
         if (!poseDeRetornoCapturada) CapturarPoseDeRetorno();

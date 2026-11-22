@@ -500,7 +500,7 @@ public class IntroManager : MonoBehaviour
         fonte.playOnAwake = false;
         fonte.loop = false;
         fonte.mute = false;
-        fonte.volume = 1f;
+        fonte.volume = 0.8f;
         fonte.ignoreListenerPause = true;
         fonte.spatialBlend = 0f;
         fonte.clip = bocejo;

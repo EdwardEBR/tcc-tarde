@@ -144,7 +144,7 @@ public class PlayerFPS : MonoBehaviour
                 audioAmbienciaJantar.playOnAwake = false;
                 audioAmbienciaJantar.loop = true;
                 audioAmbienciaJantar.spatialBlend = 0f;
-                audioAmbienciaJantar.volume = 0.65f;
+                audioAmbienciaJantar.volume = 1f;
             }
         }
         ConfigurarSomAmbiente();
@@ -171,7 +171,7 @@ public class PlayerFPS : MonoBehaviour
         somAmbiente.playOnAwake = false;
         somAmbiente.spatialBlend = 0f;
         somAmbiente.loop = true;
-        somAmbiente.volume = 0.5f;
+        somAmbiente.volume = 1f;
         somAmbiente.clip = SomJogo.Carregar("Snd-Ambiente");
         if (somAmbiente.clip != null) somAmbiente.Play();
         else Debug.LogWarning("PlayerFPS: não foi possível carregar Snd-Ambiente em Resources/Sons/AudioClip.", this);
@@ -184,8 +184,9 @@ public class PlayerFPS : MonoBehaviour
         somGeladeira = SomJogo.CriarFonte(porta.transform);
         somGeladeira.clip = SomJogo.Carregar("Snd-Geladeira");
         somGeladeira.loop = true;
+        somGeladeira.volume = 0.4f;
         somGeladeira.minDistance = 1f;
-        somGeladeira.maxDistance = 8f;
+        somGeladeira.maxDistance = 16f;
         if (somGeladeira.clip != null) somGeladeira.Play();
     }
 
@@ -529,6 +530,7 @@ public class PlayerFPS : MonoBehaviour
                 float fatorVelocidadePassos = Mathf.Clamp(
                     velocidade / VelocidadePadraoPassos, 0.5f, 1.5f);
                 audioPassos.pitch = fatorVelocidadePassos;
+                audioPassos.volume = 1f;
                 audioPassos.clip = passo;
                 audioPassos.Play();
                 float duracaoMaisLonga = Mathf.Max(
@@ -1211,7 +1213,7 @@ public class PlayerFPS : MonoBehaviour
         }
 
         audioAmbienciaJantar.clip = clipAmbienciaJantar;
-        audioAmbienciaJantar.volume = 0.65f;
+        audioAmbienciaJantar.volume = 1f;
         if (!audioAmbienciaJantar.isPlaying)
             audioAmbienciaJantar.Play();
     }
@@ -1239,7 +1241,7 @@ public class PlayerFPS : MonoBehaviour
         if (audioAmbienciaJantar != null)
         {
             audioAmbienciaJantar.Stop();
-            audioAmbienciaJantar.volume = 0.65f;
+            audioAmbienciaJantar.volume = 1f;
         }
         rotinaFadeAmbienciaJantar = null;
     }
