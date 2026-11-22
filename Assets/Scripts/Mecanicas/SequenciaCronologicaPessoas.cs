@@ -14,7 +14,6 @@ public class SequenciaCronologicaPessoas : MonoBehaviour
     [Min(0f)] public float pausaEntrePessoas = 3f;
     [Min(0f)] public float esperaAntesDosCreditos = 4f;
     [Min(0.05f)] public float duracaoTelaPreta = 1.5f;
-    [Min(0.1f)] public float duracaoRolagemCreditos = 120f;
 
     private readonly List<Renderer[]> pessoas = new();
     private readonly List<ShadowCastingMode[]> sombras = new();
@@ -83,6 +82,11 @@ public class SequenciaCronologicaPessoas : MonoBehaviour
 
     private IEnumerator ExibirCreditos()
     {
+        PauseMenuManager menuPausa = FindAnyObjectByType<PauseMenuManager>();
+        if (menuPausa != null) menuPausa.enabled = false;
+        MiraCircularUI mira = FindAnyObjectByType<MiraCircularUI>();
+        if (mira != null) mira.gameObject.SetActive(false);
+
         GameObject canvasObject = new GameObject("CanvasCreditosFinal", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler));
         Canvas canvas = canvasObject.GetComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
@@ -103,6 +107,27 @@ public class SequenciaCronologicaPessoas : MonoBehaviour
         background.color = new Color(0f, 0f, 0f, 0f);
         background.raycastTarget = true;
 
+        float tempoEscurecer = 0f;
+        while (tempoEscurecer < duracaoTelaPreta)
+        {
+            tempoEscurecer += Time.unscaledDeltaTime;
+            Color cor = background.color;
+            cor.a = Mathf.Clamp01(tempoEscurecer / duracaoTelaPreta);
+            background.color = cor;
+            yield return null;
+        }
+        background.color = Color.black;
+
+        Camera cameraFundo = Camera.main != null ? Camera.main : FindAnyObjectByType<Camera>();
+        if (cameraFundo != null)
+        {
+            MainMenuPhotoSlideshow fotosDeFundo = new GameObject("Fotos_Fundo_Creditos")
+                .AddComponent<MainMenuPhotoSlideshow>();
+            fotosDeFundo.Inicializar(cameraFundo, canvas);
+            fotosDeFundo.DefinirContrasteAtivo(false);
+            yield return null;
+        }
+
         GameObject textObject = new GameObject("Creditos", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
         textObject.transform.SetParent(canvasObject.transform, false);
         RectTransform textRect = textObject.GetComponent<RectTransform>();
@@ -113,24 +138,25 @@ public class SequenciaCronologicaPessoas : MonoBehaviour
 
         TextMeshProUGUI creditText = textObject.GetComponent<TextMeshProUGUI>();
         creditText.font = TMP_Settings.defaultFontAsset;
-        creditText.fontSize = 44f;
+        creditText.fontSize = 48f;
         creditText.color = Color.white;
+        creditText.alpha = 0f;
         creditText.alignment = TextAlignmentOptions.Center;
         creditText.textWrappingMode = TextWrappingModes.Normal;
         creditText.lineSpacing = 8f;
         string destaque = ColorUtility.ToHtmlStringRGB(new Color(1f, 0.686f, 0f));
-        string tituloSecao = "<size=38><b><color=#" + destaque + ">";
+        string tituloSecao = "<size=52><b><color=#" + destaque + ">";
         string fimTituloSecao = "</color></b></size>\n\n";
-        string tituloFuncao = "<size=31><b><color=#E8EDF5>";
+        string tituloFuncao = "<size=44><b><color=#D6A647>";
         string fimTituloFuncao = "</color></b></size>\n";
-        string nomes = "<size=30>";
-        string fimNomes = "</size>\n\n";
+        string nomes = "<size=44><color=#FFE5A3>";
+        string fimNomes = "</color></size>\n\n";
 
         creditText.text =
-            "<size=72><b><color=#" + destaque + ">MEMÓRIAS PARTIDAS</color></b></size>\n" +
-            "<size=30><b>TRABALHO DE CONCLUSÃO DE CURSO (TCC)</b></size>\n\n" +
-            "<size=34>Uma história sobre memória, tempo e identidade,\n" +
-            "protagonizada por Dona Helena.</size>\n\n\n" +
+            "<size=98><b><color=#" + destaque + ">MEMÓRIAS PARTIDAS</color></b></size>\n" +
+            "<size=42><b><color=#FFE5A3>TRABALHO DE CONCLUSÃO DE CURSO (TCC)</color></b></size>\n\n" +
+            "<size=46><color=#FFE5A3>Uma história sobre memória, tempo e identidade,\n" +
+            "protagonizada por Dona Helena.</color></size>\n\n\n" +
 
             tituloSecao + "EQUIPE DE DESENVOLVIMENTO" + fimTituloSecao +
             nomes +
@@ -202,36 +228,38 @@ public class SequenciaCronologicaPessoas : MonoBehaviour
             nomes + "assetstore.unity.com" + fimNomes +
 
             tituloSecao + "AGRADECIMENTOS ESPECIAIS" + fimTituloSecao +
-            "<size=30>Aos professores da ETEC pelo apoio, revisão e\n" +
+            "<size=44><color=#FFE5A3>Aos professores da ETEC pelo apoio, revisão e\n" +
             "orientação ao longo do desenvolvimento do jogo,\n" +
             "da documentação e do artigo científico.\n\n" +
             "Aos familiares, amigos e colegas que testaram o jogo,\n" +
             "deram feedback e estiveram presentes em cada etapa.\n\n" +
             "E a todos que jogaram e vivenciaram a história\n" +
-            "de Dona Helena.</size>\n\n\n" +
-            "<size=64><b><color=#" + destaque + ">OBRIGADO POR JOGAR</color></b></size>";
+            "de Dona Helena.</color></size>";
         creditText.ForceMeshUpdate();
         float alturaCreditos = creditText.preferredHeight;
         textRect.sizeDelta = new Vector2(0f, alturaCreditos);
         float alturaTela = scaler.referenceResolution.y;
         textRect.anchoredPosition = new Vector2(0f, -alturaCreditos);
+        creditText.ForceMeshUpdate(false, true);
+        Vector3[][] verticesOriginais = CopiarVertices(creditText);
+        AplicarPerspectivaStarWars(creditText, alturaTela, verticesOriginais);
 
         float tempoFade = 0f;
         while (tempoFade < duracaoTelaPreta)
         {
-            tempoFade += Time.deltaTime;
+            tempoFade += Time.unscaledDeltaTime;
             Color cor = background.color;
-            cor.a = Mathf.Clamp01(tempoFade / duracaoTelaPreta);
+            cor.a = 1f - 0.62f * Mathf.Clamp01(tempoFade / duracaoTelaPreta);
             background.color = cor;
+            creditText.alpha = Mathf.Clamp01(tempoFade / duracaoTelaPreta);
             yield return null;
         }
-        background.color = Color.black;
+        background.color = new Color(0f, 0f, 0f, 0.38f);
+        creditText.alpha = 1f;
 
-        const float velocidadeRolagemLegivel = 40f;
+        const float velocidadeRolagemLegivel = 75f;
         float distanciaRolagem = alturaCreditos + alturaTela;
-        float duracao = Mathf.Max(
-            duracaoRolagemCreditos,
-            distanciaRolagem / velocidadeRolagemLegivel);
+        float duracao = distanciaRolagem / velocidadeRolagemLegivel;
         float duracaoFadeMusica = Mathf.Min(DuracaoFadeTrilhaFinal, duracao);
         float tempoRolagem = 0f;
         bool fadeMusicaIniciado = false;
@@ -240,6 +268,8 @@ public class SequenciaCronologicaPessoas : MonoBehaviour
             tempoRolagem += Time.deltaTime;
             float progresso = Mathf.Clamp01(tempoRolagem / duracao);
             textRect.anchoredPosition = new Vector2(0f, Mathf.Lerp(-alturaCreditos, alturaTela, progresso));
+            RestaurarVerticesOriginais(creditText, verticesOriginais);
+            AplicarPerspectivaStarWars(creditText, alturaTela, verticesOriginais);
             if (!fadeMusicaIniciado && tempoRolagem >= duracao - duracaoFadeMusica)
             {
                 fadeMusicaIniciado = true;
@@ -250,8 +280,122 @@ public class SequenciaCronologicaPessoas : MonoBehaviour
         textRect.anchoredPosition = new Vector2(0f, alturaTela);
         while (MusicaNivel5.FadeSaidaEmAndamento)
             yield return null;
+
+        creditText.alpha = 0f;
+        GameObject mensagemFinalObject = new GameObject(
+            "MensagemFinalCreditos",
+            typeof(RectTransform),
+            typeof(CanvasRenderer),
+            typeof(TextMeshProUGUI));
+        mensagemFinalObject.transform.SetParent(canvasObject.transform, false);
+        RectTransform mensagemFinalRect = mensagemFinalObject.GetComponent<RectTransform>();
+        mensagemFinalRect.anchorMin = new Vector2(0.03f, 0.12f);
+        mensagemFinalRect.anchorMax = new Vector2(0.97f, 0.88f);
+        mensagemFinalRect.offsetMin = Vector2.zero;
+        mensagemFinalRect.offsetMax = Vector2.zero;
+        TextMeshProUGUI mensagemFinal = mensagemFinalObject.GetComponent<TextMeshProUGUI>();
+        mensagemFinal.font = creditText.font;
+        mensagemFinal.text = "OBRIGADO POR JOGAR!";
+        mensagemFinal.fontSize = 180f;
+        mensagemFinal.fontSizeMin = 96f;
+        mensagemFinal.fontSizeMax = 180f;
+        mensagemFinal.enableAutoSizing = true;
+        mensagemFinal.textWrappingMode = TextWrappingModes.NoWrap;
+        mensagemFinal.alignment = TextAlignmentOptions.Center;
+        mensagemFinal.fontStyle = FontStyles.Bold;
+        mensagemFinal.color = new Color(1f, 0.686f, 0f);
+        mensagemFinal.alpha = 0f;
+
+        const float duracaoAparicaoMensagemFinal = 0.9f;
+        float tempoAparicaoMensagemFinal = 0f;
+        while (tempoAparicaoMensagemFinal < duracaoAparicaoMensagemFinal)
+        {
+            tempoAparicaoMensagemFinal += Time.unscaledDeltaTime;
+            mensagemFinal.alpha = Mathf.Clamp01(tempoAparicaoMensagemFinal / duracaoAparicaoMensagemFinal);
+            yield return null;
+        }
+        mensagemFinal.alpha = 1f;
+        yield return new WaitForSecondsRealtime(2f);
+
         SaveGameDatabase.Delete();
-        SceneManager.LoadScene("Demo1");
+        TransicaoSuaveMenu.CarregarComTransicao("Demo1", 1.25f, 1.1f);
+    }
+
+    private static Vector3[][] CopiarVertices(TMP_Text texto)
+    {
+        TMP_MeshInfo[] malhas = texto.textInfo.meshInfo;
+        Vector3[][] copia = new Vector3[malhas.Length][];
+        for (int i = 0; i < malhas.Length; i++)
+            copia[i] = (Vector3[])malhas[i].vertices.Clone();
+        return copia;
+    }
+
+    private static void RestaurarVerticesOriginais(TMP_Text texto, Vector3[][] verticesOriginais)
+    {
+        TMP_MeshInfo[] malhas = texto.textInfo.meshInfo;
+        for (int i = 0; i < malhas.Length; i++)
+            System.Array.Copy(verticesOriginais[i], malhas[i].vertices, verticesOriginais[i].Length);
+    }
+
+    private static void AplicarPerspectivaStarWars(TMP_Text texto, float alturaTela, Vector3[][] verticesOriginais)
+    {
+        TMP_TextInfo informacoes = texto.textInfo;
+        float deslocamentoVertical = texto.rectTransform.anchoredPosition.y;
+        float horizonte = alturaTela * 1.2f;
+        const float escalaNoHorizonte = 0.24f;
+        const float compressaoVertical = 0.7f;
+        const float inclinacaoNoHorizonte = 0.48f;
+
+        for (int linhaIndice = 0; linhaIndice < informacoes.lineCount; linhaIndice++)
+        {
+            TMP_LineInfo linha = informacoes.lineInfo[linhaIndice];
+            float yLinhaNaTela = deslocamentoVertical + linha.baseline;
+            float yLinhaProjetado = yLinhaNaTela;
+            float escalaLinha = 1f;
+            float escalaVerticalLinha = 1f;
+
+            if (yLinhaNaTela > 0f)
+            {
+                float alturaRelativa = Mathf.Clamp01(yLinhaNaTela / horizonte);
+                escalaLinha = Mathf.Lerp(1f, escalaNoHorizonte, alturaRelativa);
+                escalaVerticalLinha = escalaLinha * Mathf.Lerp(1f, inclinacaoNoHorizonte, alturaRelativa);
+                if (yLinhaNaTela <= horizonte)
+                {
+                    float alturaComprimida = alturaRelativa * (1f + compressaoVertical)
+                        / (1f + compressaoVertical * alturaRelativa);
+                    yLinhaProjetado = alturaComprimida * horizonte;
+                }
+                else
+                {
+                    yLinhaProjetado = horizonte + (yLinhaNaTela - horizonte) * escalaNoHorizonte;
+                }
+            }
+
+            float centroXLinha = (linha.lineExtents.min.x + linha.lineExtents.max.x) * 0.5f;
+            int primeiroCaractere = Mathf.Max(0, linha.firstCharacterIndex);
+            int ultimoCaractere = Mathf.Min(informacoes.characterCount - 1, linha.lastCharacterIndex);
+            for (int caractereIndice = primeiroCaractere; caractereIndice <= ultimoCaractere; caractereIndice++)
+            {
+                TMP_CharacterInfo caractere = informacoes.characterInfo[caractereIndice];
+                if (!caractere.isVisible) continue;
+
+                int indiceMaterial = caractere.materialReferenceIndex;
+                int indiceVertice = caractere.vertexIndex;
+                Vector3[] vertices = informacoes.meshInfo[indiceMaterial].vertices;
+                Vector3[] verticesBase = verticesOriginais[indiceMaterial];
+                for (int canto = 0; canto < 4; canto++)
+                {
+                    int indice = indiceVertice + canto;
+                    Vector3 vertice = verticesBase[indice];
+                    vertice.x = centroXLinha + (vertice.x - centroXLinha) * escalaLinha;
+                    vertice.y = yLinhaProjetado - deslocamentoVertical
+                        + (vertice.y - linha.baseline) * escalaVerticalLinha;
+                    vertices[indice] = vertice;
+                }
+            }
+        }
+
+        texto.UpdateVertexData(TMP_VertexDataUpdateFlags.Vertices);
     }
 
     private static IEnumerator Esmaecer(MaterialFadeState[] materiaisPessoa, float inicio, float fim, float duracao)
