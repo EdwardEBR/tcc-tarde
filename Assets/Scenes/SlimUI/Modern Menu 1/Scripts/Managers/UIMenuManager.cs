@@ -6,8 +6,11 @@ using UnityEngine.SceneManagement;
 
 namespace SlimUI.ModernMenu{
 	public class UIMenuManager : MonoBehaviour {
+		private const float DuracaoMinimaCarregamento = 5f;
+		private const float ProgressoAposTempoDeEspera = 0.8f;
 		private Animator CameraObject;
 	private MainMenuPhotoSlideshow photoSlideshow;
+		private bool carregamentoEmAndamento;
 
 		// campaign button sub menu
         [Header("MENUS")]
@@ -201,7 +204,7 @@ namespace SlimUI.ModernMenu{
 			if (save != null && !string.IsNullOrWhiteSpace(save.sceneName)
 				&& Application.CanStreamedLevelBeLoaded(save.sceneName))
 			{
-				SceneManager.LoadScene(save.sceneName);
+				IniciarCarregamentoAssincrono(save.sceneName);
 				return;
 			}
 
@@ -210,7 +213,7 @@ namespace SlimUI.ModernMenu{
 				Debug.LogError("Não foi possível carregar o jogo: não há um save válido e a cena inicial não está nas Build Settings.");
 				return;
 			}
-			SceneManager.LoadScene(scene);
+			IniciarCarregamentoAssincrono(scene);
 		}
 
 		public void NewGame(string scene){
@@ -220,7 +223,13 @@ namespace SlimUI.ModernMenu{
 				Debug.LogError("Não foi possível iniciar um novo jogo: a cena inicial não está nas Build Settings.");
 				return;
 			}
-			SceneManager.LoadScene(scene);
+			IniciarCarregamentoAssincrono(scene);
+		}
+
+		private void IniciarCarregamentoAssincrono(string sceneName){
+			if(carregamentoEmAndamento) return;
+			carregamentoEmAndamento = true;
+			StartCoroutine(LoadAsynchronously(sceneName));
 		}
 
 		public void  DisablePlayCampaign(){
@@ -348,29 +357,187 @@ namespace SlimUI.ModernMenu{
 		}
 
 		// Load Bar synching animation
-		IEnumerator LoadAsynchronously(string sceneName){ // scene name is just the name of the current scene being loaded
-			AsyncOperation operation = SceneManager.LoadSceneAsync(sceneName);
-			operation.allowSceneActivation = false;
-			mainCanvas.SetActive(false);
-			loadingMenu.SetActive(true);
+		IEnumerator LoadAsynchronously(string sceneName){
+			float escalaTempoAnterior = Time.timeScale;
+			Time.timeScale = 0f;
 
-			while (!operation.isDone){
-				float progress = Mathf.Clamp01(operation.progress / .95f);
-				loadingBar.value = progress;
-
-				if (operation.progress >= 0.9f && waitForInput){
-					loadPromptText.text = "Press " + userPromptKey.ToString().ToUpper() + " to continue";
-					loadingBar.value = 1;
-
-					if (Input.GetKeyDown(userPromptKey)){
-						operation.allowSceneActivation = true;
-					}
-                }else if(operation.progress >= 0.9f && !waitForInput){
-					operation.allowSceneActivation = true;
+			if(mainCanvas != null) mainCanvas.SetActive(false);
+			if(loadingMenu != null){
+				loadingMenu.SetActive(true);
+				CriarPainelControlesCarregamento();
+				Canvas loadingCanvas = loadingMenu.GetComponent<Canvas>();
+				if(loadingCanvas != null){
+					loadingCanvas.overrideSorting = true;
+					loadingCanvas.sortingOrder = 100;
 				}
+			}
+			if(loadingBar != null) loadingBar.value = 0f;
+			if(loadPromptText != null) loadPromptText.text = "Carregando...";
+			AsyncOperation operation = SceneManager.LoadSceneAsync(sceneName);
+			if(operation == null){
+				Debug.LogError("Não foi possível iniciar o carregamento da cena: " + sceneName);
+				Time.timeScale = escalaTempoAnterior;
+				if(loadingMenu != null) loadingMenu.SetActive(false);
+				if(mainCanvas != null) mainCanvas.SetActive(true);
+				carregamentoEmAndamento = false;
+				yield break;
+			}
 
+			operation.allowSceneActivation = false;
+			float inicioCarregamento = Time.unscaledTime;
+			while(Time.unscaledTime - inicioCarregamento < DuracaoMinimaCarregamento
+				|| operation.progress < 0.9f){
+				float tempoDecorrido = Time.unscaledTime - inicioCarregamento;
+				if(loadingBar != null){
+					if(tempoDecorrido < DuracaoMinimaCarregamento){
+						float progressoDoTempo = Mathf.Clamp01(
+							tempoDecorrido / DuracaoMinimaCarregamento);
+						loadingBar.value = progressoDoTempo * ProgressoAposTempoDeEspera;
+					}else{
+						float progressoDaCena = Mathf.Clamp01(operation.progress / 0.9f);
+						loadingBar.value = Mathf.Lerp(
+							ProgressoAposTempoDeEspera, 1f, progressoDaCena);
+					}
+				}
 				yield return null;
 			}
+
+			if(loadingBar != null) loadingBar.value = 1f;
+			// O avanço é automático; não exige Enter ou outra tecla.
+			yield return null;
+
+			// Retoma o tempo somente no fim da espera, antes de ativar a próxima cena.
+			Time.timeScale = escalaTempoAnterior;
+			operation.allowSceneActivation = true;
+			while(!operation.isDone) yield return null;
+		}
+
+		private void CriarPainelControlesCarregamento(){
+			if(loadingMenu == null || loadingMenu.transform.Find("Cartao_Controles") != null) return;
+
+			TMP_FontAsset fonte = loadPromptText != null
+				? loadPromptText.font
+				: TMP_Settings.defaultFontAsset;
+
+			RawImage cartao = CriarImagemUI(
+				loadingMenu.transform,
+				"Cartao_Controles",
+				new Color(0.025f, 0.038f, 0.060f, 0.94f));
+			RectTransform retanguloCartao = cartao.rectTransform;
+			retanguloCartao.anchorMin = new Vector2(0.045f, 0.26f);
+			retanguloCartao.anchorMax = new Vector2(0.525f, 0.84f);
+			retanguloCartao.offsetMin = Vector2.zero;
+			retanguloCartao.offsetMax = Vector2.zero;
+			UnityEngine.UI.Outline contornoCartao =
+				cartao.gameObject.AddComponent<UnityEngine.UI.Outline>();
+			contornoCartao.effectColor = new Color(1f, 0.65f, 0.16f, 0.82f);
+			contornoCartao.effectDistance = new Vector2(2f, 2f);
+
+			RawImage faixaDestaque = CriarImagemUI(
+				cartao.transform,
+				"Faixa_Destaque",
+				new Color(1f, 0.65f, 0.16f, 1f));
+			DefinirRetangulo(faixaDestaque.rectTransform,
+				new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 1f),
+				Vector2.zero, new Vector2(0f, 5f));
+
+			CriarTextoUI(cartao.transform, "Titulo_Controles", "CONTROLES DO JOGO",
+				fonte, 32f, FontStyles.Bold, new Color(1f, 0.72f, 0.30f, 1f),
+				TextAlignmentOptions.Center,
+				new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 1f),
+				new Vector2(0f, -24f), new Vector2(-48f, 44f));
+			CriarTextoUI(cartao.transform, "Subtitulo_Controles", "TECLADO E MOUSE",
+				fonte, 17f, FontStyles.Bold, new Color(0.70f, 0.76f, 0.84f, 1f),
+				TextAlignmentOptions.Center,
+				new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 1f),
+				new Vector2(0f, -70f), new Vector2(-48f, 28f));
+
+			CriarLinhaDeControle(cartao.transform, fonte, 0,
+				new[] { "W", "A", "S", "D" }, "Mover o personagem");
+			CriarLinhaDeControle(cartao.transform, fonte, 1,
+				new[] { "MOUSE" }, "Olhar ao redor");
+			CriarLinhaDeControle(cartao.transform, fonte, 2,
+				new[] { "CLIQUE ESQ." }, "Interagir, pegar e devolver itens");
+			CriarLinhaDeControle(cartao.transform, fonte, 3,
+				new[] { "ESC" }, "Abrir ou fechar o menu de pausa");
+			CriarLinhaDeControle(cartao.transform, fonte, 4,
+				new[] { "1", "2" }, "Escolher uma resposta na conversa");
+		}
+
+		private void CriarLinhaDeControle(Transform pai, TMP_FontAsset fonte,
+			int indice, string[] teclas, string descricao){
+			RawImage linha = CriarImagemUI(pai, "Linha_Controle_" + indice,
+				new Color(1f, 1f, 1f, 0.045f));
+			DefinirRetangulo(linha.rectTransform,
+				new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 1f),
+				new Vector2(0f, -122f - indice * 80f), new Vector2(-44f, 62f));
+
+			float deslocamentoTecla = 18f;
+			foreach(string tecla in teclas){
+				float largura = tecla.Length >= 9 ? 172f : tecla.Length >= 5 ? 126f : 46f;
+				RawImage teclaImagem = CriarImagemUI(linha.transform,
+					"Tecla_" + tecla.Replace(" ", "_"), new Color(0.11f, 0.15f, 0.21f, 1f));
+				DefinirRetangulo(teclaImagem.rectTransform,
+					new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f),
+					new Vector2(deslocamentoTecla, 0f), new Vector2(largura, 44f));
+				UnityEngine.UI.Outline contornoTecla =
+					teclaImagem.gameObject.AddComponent<UnityEngine.UI.Outline>();
+				contornoTecla.effectColor = new Color(1f, 0.65f, 0.16f, 0.9f);
+				contornoTecla.effectDistance = new Vector2(1f, 1f);
+
+				CriarTextoUI(teclaImagem.transform, "Rotulo", tecla, fonte,
+					tecla.Length >= 9 ? 15f : 18f, FontStyles.Bold, Color.white,
+					TextAlignmentOptions.Center,
+					Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f),
+					Vector2.zero, Vector2.zero);
+				deslocamentoTecla += largura + 8f;
+			}
+
+			CriarTextoUI(linha.transform, "Descricao", descricao, fonte,
+				19f, FontStyles.Normal, new Color(0.94f, 0.95f, 0.98f, 1f),
+				TextAlignmentOptions.MidlineLeft,
+				new Vector2(0.34f, 0f), new Vector2(1f, 1f), new Vector2(0f, 0.5f),
+				new Vector2(6f, 0f), new Vector2(-12f, 0f));
+		}
+
+		private static RawImage CriarImagemUI(Transform pai, string nome, Color cor){
+			GameObject objeto = new GameObject(nome,
+				typeof(RectTransform), typeof(CanvasRenderer), typeof(RawImage));
+			objeto.transform.SetParent(pai, false);
+			RawImage imagem = objeto.GetComponent<RawImage>();
+			imagem.texture = Texture2D.whiteTexture;
+			imagem.color = cor;
+			imagem.raycastTarget = false;
+			return imagem;
+		}
+
+		private static TMP_Text CriarTextoUI(Transform pai, string nome, string conteudo,
+			TMP_FontAsset fonte, float tamanho, FontStyles estilo, Color cor,
+			TextAlignmentOptions alinhamento, Vector2 ancoraMin, Vector2 ancoraMax,
+			Vector2 pivo, Vector2 posicao, Vector2 tamanhoRetangulo){
+			GameObject objeto = new GameObject(nome,
+				typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+			objeto.transform.SetParent(pai, false);
+			TMP_Text texto = objeto.GetComponent<TextMeshProUGUI>();
+			texto.text = conteudo;
+			texto.font = fonte;
+			texto.fontSize = tamanho;
+			texto.fontStyle = estilo;
+			texto.color = cor;
+			texto.alignment = alinhamento;
+			texto.enableAutoSizing = false;
+			texto.raycastTarget = false;
+			DefinirRetangulo(texto.rectTransform, ancoraMin, ancoraMax, pivo, posicao, tamanhoRetangulo);
+			return texto;
+		}
+
+		private static void DefinirRetangulo(RectTransform retangulo, Vector2 ancoraMin,
+			Vector2 ancoraMax, Vector2 pivo, Vector2 posicao, Vector2 tamanho){
+			retangulo.anchorMin = ancoraMin;
+			retangulo.anchorMax = ancoraMax;
+			retangulo.pivot = pivo;
+			retangulo.anchoredPosition = posicao;
+			retangulo.sizeDelta = tamanho;
 		}
 	}
 }

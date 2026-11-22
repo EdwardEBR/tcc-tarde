@@ -14907,7 +14907,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Loading
+  m_text: CARREGANDO
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 0b65c99348f068b49bef5db0bb76a6e4, type: 2}
   m_sharedMaterial: {fileID: 21809785584020342, guid: 0b65c99348f068b49bef5db0bb76a6e4, type: 2}
@@ -16555,7 +16555,7 @@ MonoBehaviour:
   lineMovement: {fileID: 353453019068715078}
   lineCombat: {fileID: 352726507265365772}
   lineGeneral: {fileID: 353376392794327380}
-  waitForInput: 1
+  waitForInput: 0
   loadingMenu: {fileID: 353452697866409506}
   loadingBar: {fileID: 393972673582061820}
   loadPromptText: {fileID: 393764844836338496}
@@ -29661,7 +29661,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Press any key to continue
+  m_text: Carregando...
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: debe894442e153d479c7f9d07cce1276, type: 2}
   m_sharedMaterial: {fileID: 21975412471922176, guid: debe894442e153d479c7f9d07cce1276, type: 2}
@@ -31155,7 +31155,7 @@ RectTransform:
   m_GameObject: {fileID: 353452697866409506}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 576255757201293412}
