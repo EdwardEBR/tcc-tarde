@@ -220,6 +220,7 @@ namespace SlimUI.ModernMenu{
 
 		public void SensitivityXSlider (){
 			PlayerPrefs.SetFloat("XSensitivity", sliderValueXSensitivity);
+			PlayerPrefs.SetFloat("YSensitivity", sliderValueXSensitivity);
 		}
 
 		public void SensitivityYSlider (){
