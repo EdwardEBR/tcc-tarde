@@ -14,7 +14,7 @@ public class SequenciaCronologicaPessoas : MonoBehaviour
     [Min(0f)] public float pausaEntrePessoas = 3f;
     [Min(0f)] public float esperaAntesDosCreditos = 4f;
     [Min(0.05f)] public float duracaoTelaPreta = 1.5f;
-    [Min(0.1f)] public float duracaoRolagemCreditos = 40f;
+    [Min(0.1f)] public float duracaoRolagemCreditos = 120f;
 
     private readonly List<Renderer[]> pessoas = new();
     private readonly List<ShadowCastingMode[]> sombras = new();
@@ -119,22 +119,97 @@ public class SequenciaCronologicaPessoas : MonoBehaviour
         creditText.textWrappingMode = TextWrappingModes.Normal;
         creditText.lineSpacing = 8f;
         string destaque = ColorUtility.ToHtmlStringRGB(new Color(1f, 0.686f, 0f));
+        string tituloSecao = "<size=38><b><color=#" + destaque + ">";
+        string fimTituloSecao = "</color></b></size>\n\n";
+        string tituloFuncao = "<size=31><b><color=#E8EDF5>";
+        string fimTituloFuncao = "</color></b></size>\n";
+        string nomes = "<size=30>";
+        string fimNomes = "</size>\n\n";
+
         creditText.text =
-            "<size=64><b>CRÉDITOS</b></size>\n\n" +
-            "<color=#" + destaque + "><b>DIREÇÃO E PRODUÇÃO</b></color>\n" +
-            "Gerente de Projeto / Produção: Eduardo\nGame Design: Eduardo\nLevel Design: Eduardo\n\n" +
-            "<color=#" + destaque + "><b>ROTEIRO E DOCUMENTAÇÃO</b></color>\n" +
-            "Roteiro e Narrativa: Diogo, Eduardo, Felipe, Gabriel e Gabriely\nDocumentação Técnica / GDD: Felipe\n\n" +
-            "<color=#" + destaque + "><b>PROGRAMAÇÃO</b></color>\n" +
-            "Programação de Gameplay: Eduardo\nProgramação de UI / HUD: Eduardo\nArte Técnica / Iluminação / Otimização: Eduardo\n\n" +
-            "<color=#" + destaque + "><b>ARTE 3D E VISUAL</b></color>\n" +
-            "Modelagem 3D: Diogo, Eduardo e Gabriely\nTexturização e Materiais: Eduardo\nRigging e Animação: Eduardo\nDesign de UI / UX: Diogo, Eduardo e Gabriely\n\n" +
-            "<color=#" + destaque + "><b>ÁUDIO</b></color>\n" +
-            "Trilha Sonora / Composição: Gabriel\nSound Design / SFX: Gabriel\n\n" +
-            "<color=#" + destaque + "><b>QUALIDADE E TESTES</b></color>\n" +
-            "QA / Testes: Eduardo\n\n" +
-            "<color=#" + destaque + "><b>AGRADECIMENTOS ESPECIAIS</b></color>\n" +
-            "Professores Daniel e Mario\nOrientadora Andressa";
+            "<size=72><b><color=#" + destaque + ">MEMÓRIAS PARTIDAS</color></b></size>\n" +
+            "<size=30><b>TRABALHO DE CONCLUSÃO DE CURSO (TCC)</b></size>\n\n" +
+            "<size=34>Uma história sobre memória, tempo e identidade,\n" +
+            "protagonizada por Dona Helena.</size>\n\n\n" +
+
+            tituloSecao + "EQUIPE DE DESENVOLVIMENTO" + fimTituloSecao +
+            nomes +
+            "Eduardo Pinto Pontes\n" +
+            "Felipe Cyller Santana Santos\n" +
+            "Diogo Neto Fernandes\n" +
+            "Gabriel Antonio da Silva Campos\n" +
+            "Gabriely Barbosa Figueiredo" + fimNomes +
+
+            tituloSecao + "FUNÇÕES E ÁREAS" + fimTituloSecao +
+            tituloFuncao + "PROGRAMAÇÃO E MECÂNICAS" + fimTituloFuncao +
+            nomes + "Eduardo Pinto Pontes" + fimNomes +
+            tituloFuncao + "GAME DESIGN E NARRATIVA" + fimTituloFuncao +
+            nomes +
+            "Diogo Neto Fernandes\n" +
+            "Eduardo Pinto Pontes\n" +
+            "Felipe Cyller Santana Santos\n" +
+            "Gabriel Antonio da Silva Campos\n" +
+            "Gabriely Barbosa Figueiredo" + fimNomes +
+            tituloFuncao + "MODELAGEM 3D, CENÁRIOS E PROPS" + fimTituloFuncao +
+            nomes +
+            "Diogo Neto Fernandes\n" +
+            "Eduardo Pinto Pontes\n" +
+            "Gabriely Barbosa Figueiredo" + fimNomes +
+            tituloFuncao + "ARTE 2D, UI E IDENTIDADE VISUAL" + fimTituloFuncao +
+            nomes +
+            "Diogo Neto Fernandes\n" +
+            "Eduardo Pinto Pontes\n" +
+            "Gabriely Barbosa Figueiredo" + fimNomes +
+            tituloFuncao + "ÁUDIO, EFEITOS SONOROS E TRILHA" + fimTituloFuncao +
+            nomes + "Gabriel Antonio da Silva Campos\nEduardo Pinto Pontes" + fimNomes +
+            tituloFuncao + "TESTES, BALANCEAMENTO E QA" + fimTituloFuncao +
+            nomes + "Eduardo Pinto Pontes" + fimNomes +
+            tituloFuncao + "ARTIGO CIENTÍFICO" + fimTituloFuncao +
+            nomes +
+            "Felipe Cyller Santana Santos\n" +
+            "Diogo Neto Fernandes\n" +
+            "Gabriely Barbosa Figueiredo" + fimNomes +
+            tituloFuncao + "DOCUMENTAÇÃO DO JOGO (GDD / DOCUMENTAÇÃO TÉCNICA)" + fimTituloFuncao +
+            nomes +
+            "Felipe Cyller Santana Santos\n" +
+            "Diogo Neto Fernandes\n" +
+            "Eduardo Pinto Pontes\n" +
+            "Gabriely Barbosa Figueiredo" + fimNomes +
+
+            tituloSecao + "ORIENTAÇÃO E INSTITUIÇÃO" + fimTituloSecao +
+            tituloFuncao + "ORIENTADORA" + fimTituloFuncao +
+            nomes + "Andressa Cristina Passos Santos" + fimNomes +
+            tituloFuncao + "COORIENTAÇÃO / BANCA" + fimTituloFuncao +
+            nomes + "Daniel Minoh Giampaulo\nMario da Silva de Jesus" + fimNomes +
+            tituloFuncao + "INSTITUIÇÃO" + fimTituloFuncao +
+            nomes + "Etec Profª Ermelinda Giannini Teixeira\n" +
+            "Curso Técnico em Programação de Jogos Digitais" + fimNomes +
+
+            tituloSecao + "FERRAMENTAS E TECNOLOGIAS" + fimTituloSecao +
+            tituloFuncao + "ENGINE E DESENVOLVIMENTO" + fimTituloFuncao +
+            nomes + "Unity" + fimNomes +
+            tituloFuncao + "MODELAGEM E ARTE" + fimTituloFuncao +
+            nomes + "Blender\nCanva" + fimNomes +
+            tituloFuncao + "DOCUMENTAÇÃO E GESTÃO" + fimTituloFuncao +
+            nomes + "GitHub\nGoogle Docs\nGoogle Planilhas\nWord\nCanva" + fimNomes +
+
+            tituloSecao + "ASSETS E RECURSOS DE TERCEIROS" + fimTituloSecao +
+            tituloFuncao + "MODELOS, TEXTURAS E MATERIAIS" + fimTituloFuncao +
+            nomes + "assetstore.unity.com" + fimNomes +
+            tituloFuncao + "ÁUDIO, EFEITOS E MÚSICA" + fimTituloFuncao +
+            nomes + "pixabay.com\nyoutube.com" + fimNomes +
+            tituloFuncao + "FONTES TIPOGRÁFICAS E PLUGINS" + fimTituloFuncao +
+            nomes + "assetstore.unity.com" + fimNomes +
+
+            tituloSecao + "AGRADECIMENTOS ESPECIAIS" + fimTituloSecao +
+            "<size=30>Aos professores da ETEC pelo apoio, revisão e\n" +
+            "orientação ao longo do desenvolvimento do jogo,\n" +
+            "da documentação e do artigo científico.\n\n" +
+            "Aos familiares, amigos e colegas que testaram o jogo,\n" +
+            "deram feedback e estiveram presentes em cada etapa.\n\n" +
+            "E a todos que jogaram e vivenciaram a história\n" +
+            "de Dona Helena.</size>\n\n\n" +
+            "<size=64><b><color=#" + destaque + ">OBRIGADO POR JOGAR</color></b></size>";
         creditText.ForceMeshUpdate();
         float alturaCreditos = creditText.preferredHeight;
         textRect.sizeDelta = new Vector2(0f, alturaCreditos);
@@ -152,7 +227,11 @@ public class SequenciaCronologicaPessoas : MonoBehaviour
         }
         background.color = Color.black;
 
-        float duracao = Mathf.Max(duracaoRolagemCreditos, 0.1f);
+        const float velocidadeRolagemLegivel = 40f;
+        float distanciaRolagem = alturaCreditos + alturaTela;
+        float duracao = Mathf.Max(
+            duracaoRolagemCreditos,
+            distanciaRolagem / velocidadeRolagemLegivel);
         float duracaoFadeMusica = Mathf.Min(DuracaoFadeTrilhaFinal, duracao);
         float tempoRolagem = 0f;
         bool fadeMusicaIniciado = false;
