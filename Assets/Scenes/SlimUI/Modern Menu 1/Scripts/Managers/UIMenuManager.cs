@@ -7,6 +7,7 @@ using UnityEngine.SceneManagement;
 namespace SlimUI.ModernMenu{
 	public class UIMenuManager : MonoBehaviour {
 		private const float DuracaoMinimaCarregamento = 5f;
+		private const float DuracaoMinimaNovoJogo = 10f;
 		private const float ProgressoAposTempoDeEspera = 0.8f;
 		private Animator CameraObject;
 	private MainMenuPhotoSlideshow photoSlideshow;
@@ -271,13 +272,14 @@ namespace SlimUI.ModernMenu{
 				return;
 			}
 			IniciarFadeMusica();
-			IniciarCarregamentoAssincrono(scene);
+			IniciarCarregamentoAssincrono(scene, DuracaoMinimaNovoJogo);
 		}
 
-		private void IniciarCarregamentoAssincrono(string sceneName){
+		private void IniciarCarregamentoAssincrono(string sceneName,
+			float duracaoMinima = DuracaoMinimaCarregamento){
 			if(carregamentoEmAndamento) return;
 			carregamentoEmAndamento = true;
-			StartCoroutine(LoadAsynchronously(sceneName));
+			StartCoroutine(LoadAsynchronously(sceneName, duracaoMinima));
 		}
 
 		public void  DisablePlayCampaign(){
@@ -405,7 +407,7 @@ namespace SlimUI.ModernMenu{
 		}
 
 		// Load Bar synching animation
-		IEnumerator LoadAsynchronously(string sceneName){
+		IEnumerator LoadAsynchronously(string sceneName, float duracaoMinima){
 			float escalaTempoAnterior = Time.timeScale;
 			Time.timeScale = 0f;
 
@@ -419,8 +421,17 @@ namespace SlimUI.ModernMenu{
 					loadingCanvas.sortingOrder = 100;
 				}
 			}
+			// TextPrompt fica à esquerda. O título CARREGANDO à direita é o único
+			// texto de status exibido durante o carregamento.
+			if(loadPromptText != null) loadPromptText.gameObject.SetActive(false);
+			TMP_Text textoCarregando = loadingMenu != null
+				? loadingMenu.transform.Find("LoadingText")?.GetComponent<TMP_Text>()
+				: null;
+			if(textoCarregando != null){
+				textoCarregando.gameObject.SetActive(true);
+				textoCarregando.text = "CARREGANDO";
+			}
 			if(loadingBar != null) loadingBar.value = 0f;
-			if(loadPromptText != null) loadPromptText.text = "Carregando...";
 			AsyncOperation operation = SceneManager.LoadSceneAsync(sceneName);
 			if(operation == null){
 				Debug.LogError("Não foi possível iniciar o carregamento da cena: " + sceneName);
@@ -433,19 +444,23 @@ namespace SlimUI.ModernMenu{
 
 			operation.allowSceneActivation = false;
 			float inicioCarregamento = Time.unscaledTime;
-			while(Time.unscaledTime - inicioCarregamento < DuracaoMinimaCarregamento
+			while(Time.unscaledTime - inicioCarregamento < duracaoMinima
 				|| operation.progress < 0.9f){
 				float tempoDecorrido = Time.unscaledTime - inicioCarregamento;
 				if(loadingBar != null){
-					if(tempoDecorrido < DuracaoMinimaCarregamento){
+					if(tempoDecorrido < duracaoMinima){
 						float progressoDoTempo = Mathf.Clamp01(
-							tempoDecorrido / DuracaoMinimaCarregamento);
+							tempoDecorrido / duracaoMinima);
 						loadingBar.value = progressoDoTempo * ProgressoAposTempoDeEspera;
 					}else{
 						float progressoDaCena = Mathf.Clamp01(operation.progress / 0.9f);
 						loadingBar.value = Mathf.Lerp(
 							ProgressoAposTempoDeEspera, 1f, progressoDaCena);
 					}
+				}
+				if(textoCarregando != null){
+					int quantidadePontos = (int)(Time.unscaledTime * 2f) % 4;
+					textoCarregando.text = "CARREGANDO" + new string('.', quantidadePontos);
 				}
 				yield return null;
 			}

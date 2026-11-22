@@ -130,6 +130,14 @@ public class IntroManager : MonoBehaviour
             cameraDoJogador.enabled = true;
         }
 
+        // Ao carregar o Nivel4, a introdução é ignorada. Reproduz a mesma
+        // redução gradual de vinheta e desfoque que ocorreria ao acordar.
+        if (string.Equals(SceneManager.GetActiveScene().name, "Nivel4", System.StringComparison.OrdinalIgnoreCase)
+            && volumeVisaoEmbacada != null)
+        {
+            StartCoroutine(ClarearVisaoAoAcordar());
+        }
+
         // PauseMenuManager restaura posição e rotação após PlayerFPS.Start
         // capturar a posição local original da câmera.
         Debug.Log("IntroManager: introdução ignorada; posição será restaurada pelo menu de pausa.", this);
