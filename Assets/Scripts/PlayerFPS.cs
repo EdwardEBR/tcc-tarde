@@ -7,6 +7,7 @@ using TMPro;
 
 public class PlayerFPS : MonoBehaviour
 {
+    private const float VelocidadePadraoPassos = 3f;
     [Header("Movimento")]
     public float velocidade = 3f;
     public float gravidade = -20f;
@@ -507,15 +508,18 @@ public class PlayerFPS : MonoBehaviour
             AudioClip passo = alternarPasso ? somPasso2 : somPasso1;
             if (passo != null)
             {
-                // Aguarda o clipe atual terminar e acrescenta uma pausa maior,
-                // mantendo uma cadência de caminhada mais lenta.
+                // Diminui o tom e espaça os passos na mesma proporção da velocidade do jogador.
+                float fatorVelocidadePassos = Mathf.Clamp(
+                    velocidade / VelocidadePadraoPassos, 0.5f, 1.5f);
+                audioPassos.pitch = fatorVelocidadePassos;
                 audioPassos.clip = passo;
                 audioPassos.Play();
                 float duracaoMaisLonga = Mathf.Max(
                     passo.length,
                     somPasso1 != null ? somPasso1.length : 0f,
                     somPasso2 != null ? somPasso2.length : 0f);
-                proximoPasso = Time.time + Mathf.Max(intervaloPassos, duracaoMaisLonga + pausaEntrePassos);
+                float intervaloBase = Mathf.Max(intervaloPassos, duracaoMaisLonga + pausaEntrePassos);
+                proximoPasso = Time.time + intervaloBase / fatorVelocidadePassos;
             }
             else
             {

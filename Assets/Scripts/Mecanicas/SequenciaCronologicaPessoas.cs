@@ -8,6 +8,7 @@ using TMPro;
 
 public class SequenciaCronologicaPessoas : MonoBehaviour
 {
+    private const float DuracaoFadeTrilhaFinal = 3f;
     [Min(0.05f)] public float duracaoEsmaecimento = 0.8f;
     [Min(0f)] public float atrasoInicial = 3f;
     [Min(0f)] public float pausaEntrePessoas = 3f;
@@ -152,15 +153,24 @@ public class SequenciaCronologicaPessoas : MonoBehaviour
         background.color = Color.black;
 
         float duracao = Mathf.Max(duracaoRolagemCreditos, 0.1f);
+        float duracaoFadeMusica = Mathf.Min(DuracaoFadeTrilhaFinal, duracao);
         float tempoRolagem = 0f;
+        bool fadeMusicaIniciado = false;
         while (tempoRolagem < duracao)
         {
             tempoRolagem += Time.deltaTime;
             float progresso = Mathf.Clamp01(tempoRolagem / duracao);
             textRect.anchoredPosition = new Vector2(0f, Mathf.Lerp(-alturaCreditos, alturaTela, progresso));
+            if (!fadeMusicaIniciado && tempoRolagem >= duracao - duracaoFadeMusica)
+            {
+                fadeMusicaIniciado = true;
+                MusicaNivel5.IniciarFadeSaida(duracaoFadeMusica);
+            }
             yield return null;
         }
         textRect.anchoredPosition = new Vector2(0f, alturaTela);
+        while (MusicaNivel5.FadeSaidaEmAndamento)
+            yield return null;
         SaveGameDatabase.Delete();
         SceneManager.LoadScene("Demo1");
     }

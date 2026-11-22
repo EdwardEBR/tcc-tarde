@@ -11,6 +11,10 @@ namespace SlimUI.ModernMenu{
 		private Animator CameraObject;
 	private MainMenuPhotoSlideshow photoSlideshow;
 		private bool carregamentoEmAndamento;
+		private AudioSource musicaDoMenu;
+		private bool diminuindoMusica;
+		private const float DuracaoFadeMusica = 5f;
+		private const string ChaveVolumeMusica = "MusicVolume";
 
 		// campaign button sub menu
         [Header("MENUS")]
@@ -86,6 +90,7 @@ namespace SlimUI.ModernMenu{
 		void Start(){
 			Cursor.lockState = CursorLockMode.None;
 			Cursor.visible = true;
+			IniciarMusicaDoMenu();
 
 			CameraObject = transform.GetComponent<Animator>();
 
@@ -109,6 +114,46 @@ namespace SlimUI.ModernMenu{
 				photoSlideshow.DefinirContrasteAtivo(true);
 				AplicarLegibilidadeMenuPrincipal();
 			}
+		}
+
+		private void IniciarMusicaDoMenu(){
+			AudioClip faixa = Resources.Load<AudioClip>("Music/the_mountain-sad-512361");
+			if(faixa == null){
+				Debug.LogWarning("Não foi possível carregar a música do menu em Resources/Music.", this);
+				return;
+			}
+
+			musicaDoMenu = gameObject.AddComponent<AudioSource>();
+			musicaDoMenu.clip = faixa;
+			musicaDoMenu.loop = true;
+			musicaDoMenu.playOnAwake = false;
+			musicaDoMenu.volume = PlayerPrefs.GetFloat(ChaveVolumeMusica, 1f);
+			musicaDoMenu.Play();
+		}
+
+		private void Update(){
+			if(musicaDoMenu != null && !diminuindoMusica)
+				musicaDoMenu.volume = PlayerPrefs.GetFloat(ChaveVolumeMusica, 1f);
+		}
+
+		private IEnumerator DiminuirMusicaAteSilencio(){
+			diminuindoMusica = true;
+			float volumeInicial = musicaDoMenu != null ? musicaDoMenu.volume : 0f;
+			float tempo = 0f;
+			while(tempo < DuracaoFadeMusica && musicaDoMenu != null){
+				tempo += Time.unscaledDeltaTime;
+				musicaDoMenu.volume = Mathf.Lerp(volumeInicial, 0f, Mathf.Clamp01(tempo / DuracaoFadeMusica));
+				yield return null;
+			}
+			if(musicaDoMenu != null){
+				musicaDoMenu.volume = 0f;
+				musicaDoMenu.Stop();
+			}
+		}
+
+		private void IniciarFadeMusica(){
+			if(musicaDoMenu != null && !diminuindoMusica)
+				StartCoroutine(DiminuirMusicaAteSilencio());
 		}
 
 		private void AplicarLegibilidadeMenuPrincipal(){
@@ -204,6 +249,7 @@ namespace SlimUI.ModernMenu{
 			if (save != null && !string.IsNullOrWhiteSpace(save.sceneName)
 				&& Application.CanStreamedLevelBeLoaded(save.sceneName))
 			{
+				IniciarFadeMusica();
 				IniciarCarregamentoAssincrono(save.sceneName);
 				return;
 			}
@@ -213,6 +259,7 @@ namespace SlimUI.ModernMenu{
 				Debug.LogError("Não foi possível carregar o jogo: não há um save válido e a cena inicial não está nas Build Settings.");
 				return;
 			}
+			IniciarFadeMusica();
 			IniciarCarregamentoAssincrono(scene);
 		}
 
@@ -223,6 +270,7 @@ namespace SlimUI.ModernMenu{
 				Debug.LogError("Não foi possível iniciar um novo jogo: a cena inicial não está nas Build Settings.");
 				return;
 			}
+			IniciarFadeMusica();
 			IniciarCarregamentoAssincrono(scene);
 		}
 

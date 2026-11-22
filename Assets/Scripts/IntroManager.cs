@@ -15,6 +15,7 @@ public class IntroManager : MonoBehaviour
     private static float vinhetaNivel5 = 0.4f;
 
     private const float DistanciaParaAproximarMedico = 3f;
+    private const float TempoMaximoParaVisitarMedicos = 40f;
     private const float DuracaoAteTeleporteNivel4 = 7f;
     private const float DuracaoFechamentoTransicao = TaskManager.DuracaoFechamentoTelaPretaRapida;
     private const float DuracaoEfeitoFinalNivel4 = DuracaoAteTeleporteNivel4 - DuracaoFechamentoTransicao;
@@ -45,6 +46,14 @@ public class IntroManager : MonoBehaviour
     void Start()
     {
         string cenaAtual = SceneManager.GetActiveScene().name;
+        if (string.Equals(cenaAtual, "Nivel1", System.StringComparison.OrdinalIgnoreCase)
+            || string.Equals(cenaAtual, "Nivel2", System.StringComparison.OrdinalIgnoreCase)
+            || string.Equals(cenaAtual, "Nivel3", System.StringComparison.OrdinalIgnoreCase)
+            || string.Equals(cenaAtual, "Nivel4", System.StringComparison.OrdinalIgnoreCase))
+        {
+            StartCoroutine(TocarSomDeAcordar());
+        }
+
         if (string.Equals(cenaAtual, "Nivel5", System.StringComparison.OrdinalIgnoreCase))
         {
             IniciarNivel5SemIntro();
@@ -87,8 +96,6 @@ public class IntroManager : MonoBehaviour
         if (camIntroObj != null) camIntroObj.SetActive(true);
         if (telaPretaObj != null) telaPretaObj.SetActive(true);
         if (playerObj != null) playerObj.SetActive(false);
-
-        StartCoroutine(TocarSomDeAcordar());
 
         // 2. Inicia a contagem
         StartCoroutine(TrocarParaPlayer());
@@ -149,6 +156,10 @@ public class IntroManager : MonoBehaviour
                 if (controlador != null) controlador.enabled = true;
             }
         }
+
+        MusicaNivel5 musicaNivel5 = GetComponent<MusicaNivel5>();
+        if (musicaNivel5 == null) musicaNivel5 = gameObject.AddComponent<MusicaNivel5>();
+        musicaNivel5.IniciarAposChegada();
 
         if (veioDoNivel4 && manterVisaoEmbacadaNoNivel5)
         {
@@ -215,6 +226,7 @@ public class IntroManager : MonoBehaviour
         PlayerFPS jogador = playerObj != null ? playerObj.GetComponent<PlayerFPS>() : null;
         if (jogador == null || medicosNivel4 == null) yield break;
 
+        float inicioBuscaMedicos = Time.time;
         while (!transicaoNivel4Iniciada)
         {
             for (int i = 0; i < medicosNivel4.Length; i++)
@@ -228,8 +240,15 @@ public class IntroManager : MonoBehaviour
                     medicosVisitados.Add(i);
             }
 
-            if (medicosVisitados.Count == medicosNivel4.Length)
+            bool tempoEsgotado = Time.time - inicioBuscaMedicos >= TempoMaximoParaVisitarMedicos;
+            if (medicosVisitados.Count == medicosNivel4.Length || tempoEsgotado)
             {
+                if (tempoEsgotado && medicosVisitados.Count < medicosNivel4.Length)
+                {
+                    for (int i = 0; i < medicosNivel4.Length; i++)
+                        medicosVisitados.Add(i);
+                    Debug.Log("IntroManager: limite de 40 segundos atingido; médicos restantes marcados como vistos.", this);
+                }
                 transicaoNivel4Iniciada = true;
                 yield return StartCoroutine(ConcluirNivel4AposVisitarMedicos());
                 yield break;
@@ -252,7 +271,7 @@ public class IntroManager : MonoBehaviour
             float suave = progresso * progresso * (3f - 2f * progresso);
             profundidadeDeCampo.gaussianEnd.value = Mathf.Lerp(desfoqueInicial, 0.1f, suave);
             profundidadeDeCampo.gaussianMaxRadius.value = Mathf.Lerp(raioInicial, 2f, suave);
-            vinhetaVisaoEmbacada.intensity.value = Mathf.Lerp(vinhetaInicial, 0.85f, suave);
+            vinhetaVisaoEmbacada.intensity.value = Mathf.Lerp(vinhetaInicial, 1f, suave);
             yield return null;
         }
 
@@ -269,8 +288,28 @@ public class IntroManager : MonoBehaviour
             Debug.LogWarning("IntroManager: não encontrou TaskManager para iniciar TelaPretaFecharRapido.", this);
 
         yield return new WaitForSeconds(DuracaoFechamentoTransicao);
+        ManterFechamentoTotalAteTrocarCena();
         PrepararEntradaDiretaNivel5(PosicaoEntradaNivel5Padrao);
         SceneManager.LoadScene("Nivel5");
+    }
+
+    private void ManterFechamentoTotalAteTrocarCena()
+    {
+        GameObject telaRapida = EncontrarObjetoNaCena("TelaPretaFecharRapido");
+        if (telaRapida == null) return;
+
+        float pontoFechamento = TaskManager.DuracaoFechamentoTelaPretaRapida
+            / TaskManager.DuracaoAnimacaoTelaPretaRapida;
+        foreach (Animator animator in telaRapida.GetComponentsInChildren<Animator>(true))
+        {
+            string estado = animator.name == "Cima" ? "FecharRapidoCima"
+                : animator.name == "Baixo" ? "FecharRapidoBaixo" : null;
+            if (estado == null) continue;
+
+            animator.Play(estado, 0, pontoFechamento);
+            animator.Update(0f);
+            animator.speed = 0f;
+        }
     }
 
     private static void GarantirColisaoMedicos()
@@ -375,6 +414,8 @@ public class IntroManager : MonoBehaviour
 
     private IEnumerator TocarSomDeAcordar()
     {
+        yield return null;
+
         AudioClip bocejo = SomJogo.Carregar("Snd-Bocejo");
         if (bocejo == null)
         {
@@ -382,9 +423,17 @@ public class IntroManager : MonoBehaviour
             yield break;
         }
 
-        bocejo.LoadAudioData();
-        while (bocejo.loadState == AudioDataLoadState.Loading)
+        if (bocejo.loadState != AudioDataLoadState.Loaded)
+            bocejo.LoadAudioData();
+        float tempoLimiteDeCarregamento = 5f;
+        while (bocejo.loadState == AudioDataLoadState.Loading
+            || bocejo.loadState == AudioDataLoadState.Unloaded)
+        {
+            if (tempoLimiteDeCarregamento <= 0f)
+                break;
+            tempoLimiteDeCarregamento -= Time.unscaledDeltaTime;
             yield return null;
+        }
 
         if (bocejo.loadState != AudioDataLoadState.Loaded)
         {
@@ -392,11 +441,22 @@ public class IntroManager : MonoBehaviour
             yield break;
         }
 
-        AudioSource fonte = GetComponent<AudioSource>();
-        if (fonte == null) fonte = gameObject.AddComponent<AudioSource>();
+        AudioListener ouvinte = Camera.main != null
+            ? Camera.main.GetComponent<AudioListener>()
+            : FindAnyObjectByType<AudioListener>();
+        AudioSource fonte = ouvinte != null
+            ? ouvinte.GetComponent<AudioSource>()
+            : GetComponent<AudioSource>();
+        if (fonte == null)
+            fonte = (ouvinte != null ? ouvinte.gameObject : gameObject).AddComponent<AudioSource>();
         fonte.playOnAwake = false;
+        fonte.loop = false;
+        fonte.mute = false;
+        fonte.volume = 1f;
+        fonte.ignoreListenerPause = true;
         fonte.spatialBlend = 0f;
-        fonte.PlayOneShot(bocejo);
+        fonte.clip = bocejo;
+        fonte.Play();
     }
 
     IEnumerator TrocarParaPlayer()
