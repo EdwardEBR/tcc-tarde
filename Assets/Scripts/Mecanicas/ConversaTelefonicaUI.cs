@@ -385,8 +385,8 @@ public class ConversaTelefonicaUI : MonoBehaviour
             && (Keyboard.current.digit1Key.wasPressedThisFrame || Keyboard.current.numpad1Key.wasPressedThisFrame);
         bool resposta2 = Keyboard.current != null
             && (Keyboard.current.digit2Key.wasPressedThisFrame || Keyboard.current.numpad2Key.wasPressedThisFrame);
-        resposta1 |= Gamepad.current != null && Gamepad.current.buttonSouth.wasPressedThisFrame;
-        resposta2 |= Gamepad.current != null && Gamepad.current.buttonEast.wasPressedThisFrame;
+        resposta1 |= ControleCompatibilidade.BotaoXboxAPressionado(Gamepad.current);
+        resposta2 |= ControleCompatibilidade.BotaoXboxBPressionado(Gamepad.current);
         resposta1 |= ControleCompatibilidade.BotaoJoystickPressionado(0);
         resposta2 |= ControleCompatibilidade.BotaoJoystickPressionado(1);
 

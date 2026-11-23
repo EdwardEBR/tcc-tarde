@@ -30,6 +30,40 @@ public static class ControleCompatibilidade
         return ComFallbackLegado(olhar, "ControllerLookX", "ControllerLookY");
     }
 
+    public static bool BotaoXboxAPressionado(Gamepad gamepad)
+    {
+        return gamepad != null && gamepad.buttonSouth.wasPressedThisFrame;
+    }
+
+    public static bool BotaoXboxBPressionado(Gamepad gamepad)
+    {
+        return gamepad != null && gamepad.buttonEast.wasPressedThisFrame;
+    }
+
+    public static bool BotaoXboxXPressionado(Gamepad gamepad)
+    {
+        return gamepad != null && gamepad.buttonWest.wasPressedThisFrame;
+    }
+
+    public static bool BotaoXboxYPressionado(Gamepad gamepad)
+    {
+        return gamepad != null && gamepad.buttonNorth.wasPressedThisFrame;
+    }
+
+    public static bool AlgumBotaoXboxAPressionado()
+    {
+        for (int i = 0; i < Gamepad.all.Count; i++)
+            if (BotaoXboxAPressionado(Gamepad.all[i])) return true;
+        return false;
+    }
+
+    public static bool AlgumBotaoXboxBPressionado()
+    {
+        for (int i = 0; i < Gamepad.all.Count; i++)
+            if (BotaoXboxBPressionado(Gamepad.all[i])) return true;
+        return false;
+    }
+
     private static Vector2 ComFallbackLegado(Vector2 valor, string eixoX, string eixoY)
     {
         if (valor.sqrMagnitude > 0.0001f) return valor;
@@ -124,9 +158,7 @@ public static class ControleCompatibilidade
             proximoMovimentoUI = Time.unscaledTime + 0.22f;
         }
 
-        bool confirmou = false;
-        for (int i = 0; i < Gamepad.all.Count && !confirmou; i++)
-            confirmou = Gamepad.all[i].buttonSouth.wasPressedThisFrame;
+        bool confirmou = AlgumBotaoXboxAPressionado();
         if (!confirmou)
             confirmou = BotaoJoystickPressionado(0);
         bool moduloLegadoRecebeuConfirmacao = moduloLegadoAtivo
@@ -201,10 +233,10 @@ public static class ControleCompatibilidade
         if (moduloLegado == null)
             moduloLegado = sistema.gameObject.AddComponent<StandaloneInputModule>();
 
-        moduloLegado.horizontalAxis = "Horizontal";
-        moduloLegado.verticalAxis = "Vertical";
-        moduloLegado.submitButton = "Submit";
-        moduloLegado.cancelButton = "Cancel";
+        moduloLegado.horizontalAxis = "UIKeyboardHorizontal";
+        moduloLegado.verticalAxis = "UIKeyboardVertical";
+        moduloLegado.submitButton = "UIKeyboardSubmit";
+        moduloLegado.cancelButton = "UIKeyboardCancel";
         moduloLegado.enabled = true;
         sistema.sendNavigationEvents = true;
     }

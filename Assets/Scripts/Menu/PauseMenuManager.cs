@@ -50,8 +50,7 @@ public sealed class PauseMenuManager : MonoBehaviour
         bool escape = Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame;
         bool start = (Gamepad.current != null && Gamepad.current.startButton.wasPressedThisFrame)
             || ControleCompatibilidade.BotaoJoystickPressionado(7);
-        bool cancel = JogoPausado && Gamepad.current != null
-            && Gamepad.current.buttonEast.wasPressedThisFrame;
+        bool cancel = JogoPausado && ControleCompatibilidade.BotaoXboxBPressionado(Gamepad.current);
         cancel |= JogoPausado && ControleCompatibilidade.BotaoJoystickPressionado(1);
         if (!escape && !start && !cancel) return;
 

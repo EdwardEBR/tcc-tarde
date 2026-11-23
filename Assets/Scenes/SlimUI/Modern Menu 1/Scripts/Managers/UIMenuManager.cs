@@ -139,8 +139,7 @@ namespace SlimUI.ModernMenu{
 			ControleCompatibilidade.AtualizarNavegacaoUI();
 
 			bool voltar = Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame;
-			for(int i = 0; i < Gamepad.all.Count && !voltar; i++)
-				voltar = Gamepad.all[i].buttonEast.wasPressedThisFrame;
+			voltar |= ControleCompatibilidade.AlgumBotaoXboxBPressionado();
 			voltar |= ControleCompatibilidade.BotaoJoystickPressionado(1);
 			if(voltar && (playMenu.activeSelf || exitMenu.activeSelf || (extrasMenu && extrasMenu.activeSelf)))
 				ReturnMenu();

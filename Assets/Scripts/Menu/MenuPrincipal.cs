@@ -32,7 +32,7 @@ public class MenuPrincipalManager : MonoBehaviour
     {
         ControleCompatibilidade.AtualizarNavegacaoUI();
         bool voltar = Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame;
-        voltar |= Gamepad.current != null && Gamepad.current.buttonEast.wasPressedThisFrame;
+        voltar |= ControleCompatibilidade.BotaoXboxBPressionado(Gamepad.current);
         voltar |= ControleCompatibilidade.BotaoJoystickPressionado(1);
         if (!voltar) return;
 

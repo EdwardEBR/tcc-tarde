@@ -1179,10 +1179,9 @@ public class PlayerFPS : MonoBehaviour
         bool mouse = Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame;
         bool teclado = Keyboard.current != null
             && (Keyboard.current.eKey.wasPressedThisFrame || Keyboard.current.enterKey.wasPressedThisFrame);
-        bool controle = Gamepad.current != null
-            && (Gamepad.current.buttonSouth.wasPressedThisFrame
-                || Gamepad.current.buttonWest.wasPressedThisFrame
-                || Gamepad.current.buttonNorth.wasPressedThisFrame);
+        bool controle = ControleCompatibilidade.BotaoXboxAPressionado(Gamepad.current)
+            || ControleCompatibilidade.BotaoXboxXPressionado(Gamepad.current)
+            || ControleCompatibilidade.BotaoXboxYPressionado(Gamepad.current);
         bool joystick = ControleCompatibilidade.BotaoJoystickPressionado(0)
             || ControleCompatibilidade.BotaoJoystickPressionado(2)
             || ControleCompatibilidade.BotaoJoystickPressionado(3);
