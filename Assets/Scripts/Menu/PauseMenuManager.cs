@@ -524,6 +524,8 @@ public sealed class PauseMenuManager : MonoBehaviour
     {
         EventSystem sistema = EventSystem.current;
         if (sistema == null || raiz == null) return;
+        GameObject primeiroSelecionavel = null;
+
         foreach (Selectable elemento in raiz.GetComponentsInChildren<Selectable>())
         {
             if (elemento == null || !elemento.isActiveAndEnabled) continue;
@@ -533,11 +535,12 @@ public sealed class PauseMenuManager : MonoBehaviour
                 navegacao.mode = Navigation.Mode.Automatic;
                 elemento.navigation = navegacao;
             }
-            if (!elemento.interactable) continue;
-            sistema.SetSelectedGameObject(elemento.gameObject);
-            return;
+            if (primeiroSelecionavel == null && elemento.interactable)
+                primeiroSelecionavel = elemento.gameObject;
         }
-        sistema.SetSelectedGameObject(null);
+
+        sistema.firstSelectedGameObject = primeiroSelecionavel;
+        sistema.SetSelectedGameObject(primeiroSelecionavel);
     }
 
     private void ConfirmarSaidaSemSalvar()
