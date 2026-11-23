@@ -1,7 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using TMPro;
 
@@ -20,10 +22,31 @@ public class MenuPrincipalManager : MonoBehaviour
         CriarSubmenuJogo();
     }
 
+    private void Start()
+    {
+        ControleCompatibilidade.GarantirModuloUI(EventSystem.current);
+        SelecionarPrimeiroElemento(painelMenuInicial != null ? painelMenuInicial.transform : transform);
+    }
+
+    private void Update()
+    {
+        ControleCompatibilidade.AtualizarNavegacaoUI();
+        bool voltar = Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame;
+        voltar |= Gamepad.current != null && Gamepad.current.buttonEast.wasPressedThisFrame;
+        voltar |= ControleCompatibilidade.BotaoJoystickPressionado(1);
+        if (!voltar) return;
+
+        if (painelOpcoes != null && painelOpcoes.activeSelf)
+            FecharOpcoes();
+        else if (painelEscolhaJogo != null && painelEscolhaJogo.activeSelf)
+            VoltarAoMenu();
+    }
+
     public void Jogar()
     {
         painelMenuInicial.SetActive(false);
         painelEscolhaJogo.SetActive(true);
+        SelecionarPrimeiroElemento(painelEscolhaJogo.transform);
     }
 
     private void CriarSubmenuJogo()
@@ -98,18 +121,41 @@ public class MenuPrincipalManager : MonoBehaviour
     {
         painelEscolhaJogo.SetActive(false);
         painelMenuInicial.SetActive(true);
+        SelecionarPrimeiroElemento(painelMenuInicial.transform);
     }
 
     public void AbrirOpcoes()
     {
         painelMenuInicial.SetActive(false);
         painelOpcoes.SetActive(true);
+        SelecionarPrimeiroElemento(painelOpcoes.transform);
     }
 
     public void FecharOpcoes()
     {
         painelOpcoes.SetActive(false);
         painelMenuInicial.SetActive(true);
+        SelecionarPrimeiroElemento(painelMenuInicial.transform);
+    }
+
+    private static void SelecionarPrimeiroElemento(Transform raiz)
+    {
+        EventSystem sistema = EventSystem.current;
+        if (sistema == null || raiz == null) return;
+        foreach (Selectable elemento in raiz.GetComponentsInChildren<Selectable>())
+        {
+            if (elemento == null || !elemento.isActiveAndEnabled) continue;
+            Navigation navegacao = elemento.navigation;
+            if (navegacao.mode == Navigation.Mode.None)
+            {
+                navegacao.mode = Navigation.Mode.Automatic;
+                elemento.navigation = navegacao;
+            }
+            if (!elemento.interactable) continue;
+            sistema.SetSelectedGameObject(elemento.gameObject);
+            return;
+        }
+        sistema.SetSelectedGameObject(null);
     }
 
     public void SairJogo()

@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.SceneManagement;
@@ -100,6 +102,7 @@ namespace SlimUI.ModernMenu{
 			if(extrasMenu) extrasMenu.SetActive(false);
 			firstMenu.SetActive(true);
 			mainMenu.SetActive(true);
+			ConfigurarNavegacaoDoMenu();
 
 			ConfigurarBotoesDeSave();
 			SetThemeColors();
@@ -133,8 +136,61 @@ namespace SlimUI.ModernMenu{
 		}
 
 		private void Update(){
+			ControleCompatibilidade.AtualizarNavegacaoUI();
+
+			bool voltar = Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame;
+			for(int i = 0; i < Gamepad.all.Count && !voltar; i++)
+				voltar = Gamepad.all[i].buttonEast.wasPressedThisFrame;
+			voltar |= ControleCompatibilidade.BotaoJoystickPressionado(1);
+			if(voltar && (playMenu.activeSelf || exitMenu.activeSelf || (extrasMenu && extrasMenu.activeSelf)))
+				ReturnMenu();
+
 			if(musicaDoMenu != null && !diminuindoMusica)
 				musicaDoMenu.volume = PlayerPrefs.GetFloat(ChaveVolumeMusica, 1f);
+		}
+
+		private void ConfigurarNavegacaoDoMenu(){
+			EventSystem[] eventSystems = FindObjectsByType<EventSystem>();
+			foreach(EventSystem sistema in eventSystems){
+				sistema.sendNavigationEvents = true;
+				ControleCompatibilidade.GarantirModuloUI(sistema);
+			}
+
+			ConfigurarNavegacao(mainCanvas);
+			ConfigurarNavegacao(mainMenu);
+			ConfigurarNavegacao(firstMenu);
+			ConfigurarNavegacao(playMenu);
+			ConfigurarNavegacao(exitMenu);
+			ConfigurarNavegacao(extrasMenu);
+			SelecionarPrimeiroBotao(firstMenu != null ? firstMenu : mainMenu);
+		}
+
+		private static void ConfigurarNavegacao(GameObject raiz){
+			if(raiz == null) return;
+			foreach(Button botao in raiz.GetComponentsInChildren<Button>(true)){
+				Navigation navegacao = botao.navigation;
+				if(navegacao.mode == Navigation.Mode.None){
+					navegacao.mode = Navigation.Mode.Automatic;
+					botao.navigation = navegacao;
+				}
+			}
+		}
+
+		private static void SelecionarPrimeiroBotao(GameObject raiz){
+			EventSystem sistema = EventSystem.current;
+			if(sistema == null || raiz == null) return;
+
+			foreach(Button botao in raiz.GetComponentsInChildren<Button>(true)){
+				if(botao == null || !botao.isActiveAndEnabled || !botao.interactable) continue;
+				Navigation navegacao = botao.navigation;
+				if(navegacao.mode == Navigation.Mode.None){
+					navegacao.mode = Navigation.Mode.Automatic;
+					botao.navigation = navegacao;
+				}
+				sistema.firstSelectedGameObject = botao.gameObject;
+				sistema.SetSelectedGameObject(botao.gameObject);
+				return;
+			}
 		}
 
 		private IEnumerator DiminuirMusicaAteSilencio(){
@@ -227,6 +283,7 @@ namespace SlimUI.ModernMenu{
 			exitMenu.SetActive(false);
 			if(extrasMenu) extrasMenu.SetActive(false);
 			playMenu.SetActive(true);
+			SelecionarPrimeiroBotao(playMenu);
 		}
 		
 		public void PlayCampaignMobile(){
@@ -235,6 +292,7 @@ namespace SlimUI.ModernMenu{
 			if(extrasMenu) extrasMenu.SetActive(false);
 			playMenu.SetActive(true);
 			mainMenu.SetActive(false);
+			SelecionarPrimeiroBotao(playMenu);
 		}
 
 		public void ReturnMenu(){
@@ -243,6 +301,8 @@ namespace SlimUI.ModernMenu{
 			if(extrasMenu) extrasMenu.SetActive(false);
 			exitMenu.SetActive(false);
 			mainMenu.SetActive(true);
+			if(firstMenu != null) firstMenu.SetActive(true);
+			SelecionarPrimeiroBotao(firstMenu != null ? firstMenu : mainMenu);
 		}
 
 		public void LoadScene(string scene){
@@ -381,6 +441,7 @@ namespace SlimUI.ModernMenu{
 			exitMenu.SetActive(true);
 			if(extrasMenu) extrasMenu.SetActive(false);
 			DisablePlayCampaign();
+			SelecionarPrimeiroBotao(exitMenu);
 		}
 
 		public void AreYouSureMobile(){
@@ -389,6 +450,7 @@ namespace SlimUI.ModernMenu{
 			if(extrasMenu) extrasMenu.SetActive(false);
 			mainMenu.SetActive(false);
 			DisablePlayCampaign();
+			SelecionarPrimeiroBotao(exitMenu);
 		}
 
 		public void ExtrasMenu(){
@@ -396,6 +458,7 @@ namespace SlimUI.ModernMenu{
 			playMenu.SetActive(false);
 			if(extrasMenu) extrasMenu.SetActive(true);
 			exitMenu.SetActive(false);
+			if(extrasMenu) SelecionarPrimeiroBotao(extrasMenu);
 		}
 
 		public void QuitGame(){

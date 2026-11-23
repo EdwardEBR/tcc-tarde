@@ -15,6 +15,8 @@ public class PlayerFPS : MonoBehaviour
     [Header("Camera")]
     public Transform cameraPlayer;
     public float sensibilidade = 0.15f;
+    [Tooltip("Velocidade de rotação da câmera pelo analógico direito, em graus por segundo.")]
+    [Min(1f)] public float sensibilidadeControle = 140f;
     [Tooltip("Tempo de suavização do movimento do olhar. Valores menores respondem mais rápido.")]
     [Min(0f)] public float suavidadeOlhar = 0.08f;
     [Tooltip("Campo de visão da câmera enquanto o botão do meio do mouse estiver pressionado.")]
@@ -346,16 +348,22 @@ public class PlayerFPS : MonoBehaviour
 
     private void AtualizarCameraLivre()
     {
-        if (cameraPlayer == null || Keyboard.current == null || Mouse.current == null) return;
+        if (cameraPlayer == null) return;
 
-        Vector2 deltaMouse = descartarDeltaMouse ? Vector2.zero : Mouse.current.delta.ReadValue();
+        Keyboard teclado = Keyboard.current;
+        Mouse mouse = Mouse.current;
+        Gamepad controle = Gamepad.current;
+        Joystick joystick = Joystick.current;
+        if (teclado == null && controle == null && joystick == null && mouse == null) return;
+
+        Vector2 deltaMouse = descartarDeltaMouse || mouse == null ? Vector2.zero : mouse.delta.ReadValue();
         descartarDeltaMouse = false;
         if (!ValorFinito(deltaMouse.x) || !ValorFinito(deltaMouse.y))
             deltaMouse = Vector2.zero;
         else
             deltaMouse = Vector2.ClampMagnitude(deltaMouse, 100f);
 
-        float scroll = Mouse.current.scroll.ReadValue().y;
+        float scroll = mouse != null ? mouse.scroll.ReadValue().y : 0f;
         if (!float.IsNaN(scroll) && !float.IsInfinity(scroll) && Mathf.Abs(scroll) > 0.01f)
             velocidadeAtualCameraLivre = Mathf.Clamp(
                 velocidadeAtualCameraLivre + Mathf.Clamp(scroll / 120f, -3f, 3f), 1f, 40f);
@@ -370,20 +378,30 @@ public class PlayerFPS : MonoBehaviour
 
         float sensibilidadeSegura = ValorFinito(sensibilidade) ? sensibilidade : 0f;
         rotacaoHorizontalAlvo = Mathf.Repeat(rotacaoHorizontalAlvo + deltaMouse.x * sensibilidadeSegura, 360f);
+        Vector2 movimento = ControleCompatibilidade.LerMovimento();
+        Vector2 olhar = ControleCompatibilidade.LerOlharGenerico();
+        rotacaoHorizontalAlvo = Mathf.Repeat(
+            rotacaoHorizontalAlvo + olhar.x * sensibilidadeControle * Time.deltaTime, 360f);
         rotacaoVerticalCameraLivre = Mathf.Clamp(
-            rotacaoVerticalCameraLivre - deltaMouse.y * sensibilidadeSegura, -85f, 85f);
+            rotacaoVerticalCameraLivre - deltaMouse.y * sensibilidadeSegura
+            - olhar.y * sensibilidadeControle * Time.deltaTime, -85f, 85f);
         cameraPlayer.rotation = Quaternion.Euler(rotacaoVerticalCameraLivre, rotacaoHorizontalAlvo, 0f);
 
-        Vector3 direcao = Vector3.zero;
-        if (Keyboard.current.wKey.isPressed) direcao += cameraPlayer.forward;
-        if (Keyboard.current.sKey.isPressed) direcao -= cameraPlayer.forward;
-        if (Keyboard.current.dKey.isPressed) direcao += cameraPlayer.right;
-        if (Keyboard.current.aKey.isPressed) direcao -= cameraPlayer.right;
-        if (Keyboard.current.eKey.isPressed || Keyboard.current.spaceKey.isPressed) direcao += Vector3.up;
-        if (Keyboard.current.qKey.isPressed || Keyboard.current.leftCtrlKey.isPressed) direcao -= Vector3.up;
+        if (teclado != null && (controle != null || joystick != null))
+        {
+            if (teclado.wKey.isPressed) movimento.y += 1f;
+            if (teclado.sKey.isPressed) movimento.y -= 1f;
+            if (teclado.dKey.isPressed) movimento.x += 1f;
+            if (teclado.aKey.isPressed) movimento.x -= 1f;
+        }
+        Vector3 direcao = cameraPlayer.forward * movimento.y + cameraPlayer.right * movimento.x;
+        if (teclado != null && (teclado.eKey.isPressed || teclado.spaceKey.isPressed)) direcao += Vector3.up;
+        if (teclado != null && (teclado.qKey.isPressed || teclado.leftCtrlKey.isPressed)) direcao -= Vector3.up;
 
         if (direcao.sqrMagnitude > 1f) direcao.Normalize();
-        float multiplicador = Keyboard.current.leftShiftKey.isPressed ? 3f : 1f;
+        float multiplicador = (teclado != null && teclado.leftShiftKey.isPressed)
+            || (controle != null && controle.leftStickButton.isPressed)
+            || ControleCompatibilidade.BotaoJoystickSegurado(8) ? 3f : 1f;
         cameraPlayer.position += direcao * velocidadeAtualCameraLivre * multiplicador * Time.deltaTime;
     }
 
@@ -488,9 +506,10 @@ public class PlayerFPS : MonoBehaviour
     {
         if (sentadoNaCadeira) return;
 
-        Vector2 input = Vector2.zero;
+        bool controleInputSystem = Gamepad.current != null || Joystick.current != null;
+        Vector2 input = ControleCompatibilidade.LerMovimento();
 
-        if (Keyboard.current != null)
+        if (Keyboard.current != null && controleInputSystem)
         {
             if (Keyboard.current.wKey.isPressed)
                 input.y += 1;
@@ -509,9 +528,14 @@ public class PlayerFPS : MonoBehaviour
             transform.right * input.x +
             transform.forward * input.y;
 
-        movimento.Normalize();
+        if (movimento.sqrMagnitude > 1f)
+            movimento.Normalize();
 
-        controller.Move(movimento * velocidade * Time.deltaTime);
+        bool correndo = (Keyboard.current != null && Keyboard.current.leftShiftKey.isPressed)
+            || (Gamepad.current != null && Gamepad.current.leftStickButton.isPressed)
+            || ControleCompatibilidade.BotaoJoystickSegurado(8);
+        float velocidadeMovimento = velocidade * (correndo ? 1.5f : 1f);
+        controller.Move(movimento * velocidadeMovimento * Time.deltaTime);
 
         bool andando = input.sqrMagnitude > 0.01f && controller.isGrounded;
         if (!andando) { proximoPasso = 0f; return; }
@@ -528,7 +552,8 @@ public class PlayerFPS : MonoBehaviour
             {
                 // Diminui o tom e espaça os passos na mesma proporção da velocidade do jogador.
                 float fatorVelocidadePassos = Mathf.Clamp(
-                    velocidade / VelocidadePadraoPassos, 0.5f, 1.5f);
+                    velocidadeMovimento * Mathf.Clamp01(input.magnitude) / VelocidadePadraoPassos,
+                    0.5f, 1.5f);
                 audioPassos.pitch = fatorVelocidadePassos;
                 audioPassos.volume = 1f;
                 audioPassos.clip = passo;
@@ -565,7 +590,7 @@ public class PlayerFPS : MonoBehaviour
 
     void Camera()
     {
-        if (Mouse.current == null || cameraPlayer == null) return;
+        if (cameraPlayer == null) return;
 
         AtualizarZoom();
 
@@ -577,15 +602,18 @@ public class PlayerFPS : MonoBehaviour
             return;
         }
 
-        Vector2 mouse = Mouse.current.delta.ReadValue();
+        Vector2 mouse = Mouse.current != null ? Mouse.current.delta.ReadValue() : Vector2.zero;
         if (!ValorFinito(mouse.x) || !ValorFinito(mouse.y))
             return;
 
         // Um delta extremo pode ocorrer quando o cursor recupera o foco; evita
         // que esse valor contamine a rotação da câmera.
         mouse = Vector2.ClampMagnitude(mouse, 100f);
+        Vector2 olharControle = Gamepad.current != null
+            ? Gamepad.current.rightStick.ReadValue() * sensibilidadeControle * Time.deltaTime
+            : ControleCompatibilidade.LerOlharGenerico() * sensibilidadeControle * Time.deltaTime;
 
-        rotacaoHorizontalAlvo += mouse.x * sensibilidade;
+        rotacaoHorizontalAlvo += mouse.x * sensibilidade + olharControle.x;
         if (sentadoNaCadeira)
         {
             float deslocamentoHorizontal = Mathf.DeltaAngle(rotacaoHorizontalBaseSentado, rotacaoHorizontalAlvo);
@@ -594,7 +622,7 @@ public class PlayerFPS : MonoBehaviour
         }
 
         // Rotação vertical da câmara
-        float novaRotacaoCamera = rotacaoCamera - mouse.y * sensibilidade;
+        float novaRotacaoCamera = rotacaoCamera - mouse.y * sensibilidade - olharControle.y;
         if (!ValorFinito(novaRotacaoCamera)) return;
         float limiteVertical = sentadoNaCadeira ? limiteGiroVerticalSentado : 80f;
         rotacaoCamera = Mathf.Clamp(novaRotacaoCamera, -limiteVertical, limiteVertical);
@@ -766,7 +794,9 @@ public class PlayerFPS : MonoBehaviour
     {
         if (cameraComponente == null || campoVisaoOriginal <= 0f) return;
 
-        float campoVisaoAlvo = Mouse.current.middleButton.isPressed
+        bool zoomAtivo = Mouse.current != null && Mouse.current.middleButton.isPressed;
+        zoomAtivo |= Gamepad.current != null && Gamepad.current.leftTrigger.ReadValue() > 0.5f;
+        float campoVisaoAlvo = zoomAtivo
             ? Mathf.Clamp(campoVisaoZoom, 1f, campoVisaoOriginal)
             : campoVisaoOriginal;
         cameraComponente.fieldOfView = Mathf.Lerp(
@@ -1001,7 +1031,7 @@ public class PlayerFPS : MonoBehaviour
         }
 
         // Executa as ações do clique.
-        if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
+        if (AcaoDeInteracaoPressionada())
         {
             PlateStackKitchenInteractable pratoParaPia = itemNaMao != null
                 ? itemNaMao.GetComponent<PlateStackKitchenInteractable>()
@@ -1142,6 +1172,21 @@ public class PlayerFPS : MonoBehaviour
                 itemNaMao.BeberCafe();
             }
         }
+    }
+
+    private static bool AcaoDeInteracaoPressionada()
+    {
+        bool mouse = Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame;
+        bool teclado = Keyboard.current != null
+            && (Keyboard.current.eKey.wasPressedThisFrame || Keyboard.current.enterKey.wasPressedThisFrame);
+        bool controle = Gamepad.current != null
+            && (Gamepad.current.buttonSouth.wasPressedThisFrame
+                || Gamepad.current.buttonWest.wasPressedThisFrame
+                || Gamepad.current.buttonNorth.wasPressedThisFrame);
+        bool joystick = ControleCompatibilidade.BotaoJoystickPressionado(0)
+            || ControleCompatibilidade.BotaoJoystickPressionado(2)
+            || ControleCompatibilidade.BotaoJoystickPressionado(3);
+        return mouse || teclado || controle || joystick;
     }
 
     private bool TentarColocarLivroNaEstante(Ray ray)

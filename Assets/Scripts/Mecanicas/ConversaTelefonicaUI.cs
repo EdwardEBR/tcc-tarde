@@ -42,6 +42,9 @@ public class ConversaTelefonicaUI : MonoBehaviour
     private const string ComandoPularConversa = "PULAR";
     private string bufferComandoTarefas = string.Empty;
     private const string ComandoCompletarTarefas = "pular";
+    private int repeticoesAnalogicoParaBaixo;
+    private int repeticoesAnalogicoParaCima;
+    private bool aguardarSoltarAnalogicos;
     public bool ConversaConcluida { get; private set; }
     [SerializeField, HideInInspector] private int versaoDoRoteiroExemplo;
     private const int VersaoAtualDoRoteiroExemplo = 6;
@@ -312,7 +315,7 @@ public class ConversaTelefonicaUI : MonoBehaviour
         botaoResposta1 = CriarBotaoResposta(painelRespostas.transform, "Resposta1", new Vector2(0.04f, 0.53f), new Vector2(0.96f, 0.94f), "1. ", out textoResposta1);
         botaoResposta2 = CriarBotaoResposta(painelRespostas.transform, "Resposta2", new Vector2(0.04f, 0.06f), new Vector2(0.96f, 0.47f), "2. ", out textoResposta2);
         textoInstrucao = CriarTexto(painel.transform, "InstrucaoTeclas", new Vector2(0.56f, 0.12f), new Vector2(0.96f, 0.18f), 21f, TextAlignmentOptions.MidlineLeft);
-        textoInstrucao.text = "Escolha uma resposta: pressione 1 ou 2";
+        textoInstrucao.text = "Escolha uma resposta: 1/A ou 2/B";
         textoInstrucao.gameObject.SetActive(false);
         painelRespostas.SetActive(false);
     }
@@ -374,12 +377,75 @@ public class ConversaTelefonicaUI : MonoBehaviour
     private void Update()
     {
         AtualizarTecladoInscrito();
-        if (PauseMenuManager.JogoPausado || cameraLivreAtiva || !conversaAtiva || rotinaDeTexto != null || Keyboard.current == null) return;
+        if (!PauseMenuManager.JogoPausado && !cameraLivreAtiva)
+            AtualizarCheatPorAnalogicos();
+        if (PauseMenuManager.JogoPausado || cameraLivreAtiva || !conversaAtiva || rotinaDeTexto != null) return;
 
-        if (Keyboard.current.digit1Key.wasPressedThisFrame || Keyboard.current.numpad1Key.wasPressedThisFrame)
+        bool resposta1 = Keyboard.current != null
+            && (Keyboard.current.digit1Key.wasPressedThisFrame || Keyboard.current.numpad1Key.wasPressedThisFrame);
+        bool resposta2 = Keyboard.current != null
+            && (Keyboard.current.digit2Key.wasPressedThisFrame || Keyboard.current.numpad2Key.wasPressedThisFrame);
+        resposta1 |= Gamepad.current != null && Gamepad.current.buttonSouth.wasPressedThisFrame;
+        resposta2 |= Gamepad.current != null && Gamepad.current.buttonEast.wasPressedThisFrame;
+        resposta1 |= ControleCompatibilidade.BotaoJoystickPressionado(0);
+        resposta2 |= ControleCompatibilidade.BotaoJoystickPressionado(1);
+
+        if (resposta1)
             EscolherResposta(0);
-        else if (Keyboard.current.digit2Key.wasPressedThisFrame || Keyboard.current.numpad2Key.wasPressedThisFrame)
+        else if (resposta2)
             EscolherResposta(1);
+    }
+
+    private void AtualizarCheatPorAnalogicos()
+    {
+        ControleCompatibilidade.LerAnalogicos(out Vector2 esquerdo, out Vector2 direito);
+        bool analogicosNeutros = Mathf.Abs(esquerdo.y) < 0.3f && Mathf.Abs(direito.y) < 0.3f;
+        if (aguardarSoltarAnalogicos)
+        {
+            if (analogicosNeutros) aguardarSoltarAnalogicos = false;
+            return;
+        }
+
+        bool ambosParaBaixo = esquerdo.y <= -0.8f && direito.y <= -0.8f;
+        bool ambosParaCima = esquerdo.y >= 0.8f && direito.y >= 0.8f;
+        if (!ambosParaBaixo && !ambosParaCima) return;
+
+        aguardarSoltarAnalogicos = true;
+        if (ambosParaBaixo)
+        {
+            repeticoesAnalogicoParaCima = 0;
+            if (!conversaAtiva)
+            {
+                repeticoesAnalogicoParaBaixo = 0;
+                return;
+            }
+
+            repeticoesAnalogicoParaBaixo++;
+            if (repeticoesAnalogicoParaBaixo >= 5)
+            {
+                repeticoesAnalogicoParaBaixo = 0;
+                bufferComandoAdmin = string.Empty;
+                PularParaUltimaFala();
+            }
+            return;
+        }
+
+        repeticoesAnalogicoParaBaixo = 0;
+        TaskManager gerenciadorTarefas = FindAnyObjectByType<TaskManager>();
+        if (gerenciadorTarefas == null || gerenciadorTarefas.dailyTasks == null
+            || gerenciadorTarefas.dailyTasks.Count == 0)
+        {
+            repeticoesAnalogicoParaCima = 0;
+            return;
+        }
+
+        repeticoesAnalogicoParaCima++;
+        if (repeticoesAnalogicoParaCima >= 5)
+        {
+            repeticoesAnalogicoParaCima = 0;
+            bufferComandoTarefas = string.Empty;
+            CompletarTodasAsTarefas();
+        }
     }
 
     public void IniciarConversa()
@@ -519,8 +585,8 @@ public class ConversaTelefonicaUI : MonoBehaviour
         if (textoInstrucao != null)
         {
             textoInstrucao.text = temResposta1 && temResposta2
-                ? "Escolha uma resposta: pressione 1 ou 2"
-                : temResposta1 ? "Pressione 1 para responder" : "Pressione 2 para responder";
+                ? "Escolha uma resposta: 1/A ou 2/B"
+                : temResposta1 ? "Pressione 1 ou A para responder" : "Pressione 2 ou B para responder";
             textoInstrucao.gameObject.SetActive(true);
         }
     }

@@ -40,13 +40,20 @@ public sealed class PauseMenuManager : MonoBehaviour
 
     private void Update()
     {
+        if (JogoPausado) ControleCompatibilidade.AtualizarNavegacaoUI();
         if (proximoStatus > 0f && Time.unscaledTime >= proximoStatus)
         {
             textoStatus.text = string.Empty;
             proximoStatus = 0f;
         }
 
-        if (Keyboard.current == null || !Keyboard.current.escapeKey.wasPressedThisFrame) return;
+        bool escape = Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame;
+        bool start = (Gamepad.current != null && Gamepad.current.startButton.wasPressedThisFrame)
+            || ControleCompatibilidade.BotaoJoystickPressionado(7);
+        bool cancel = JogoPausado && Gamepad.current != null
+            && Gamepad.current.buttonEast.wasPressedThisFrame;
+        cancel |= JogoPausado && ControleCompatibilidade.BotaoJoystickPressionado(1);
+        if (!escape && !start && !cancel) return;
 
         if (!JogoPausado)
             AbrirMenu();
@@ -81,10 +88,14 @@ public sealed class PauseMenuManager : MonoBehaviour
 
     private void CriarEventSystemSeNecessario()
     {
-        if (FindAnyObjectByType<EventSystem>() != null) return;
+        EventSystem sistema = FindAnyObjectByType<EventSystem>();
+        if (sistema == null)
+        {
+            GameObject eventSystem = new GameObject("EventSystem (Pause Menu)", typeof(EventSystem));
+            sistema = eventSystem.GetComponent<EventSystem>();
+        }
 
-        GameObject eventSystem = new GameObject("EventSystem (Pause Menu)", typeof(EventSystem));
-        eventSystem.AddComponent<InputSystemUIInputModule>().AssignDefaultActions();
+        ControleCompatibilidade.GarantirModuloUI(sistema);
     }
 
     private void CriarMenu()
@@ -307,6 +318,7 @@ public sealed class PauseMenuManager : MonoBehaviour
         painelPrincipal.SetActive(true);
         canvasOpcoes.SetActive(false);
         canvasMenu.SetActive(true);
+        SelecionarPrimeiroElemento(painelPrincipal.transform);
         Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
@@ -316,12 +328,14 @@ public sealed class PauseMenuManager : MonoBehaviour
     {
         canvasMenu.SetActive(false);
         canvasOpcoes.SetActive(true);
+        SelecionarPrimeiroElemento(painelOpcoes.transform);
     }
 
     private void MostrarMenuPrincipal()
     {
         canvasOpcoes.SetActive(false);
         canvasMenu.SetActive(true);
+        SelecionarPrimeiroElemento(painelPrincipal.transform);
     }
 
     private void RetomarJogo()
@@ -496,12 +510,34 @@ public sealed class PauseMenuManager : MonoBehaviour
     {
         painelPrincipal.SetActive(false);
         painelConfirmacaoSaida.SetActive(true);
+        SelecionarPrimeiroElemento(painelConfirmacaoSaida.transform);
     }
 
     private void CancelarSaidaSemSalvar()
     {
         painelConfirmacaoSaida.SetActive(false);
         painelPrincipal.SetActive(true);
+        SelecionarPrimeiroElemento(painelPrincipal.transform);
+    }
+
+    private static void SelecionarPrimeiroElemento(Transform raiz)
+    {
+        EventSystem sistema = EventSystem.current;
+        if (sistema == null || raiz == null) return;
+        foreach (Selectable elemento in raiz.GetComponentsInChildren<Selectable>())
+        {
+            if (elemento == null || !elemento.isActiveAndEnabled) continue;
+            Navigation navegacao = elemento.navigation;
+            if (navegacao.mode == Navigation.Mode.None)
+            {
+                navegacao.mode = Navigation.Mode.Automatic;
+                elemento.navigation = navegacao;
+            }
+            if (!elemento.interactable) continue;
+            sistema.SetSelectedGameObject(elemento.gameObject);
+            return;
+        }
+        sistema.SetSelectedGameObject(null);
     }
 
     private void ConfirmarSaidaSemSalvar()
