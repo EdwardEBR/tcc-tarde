@@ -186,9 +186,9 @@ public class PlayerFPS : MonoBehaviour
         somGeladeira = SomJogo.CriarFonte(porta.transform);
         somGeladeira.clip = SomJogo.Carregar("Snd-Geladeira");
         somGeladeira.loop = true;
-        somGeladeira.volume = 0.4f;
-        somGeladeira.minDistance = 1f;
-        somGeladeira.maxDistance = 16f;
+        somGeladeira.volume = 0.2f;
+        somGeladeira.minDistance = 0.5f;
+        somGeladeira.maxDistance = 2.5f;
         if (somGeladeira.clip != null) somGeladeira.Play();
     }
 

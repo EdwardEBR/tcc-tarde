@@ -16,6 +16,19 @@ public sealed class MusicaNivel5 : MonoBehaviour
 
     public static bool FadeSaidaEmAndamento => instancia != null && instancia.fadeSaidaEmAndamento;
 
+    public static void ManterSomApenasDaTrilhaFinal()
+    {
+        AudioSource[] fontes = FindObjectsByType<AudioSource>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        for (int i = 0; i < fontes.Length; i++)
+        {
+            AudioSource fonte = fontes[i];
+            if (fonte == null || (instancia != null && fonte == instancia.fonte)) continue;
+
+            fonte.Stop();
+            fonte.mute = true;
+        }
+    }
+
     private void Awake()
     {
         if (instancia != null && instancia != this)

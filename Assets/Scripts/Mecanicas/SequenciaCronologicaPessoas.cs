@@ -82,6 +82,8 @@ public class SequenciaCronologicaPessoas : MonoBehaviour
 
     private IEnumerator ExibirCreditos()
     {
+        MusicaNivel5.ManterSomApenasDaTrilhaFinal();
+
         PauseMenuManager menuPausa = FindAnyObjectByType<PauseMenuManager>();
         if (menuPausa != null) menuPausa.enabled = false;
         MiraCircularUI mira = FindAnyObjectByType<MiraCircularUI>();
