@@ -18,6 +18,8 @@ namespace SlimUI.ModernMenu{
 		private bool diminuindoMusica;
 		private const float DuracaoFadeMusica = 5f;
 		private const string ChaveVolumeMusica = "MusicVolume";
+		private static bool introJaExibidaNestaExecucao;
+		private bool introEmAndamento;
 
 		// campaign button sub menu
         [Header("MENUS")]
@@ -90,10 +92,18 @@ namespace SlimUI.ModernMenu{
         [Tooltip("The GameObject holding the Audio Source component for the SWOOSH SOUND when switching to the Settings Screen")]
         public AudioSource swooshSound;
 
+		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+		private static void ReiniciarIntroParaNovaExecucao(){
+			introJaExibidaNestaExecucao = false;
+		}
+
 		void Start(){
+			introEmAndamento = !introJaExibidaNestaExecucao;
+			if(introEmAndamento) introJaExibidaNestaExecucao = true;
+
 			Cursor.lockState = CursorLockMode.None;
 			Cursor.visible = true;
-			IniciarMusicaDoMenu();
+			IniciarMusicaDoMenu(introEmAndamento);
 
 			CameraObject = transform.GetComponent<Animator>();
 
@@ -118,9 +128,15 @@ namespace SlimUI.ModernMenu{
 				photoSlideshow.DefinirContrasteAtivo(true);
 				AplicarLegibilidadeMenuPrincipal();
 			}
+
+			if(introEmAndamento){
+				DefinirNavegacaoAtiva(false);
+				global::IntroAberturaJogo intro = gameObject.AddComponent<global::IntroAberturaJogo>();
+				intro.Iniciar(musicaDoMenu, ConcluirIntro);
+			}
 		}
 
-		private void IniciarMusicaDoMenu(){
+		private void IniciarMusicaDoMenu(bool iniciarEmSilencio){
 			AudioClip faixa = Resources.Load<AudioClip>("Music/the_mountain-sad-512361");
 			if(faixa == null){
 				Debug.LogWarning("Não foi possível carregar a música do menu em Resources/Music.", this);
@@ -131,11 +147,13 @@ namespace SlimUI.ModernMenu{
 			musicaDoMenu.clip = faixa;
 			musicaDoMenu.loop = true;
 			musicaDoMenu.playOnAwake = false;
-			musicaDoMenu.volume = PlayerPrefs.GetFloat(ChaveVolumeMusica, 1f);
+			musicaDoMenu.volume = iniciarEmSilencio ? 0f : PlayerPrefs.GetFloat(ChaveVolumeMusica, 1f);
 			musicaDoMenu.Play();
 		}
 
 		private void Update(){
+			if(introEmAndamento) return;
+
 			ControleCompatibilidade.AtualizarNavegacaoUI();
 
 			bool voltar = Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame;
@@ -146,6 +164,18 @@ namespace SlimUI.ModernMenu{
 
 			if(musicaDoMenu != null && !diminuindoMusica)
 				musicaDoMenu.volume = PlayerPrefs.GetFloat(ChaveVolumeMusica, 1f);
+		}
+
+		private void DefinirNavegacaoAtiva(bool ativa){
+			EventSystem[] eventSystems = FindObjectsByType<EventSystem>();
+			foreach(EventSystem sistema in eventSystems)
+				sistema.sendNavigationEvents = ativa;
+		}
+
+		private void ConcluirIntro(){
+			introEmAndamento = false;
+			DefinirNavegacaoAtiva(true);
+			SelecionarPrimeiroBotao(firstMenu != null ? firstMenu : mainMenu);
 		}
 
 		private void ConfigurarNavegacaoDoMenu(){
