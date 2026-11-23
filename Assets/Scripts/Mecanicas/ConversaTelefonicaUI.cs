@@ -795,7 +795,18 @@ public class ConversaTelefonicaUI : MonoBehaviour
 
     private IEnumerator ExecutarLapsoAntesDaFala(NoConversa no)
     {
-        yield return StartCoroutine(PiscarTelaPorLapso(no.duracaoLapso));
+        TaskManager tarefas = FindAnyObjectByType<TaskManager>();
+        if (tarefas != null)
+        {
+            tarefas.ReproduzirTelaPretaFecharRapido();
+            yield return new WaitForSeconds(TaskManager.DuracaoAnimacaoTelaPretaRapida);
+        }
+        else
+        {
+            Debug.LogWarning("ConversaTelefonicaUI: não encontrou TaskManager para a piscada do lapso de memória.", this);
+            yield return StartCoroutine(PiscarTelaPorLapso(no.duracaoLapso));
+        }
+
         rotinaDeTexto = null;
         rotinaDeTexto = StartCoroutine(DigitarFala(no));
     }
