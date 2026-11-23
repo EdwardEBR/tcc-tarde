@@ -38,6 +38,7 @@ public class ConversaTelefonicaUI : MonoBehaviour
     private Coroutine rotinaDeEncerramento;
     private bool conversaAtiva;
     private bool aguardandoSentarParaContinuar;
+    private int indiceDoNoAposSentar = -1;
     private bool cameraLivreAtiva;
     private Keyboard tecladoInscrito;
     private string bufferComandoAdmin = string.Empty;
@@ -131,6 +132,7 @@ public class ConversaTelefonicaUI : MonoBehaviour
         if (painel != null) painel.SetActive(true);
         conversaAtiva = true;
         aguardandoSentarParaContinuar = false;
+        indiceDoNoAposSentar = -1;
         ConversaConcluida = false;
         indiceDoNoAtual = indice;
         jogador.DefinirModoConversa(true);
@@ -316,12 +318,16 @@ public class ConversaTelefonicaUI : MonoBehaviour
         public string destino2;
         public bool piscar;
         public bool falaAvancaAutomaticamente;
+        public bool aguardarSentarAposFala;
         public bool eventoAutoAvanca;
         public float duracaoLapso;
+        public bool transicaoTelaPretaRapida;
 
         public EntradaRoteiro(string id, string fala, string resposta1 = null, string destino1 = null,
             string resposta2 = null, string destino2 = null, bool piscar = false,
-            bool falaAvancaAutomaticamente = false, bool eventoAutoAvanca = false, float duracaoLapso = 0.48f)
+            bool falaAvancaAutomaticamente = false, bool aguardarSentarAposFala = false,
+            bool eventoAutoAvanca = false, float duracaoLapso = 0.48f,
+            bool transicaoTelaPretaRapida = false)
         {
             this.id = id;
             this.fala = fala;
@@ -331,13 +337,19 @@ public class ConversaTelefonicaUI : MonoBehaviour
             this.destino2 = destino2;
             this.piscar = piscar;
             this.falaAvancaAutomaticamente = falaAvancaAutomaticamente;
+            this.aguardarSentarAposFala = aguardarSentarAposFala;
             this.eventoAutoAvanca = eventoAutoAvanca;
             this.duracaoLapso = duracaoLapso;
+            this.transicaoTelaPretaRapida = transicaoTelaPretaRapida;
         }
     }
 
     private static EntradaRoteiro Linha(string id, string pessoa, string fala, string proximo) =>
         new EntradaRoteiro(id, pessoa + ":\n" + fala, destino1: proximo, falaAvancaAutomaticamente: true);
+
+    private static EntradaRoteiro LinhaAguardarSentar(string id, string pessoa, string fala, string proximo) =>
+        new EntradaRoteiro(id, pessoa + ":\n" + fala, destino1: proximo,
+            falaAvancaAutomaticamente: true, aguardarSentarAposFala: true);
 
     private static EntradaRoteiro Escolha(string id, string fala, string resposta1, string destino1,
         string resposta2, string destino2, bool piscar = false) =>
@@ -346,9 +358,9 @@ public class ConversaTelefonicaUI : MonoBehaviour
     private static EntradaRoteiro Final(string id, string pessoa, string fala) =>
         new EntradaRoteiro(id, pessoa + ":\n" + fala);
 
-    private static EntradaRoteiro EventoPiscada(string id, string proximo, float duracao) =>
-        new EntradaRoteiro(id, string.Empty, destino1: proximo, piscar: true,
-            eventoAutoAvanca: true, duracaoLapso: duracao);
+    private static EntradaRoteiro EventoTransicaoTelaPreta(string id, string proximo) =>
+        new EntradaRoteiro(id, string.Empty, destino1: proximo,
+            eventoAutoAvanca: true, transicaoTelaPretaRapida: true);
 
     private static List<NoConversa> MaterializarRoteiro(IReadOnlyList<EntradaRoteiro> roteiro)
     {
@@ -367,8 +379,10 @@ public class ConversaTelefonicaUI : MonoBehaviour
                 proximoNoResposta2 = ObterIndiceDestino(indices, entrada.destino2),
                 piscarTelaAntesDaFala = entrada.piscar,
                 falaAvancaAutomaticamente = entrada.falaAvancaAutomaticamente,
+                aguardarSentarAposFala = entrada.aguardarSentarAposFala,
                 eventoAutoAvanca = entrada.eventoAutoAvanca,
-                duracaoLapso = entrada.duracaoLapso
+                duracaoLapso = entrada.duracaoLapso,
+                transicaoTelaPretaRapida = entrada.transicaoTelaPretaRapida
             });
         }
         return resultado;
@@ -399,8 +413,7 @@ public class ConversaTelefonicaUI : MonoBehaviour
                 "Eu tento ficar calma, filha. Mas às vezes me dá medo... parece que até as coisas mais simples estão ficando difíceis para mim.", "elisa_phone_anxiety_response_02"),
             Linha("elisa_phone_anxiety_response_01", "Elisa", "Eu imaginei, mãe. O médico comentou que pode ser difícil para você no começo. Tenta descansar um pouco enquanto se adapta, tá? Não precisa resolver tudo hoje.", "elisa_phone_collage_intro"),
             Linha("elisa_phone_anxiety_response_02", "Elisa", "Ah, mãe... eu queria poder tirar esse medo de você. Não vou fingir que é fácil, porque sei que não é. Mas você não precisa passar por isso tentando parecer forte o tempo todo. Pode falar comigo, mesmo quando não souber explicar o que está sentindo.", "elisa_phone_collage_intro"),
-            Linha("elisa_phone_collage_intro", "Elisa", "Mas me conta: como está o seu projeto de colagem? Deve fazer bem voltar a mexer com as coisas, escolher as fotos, montar tudo com calma... O Martin ficou tão feliz quando encontrou aquelas fotografias dele com a Nathalia e a Julia ainda bebês.", "elisa_phone_blink_01"),
-            EventoPiscada("elisa_phone_blink_01", "elisa_phone_choice_collage", 0.45f),
+            Linha("elisa_phone_collage_intro", "Elisa", "Mas me conta: como está o seu projeto de colagem? Deve fazer bem voltar a mexer com as coisas, escolher as fotos, montar tudo com calma... O Martin ficou tão feliz quando encontrou aquelas fotografias dele com a Nathalia e a Julia ainda bebês.", "elisa_phone_choice_collage"),
             Escolha("elisa_phone_choice_collage", string.Empty,
                 "Minha colagem?", "elisa_phone_collage_response_01",
                 "Eu comecei alguma coisa, não comecei? Às vezes olho para as fotos e não sei mais se já escolhi, se já colei... parece que me perco no meio do que estava fazendo.", "elisa_phone_collage_response_02"),
@@ -412,8 +425,7 @@ public class ConversaTelefonicaUI : MonoBehaviour
                 "Aquelas fotos da Nathalia e da Julia... você pode me mandar de novo? Quero olhar para elas com calma.", "elisa_phone_girls_photos_response_02"),
             Linha("elisa_phone_girls_photos_response_01", "Elisa", "Sim, mãe. Você lembra que eu levei algumas fotos neste fim de semana? Deixei todas na mesa de centro da sala...", "elisa_phone_girls_photos_followup"),
             Linha("elisa_phone_girls_photos_response_02", "Elisa", "Claro, mãe. Eu posso mandar de novo. Mas eu também tinha levado algumas impressas neste fim de semana. Deixei na mesa de centro da sala, lembra?", "elisa_phone_girls_photos_followup"),
-            Linha("elisa_phone_girls_photos_followup", "Elisa", "Você chegou a colocar em outro lugar ou já incluiu alguma delas na colagem?", "elisa_phone_blink_02"),
-            EventoPiscada("elisa_phone_blink_02", "elisa_phone_choice_missing_photos", 0.55f),
+            Linha("elisa_phone_girls_photos_followup", "Elisa", "Você chegou a colocar em outro lugar ou já incluiu alguma delas na colagem?", "elisa_phone_choice_missing_photos"),
             Escolha("elisa_phone_choice_missing_photos", string.Empty,
                 "Não estou vendo as fotos. Acho que devo ter colocado em algum lugar e esquecido.", "elisa_phone_missing_photos_response_01",
                 "Eu sei que você deixou aqui, filha... mas não consigo lembrar onde. Estou olhando para a sala e parece que a resposta deveria estar bem na minha frente.", "elisa_phone_missing_photos_response_02"),
@@ -439,9 +451,7 @@ public class ConversaTelefonicaUI : MonoBehaviour
     {
         conversa = MaterializarRoteiro(new List<EntradaRoteiro>
         {
-            Linha("d1_001", "Elisa", "Mãe? Mãe, vem cá um pouquinho.", "d1_002"),
-            Linha("d1_002", "Elisa", "A gente já regou sua planta hoje. Não precisa regar de novo, tá?", "d1_003"),
-            Linha("d1_003", "Elisa", "Vem se sentar com a gente. A janta está pronta e já está todo mundo esperando.", "d1_004"),
+            Linha("d1_001", "Elisa", "Mãe? Mãe, vem cá um pouquinho. A gente já regou sua planta hoje. Não precisa regar de novo, tá? Vem se sentar com a gente. A janta está pronta e já está todo mundo esperando.", "d1_004"),
             Linha("d1_004", "Elisa", "É tão bom ver a família reunida outra vez. Fico feliz que você tenha vindo, tia Maria.", "d1_005"),
             Linha("d1_005", "Maria", "Eu também, querida. Fazia tempo que a gente não sentava todo mundo junto assim. Quem sabe a gente não repete no Natal?", "d1_006"),
             Escolha("d1_006", "Maria:\nAliás, Helena, onde você gostaria de passar o Natal este ano? Lá em casa ou aqui com vocês?",
@@ -461,7 +471,7 @@ public class ConversaTelefonicaUI : MonoBehaviour
             Linha("d1_maria_brinca", "Maria", "Olha só... esses dois podem discordar de tudo, mas quando o assunto é você, viram uma equipe.", "d1_elisa_brinca"),
             Linha("d1_elisa_brinca", "Elisa", "A gente tenta, tia. Só não conta para ele que eu concordei.", "d1_lucas_brinca"),
             Linha("d1_lucas_brinca", "Lucas", "Eu ouvi, viu? Agora vamos comer antes que a comida esfrie. A maionese não vai esperar a gente.", "d1_cena_infancia"),
-            Linha("d1_cena_infancia", "Narrador", "Mais tarde, depois da janta, os pratos já estão quase vazios. A conversa segue pela mesa, entre risadas e histórias antigas.", "d1_julia_abre"),
+            EventoTransicaoTelaPreta("d1_cena_infancia", "d1_julia_abre"),
             Linha("d1_julia_abre", "Julia", "E ela ficou segurando a maçaneta do outro lado! Eu juro que achei que a porta nunca mais ia abrir.", "d1_nathalia"),
             Linha("d1_nathalia", "Nathalia", "Não foi bem assim! Você conta essa história como se a casa tivesse pegado fogo.", "d1_julia_pergunta"),
             Linha("d1_julia_pergunta", "Julia", "Vó, você costumava colocar a mamãe e o tio Lucas de castigo quando eles eram crianças? Aposto que os dois davam um trabalhão para você e para o vô.", "d1_choice_lapso"),
@@ -505,7 +515,7 @@ public class ConversaTelefonicaUI : MonoBehaviour
                 "Papai...? Desculpa, Maria. Em que parte da conversa a gente estava?", "d2_lapso_resposta_2", piscar: true),
             Linha("d2_lapso_resposta_1", "Maria", "Sou eu, mana. É a Maria. Você tinha acabado de me perguntar se eu conversei com papai sobre as finanças da família.", "d2_lapso_merge"),
             Linha("d2_lapso_resposta_2", "Maria", "A gente estava falando de papai. Eu disse que ele era muito fechado quando o assunto era dinheiro. Está tudo bem, Helena. Eu posso repetir.", "d2_lapso_merge"),
-            Linha("d2_lapso_merge", "Maria", "Vai, senta um pouquinho e descansa. Não precisa ficar andando pela casa e tentando arrumar tudo enquanto conversa comigo.", "d2_helena_senta"),
+            LinhaAguardarSentar("d2_lapso_merge", "Maria", "Vai, senta um pouquinho e descansa. Não precisa ficar andando pela casa e tentando arrumar tudo enquanto conversa comigo.", "d2_helena_senta"),
             Escolha("d2_helena_senta", "Maria:\nAssim está melhor? Quero saber de você, mana. Como você está hoje, de verdade?",
                 "Estou bem... tranquila.", "d2_estado_merge",
                 "Tem dias em que eu fico com medo, Maria. Começo uma coisa e, de repente, não lembro mais o que estava fazendo.", "d2_estado_confessa"),
@@ -701,6 +711,11 @@ public class ConversaTelefonicaUI : MonoBehaviour
         return IniciarConversa(true);
     }
 
+    public bool IniciarConversaComJogadorBloqueado()
+    {
+        return IniciarConversa(false);
+    }
+
     private bool IniciarConversa(bool aguardarSentar)
     {
         if (conversa == null || conversa.Count == 0 || noInicial < 0 || noInicial >= conversa.Count)
@@ -712,6 +727,7 @@ public class ConversaTelefonicaUI : MonoBehaviour
         ConversaConcluida = false;
         conversaAtiva = true;
         aguardandoSentarParaContinuar = aguardarSentar;
+        indiceDoNoAposSentar = -1;
         bufferComandoAdmin = string.Empty;
         indiceDoNoAtual = noInicial;
         if (painel != null) painel.SetActive(true);
@@ -728,6 +744,13 @@ public class ConversaTelefonicaUI : MonoBehaviour
         aguardandoSentarParaContinuar = false;
         if (jogador == null) jogador = FindAnyObjectByType<PlayerFPS>();
         if (jogador != null) jogador.DefinirModoConversa(true);
+        if (indiceDoNoAposSentar >= 0)
+        {
+            indiceDoNoAtual = indiceDoNoAposSentar;
+            indiceDoNoAposSentar = -1;
+            MostrarNo(indiceDoNoAtual);
+            return;
+        }
         if (rotinaDeTexto == null && indiceDoNoAtual >= 0 && indiceDoNoAtual < conversa.Count)
             MostrarRespostas(conversa[indiceDoNoAtual]);
     }
@@ -736,6 +759,7 @@ public class ConversaTelefonicaUI : MonoBehaviour
     {
         conversaAtiva = false;
         aguardandoSentarParaContinuar = false;
+        indiceDoNoAposSentar = -1;
         bufferComandoAdmin = string.Empty;
         if (rotinaDeTexto != null) StopCoroutine(rotinaDeTexto);
         rotinaDeTexto = null;
@@ -909,7 +933,26 @@ public class ConversaTelefonicaUI : MonoBehaviour
 
     private IEnumerator AvancarAposEvento(int proximo)
     {
-        yield return null;
+        NoConversa evento = conversa[indiceDoNoAtual];
+        if (evento.transicaoTelaPretaRapida)
+        {
+            TaskManager tarefas = FindAnyObjectByType<TaskManager>();
+            if (tarefas != null)
+            {
+                tarefas.ReproduzirTelaPretaFecharRapido();
+                yield return new WaitForSeconds(TaskManager.DuracaoAnimacaoTelaPretaRapida);
+            }
+            else
+            {
+                Debug.LogWarning("ConversaTelefonicaUI: não encontrou TaskManager para a transição de tempo do jantar.", this);
+                yield return StartCoroutine(PiscarTelaPorLapso(evento.duracaoLapso));
+            }
+        }
+        else
+        {
+            yield return null;
+        }
+
         rotinaDeEncerramento = null;
         indiceDoNoAtual = proximo;
         MostrarNo(indiceDoNoAtual);
@@ -919,6 +962,22 @@ public class ConversaTelefonicaUI : MonoBehaviour
     {
         yield return AguardarPausaDeLeitura(fala);
         rotinaDeEncerramento = null;
+        NoConversa falaAtual = conversa[indiceDoNoAtual];
+        if (falaAtual.aguardarSentarAposFala)
+        {
+            indiceDoNoAposSentar = proximo;
+            aguardandoSentarParaContinuar = true;
+            TaskManager tarefas = FindAnyObjectByType<TaskManager>();
+            if (tarefas != null)
+                tarefas.AguardarDialogoAteSentar();
+            else
+                Debug.LogWarning("ConversaTelefonicaUI: não encontrou TaskManager para aguardar Helena sentar.", this);
+
+            if (jogador == null) jogador = FindAnyObjectByType<PlayerFPS>();
+            if (jogador != null) jogador.DefinirModoConversa(false);
+            yield break;
+        }
+
         indiceDoNoAtual = proximo;
         MostrarNo(indiceDoNoAtual);
     }

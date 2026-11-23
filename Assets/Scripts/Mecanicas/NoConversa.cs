@@ -11,6 +11,8 @@ public class NoConversa
     public int proximoNoResposta2 = -1;
     public bool piscarTelaAntesDaFala;
     public bool falaAvancaAutomaticamente;
+    public bool aguardarSentarAposFala;
     public bool eventoAutoAvanca;
+    public bool transicaoTelaPretaRapida;
     [Min(0f)] public float duracaoLapso = 0.48f;
 }

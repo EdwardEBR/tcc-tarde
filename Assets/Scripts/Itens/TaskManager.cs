@@ -155,14 +155,15 @@ public class TaskManager : MonoBehaviour
 
         if (conversaAposRegar == null)
             conversaAposRegar = FindAnyObjectByType<ConversaTelefonicaUI>();
-        if (conversaAposRegar == null || !conversaAposRegar.IniciarConversaAguardandoSentar())
+        if (conversaAposRegar == null || !conversaAposRegar.IniciarConversaComJogadorBloqueado())
         {
             Debug.LogWarning("TaskManager: não encontrou uma conversa válida para continuar no sofá do Nivel3.", this);
             yield break;
         }
 
         DefinirPessoas(true);
-        dialogoAguardandoSentar = true;
+        dialogoAguardandoSentar = false;
+        dialogoAposSentarIniciado = false;
         LiberarSofaNivel3();
 
         while (conversaAposRegar != null && !conversaAposRegar.ConversaConcluida)
@@ -486,6 +487,12 @@ public class TaskManager : MonoBehaviour
         dialogoAguardandoSentar = false;
         dialogoAposSentarIniciado = true;
         conversaAposRegar.ContinuarAposSentar();
+    }
+
+    public void AguardarDialogoAteSentar()
+    {
+        if (!EstaNoNivel3() || dialogoAposSentarIniciado) return;
+        dialogoAguardandoSentar = true;
     }
 
     private IEnumerator AguardarFimDoDialogoAposRegar()
