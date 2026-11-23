@@ -9,4 +9,8 @@ public class NoConversa
     public int proximoNoResposta1 = -1;
     public string resposta2;
     public int proximoNoResposta2 = -1;
+    public bool piscarTelaAntesDaFala;
+    public bool falaAvancaAutomaticamente;
+    public bool eventoAutoAvanca;
+    [Min(0f)] public float duracaoLapso = 0.48f;
 }

@@ -18,8 +18,8 @@ namespace SlimUI.ModernMenu{
 		private bool diminuindoMusica;
 		private const float DuracaoFadeMusica = 5f;
 		private const string ChaveVolumeMusica = "MusicVolume";
-		private static bool introJaExibidaNestaExecucao;
-		private bool introEmAndamento;
+		private const float DuracaoCartelaInicial = 2f;
+		private static bool aberturaJaExibidaNestaExecucao;
 
 		// campaign button sub menu
         [Header("MENUS")]
@@ -93,17 +93,14 @@ namespace SlimUI.ModernMenu{
         public AudioSource swooshSound;
 
 		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-		private static void ReiniciarIntroParaNovaExecucao(){
-			introJaExibidaNestaExecucao = false;
+		private static void ReiniciarAberturaParaNovaExecucao(){
+			aberturaJaExibidaNestaExecucao = false;
 		}
 
 		void Start(){
-			introEmAndamento = !introJaExibidaNestaExecucao;
-			if(introEmAndamento) introJaExibidaNestaExecucao = true;
-
 			Cursor.lockState = CursorLockMode.None;
 			Cursor.visible = true;
-			IniciarMusicaDoMenu(introEmAndamento);
+			IniciarMusicaDoMenu();
 
 			CameraObject = transform.GetComponent<Animator>();
 
@@ -129,14 +126,78 @@ namespace SlimUI.ModernMenu{
 				AplicarLegibilidadeMenuPrincipal();
 			}
 
-			if(introEmAndamento){
-				DefinirNavegacaoAtiva(false);
-				global::IntroAberturaJogo intro = gameObject.AddComponent<global::IntroAberturaJogo>();
-				intro.Iniciar(musicaDoMenu, ConcluirIntro);
+			if(!aberturaJaExibidaNestaExecucao){
+				aberturaJaExibidaNestaExecucao = true;
+				StartCoroutine(ExibirAberturaDoMenu());
+			}else{
+				SelecionarPrimeiroBotao(firstMenu != null ? firstMenu : mainMenu);
 			}
+
 		}
 
-		private void IniciarMusicaDoMenu(bool iniciarEmSilencio){
+		private IEnumerator ExibirAberturaDoMenu(){
+			GameObject canvasAbertura = new GameObject("Abertura_Memorias_Partidas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(CanvasGroup));
+			Canvas canvas = canvasAbertura.GetComponent<Canvas>();
+			canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+			canvas.sortingOrder = short.MaxValue;
+
+			CanvasScaler scaler = canvasAbertura.GetComponent<CanvasScaler>();
+			scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+			scaler.referenceResolution = new Vector2(1920f, 1080f);
+
+			CanvasGroup grupo = canvasAbertura.GetComponent<CanvasGroup>();
+			grupo.alpha = 1f;
+			GameObject fundo = new GameObject("Fundo_Preto", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+			fundo.transform.SetParent(canvasAbertura.transform, false);
+			RectTransform retanguloFundo = fundo.GetComponent<RectTransform>();
+			retanguloFundo.anchorMin = Vector2.zero;
+			retanguloFundo.anchorMax = Vector2.one;
+			retanguloFundo.offsetMin = Vector2.zero;
+			retanguloFundo.offsetMax = Vector2.zero;
+			fundo.GetComponent<Image>().color = Color.black;
+
+			GameObject objetoTitulo = new GameObject("Titulo_Memorias_Partidas", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI), typeof(CanvasGroup));
+			objetoTitulo.transform.SetParent(canvasAbertura.transform, false);
+			RectTransform retanguloTitulo = objetoTitulo.GetComponent<RectTransform>();
+			retanguloTitulo.anchorMin = Vector2.zero;
+			retanguloTitulo.anchorMax = Vector2.one;
+			retanguloTitulo.offsetMin = new Vector2(40f, 40f);
+			retanguloTitulo.offsetMax = new Vector2(-40f, -40f);
+			TMP_Text titulo = objetoTitulo.GetComponent<TextMeshProUGUI>();
+			titulo.text = "Memórias\nPartidas";
+			TMP_FontAsset fonteTitulo = Resources.Load<TMP_FontAsset>("SlimUI/RUBIK-LIGHT-SDF");
+			titulo.font = fonteTitulo != null ? fonteTitulo : TMP_Settings.defaultFontAsset;
+			titulo.fontSize = 132f;
+			titulo.enableAutoSizing = true;
+			titulo.fontSizeMin = 80f;
+			titulo.fontSizeMax = 132f;
+			titulo.characterSpacing = 8f;
+			titulo.lineSpacing = 12f;
+			titulo.color = new Color(0.94f, 0.91f, 0.84f);
+			titulo.alignment = TextAlignmentOptions.Center;
+			titulo.verticalAlignment = VerticalAlignmentOptions.Middle;
+			CanvasGroup grupoTitulo = objetoTitulo.GetComponent<CanvasGroup>();
+			grupoTitulo.alpha = 0f;
+
+			yield return EsmaecerGrupo(grupoTitulo, 0f, 1f, 2f);
+			yield return new WaitForSecondsRealtime(DuracaoCartelaInicial);
+			yield return EsmaecerGrupo(grupoTitulo, 1f, 0f, 2f);
+			yield return EsmaecerGrupo(grupo, 1f, 0f, 0.01f);
+			Destroy(canvasAbertura);
+			SelecionarPrimeiroBotao(firstMenu != null ? firstMenu : mainMenu);
+		}
+
+		private static IEnumerator EsmaecerGrupo(CanvasGroup grupo, float inicio, float fim, float duracao){
+			float tempo = 0f;
+			while(tempo < duracao){
+				tempo += Time.unscaledDeltaTime;
+				if(grupo != null) grupo.alpha = Mathf.Lerp(inicio, fim, Mathf.Clamp01(tempo / duracao));
+				yield return null;
+			}
+			if(grupo != null) grupo.alpha = fim;
+		}
+
+		private void IniciarMusicaDoMenu(){
 			AudioClip faixa = Resources.Load<AudioClip>("Music/the_mountain-sad-512361");
 			if(faixa == null){
 				Debug.LogWarning("Não foi possível carregar a música do menu em Resources/Music.", this);
@@ -147,13 +208,11 @@ namespace SlimUI.ModernMenu{
 			musicaDoMenu.clip = faixa;
 			musicaDoMenu.loop = true;
 			musicaDoMenu.playOnAwake = false;
-			musicaDoMenu.volume = iniciarEmSilencio ? 0f : PlayerPrefs.GetFloat(ChaveVolumeMusica, 1f);
+			musicaDoMenu.volume = PlayerPrefs.GetFloat(ChaveVolumeMusica, 1f);
 			musicaDoMenu.Play();
 		}
 
 		private void Update(){
-			if(introEmAndamento) return;
-
 			ControleCompatibilidade.AtualizarNavegacaoUI();
 
 			bool voltar = Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame;
@@ -164,18 +223,6 @@ namespace SlimUI.ModernMenu{
 
 			if(musicaDoMenu != null && !diminuindoMusica)
 				musicaDoMenu.volume = PlayerPrefs.GetFloat(ChaveVolumeMusica, 1f);
-		}
-
-		private void DefinirNavegacaoAtiva(bool ativa){
-			EventSystem[] eventSystems = FindObjectsByType<EventSystem>();
-			foreach(EventSystem sistema in eventSystems)
-				sistema.sendNavigationEvents = ativa;
-		}
-
-		private void ConcluirIntro(){
-			introEmAndamento = false;
-			DefinirNavegacaoAtiva(true);
-			SelecionarPrimeiroBotao(firstMenu != null ? firstMenu : mainMenu);
 		}
 
 		private void ConfigurarNavegacaoDoMenu(){
