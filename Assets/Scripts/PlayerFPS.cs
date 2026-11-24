@@ -110,6 +110,7 @@ public class PlayerFPS : MonoBehaviour
         : Mathf.Max(0.5f, transform.lossyScale.y);
     public bool CameraLivreAtiva => cameraLivreAtiva;
     public bool ConversaAtiva => modoConversaAtivo;
+    public bool EstaSentadoNaCadeira => sentadoNaCadeira;
     public bool PodeInteragirPelaMira =>
         !PauseMenuManager.JogoPausado && !modoConversaAtivo && !cameraLivreAtiva && !mouseLivre
         && !sentandoNaCadeira
@@ -1041,6 +1042,23 @@ public class PlayerFPS : MonoBehaviour
                     break;
                 }
             }
+        }
+
+        // Os itens do Nivel2 são ativados e recebem colliders em tempo de execução.
+        // Se algum collider do modelo ficar fora da camada configurada no Inspector,
+        // ainda permite mirar diretamente no prato ou no livro sem atravessar objetos.
+        if (itemNaMao == null && itemSeguravelDetectado == null && EstaNoNivel2()
+            && Physics.Raycast(ray, out RaycastHit hitItemNivel2, distanciaInteracao, ~0,
+                QueryTriggerInteraction.Collide))
+        {
+            ItemSeguravel itemNivel2 = hitItemNivel2.collider.GetComponentInParent<ItemSeguravel>();
+            PlateStackKitchenInteractable pilhaDePratos = itemNivel2 != null
+                ? itemNivel2.GetComponent<PlateStackKitchenInteractable>()
+                : null;
+            bool pratoDisponivel = pilhaDePratos != null && pilhaDePratos.PodePegar;
+            bool livroDisponivel = EhLivroPT(itemNivel2);
+            if (itemNivel2 != null && itemNivel2.podeSerPego && (pratoDisponivel || livroDisponivel))
+                itemSeguravelDetectado = itemNivel2;
         }
 
         AtualizarIndicadorEstanteLivro(ray);

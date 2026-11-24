@@ -17,8 +17,13 @@ public sealed class ControlesTouchscreen : MonoBehaviour
     private PauseMenuManager menuPausa;
     private GameObject raizControles;
     private RectTransform areaSegura;
+    private Canvas canvasControles;
+    private GameObject joystickBase;
+    private GameObject joystickEntrada;
+    private GameObject legendaJoystick;
     private OnScreenButton botaoInteracaoNaTela;
     private Button botaoInteracao;
+    private Button botaoMenu;
     private bool aplicativoAtivo = true;
     private Rect ultimaAreaSegura;
     private int ultimaLargura;
@@ -47,7 +52,8 @@ public sealed class ControlesTouchscreen : MonoBehaviour
         if (areaSegura == null) return;
 
         AtualizarAreaSegura(false);
-        bool jogoAtivo = aplicativoAtivo && !PauseMenuManager.JogoPausado && !jogador.ConversaAtiva;
+        bool jogoAtivo = aplicativoAtivo && !PauseMenuManager.JogoPausado;
+        bool dialogoAtivo = jogador.ConversaAtiva;
         if (raizControles.activeSelf != jogoAtivo)
         {
             raizControles.SetActive(jogoAtivo);
@@ -55,9 +61,23 @@ public sealed class ControlesTouchscreen : MonoBehaviour
                 jogador.CancelarOlharToque();
         }
 
+        if (canvasControles != null)
+            canvasControles.sortingOrder = dialogoAtivo ? -1 : OrdemCanvas;
+
+        bool sentado = jogador.EstaSentadoNaCadeira;
+        bool controlesDeMovimentoAtivos = jogoAtivo && !sentado;
+        DefinirAtivo(joystickBase, controlesDeMovimentoAtivos);
+        DefinirAtivo(joystickEntrada, controlesDeMovimentoAtivos);
+        DefinirAtivo(legendaJoystick, controlesDeMovimentoAtivos);
+
+        bool exibirBotaoInteracao = !dialogoAtivo && !sentado;
+        bool exibirBotaoMenu = !dialogoAtivo;
+        DefinirAtivo(botaoInteracao != null ? botaoInteracao.gameObject : null, exibirBotaoInteracao);
+        DefinirAtivo(botaoMenu != null ? botaoMenu.gameObject : null, exibirBotaoMenu);
+
         if (botaoInteracao != null && botaoInteracaoNaTela != null)
         {
-            bool podeInteragir = jogoAtivo && jogador.PodeInteragirPelaMira;
+            bool podeInteragir = jogoAtivo && exibirBotaoInteracao && jogador.PodeInteragirPelaMira;
             if (botaoInteracao.interactable != podeInteragir)
                 botaoInteracao.interactable = podeInteragir;
             if (botaoInteracaoNaTela.enabled != podeInteragir)
@@ -94,9 +114,9 @@ public sealed class ControlesTouchscreen : MonoBehaviour
         GameObject objetoCanvas = new GameObject(
             "Canvas_ControlesTouchscreen",
             typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
-        Canvas canvas = objetoCanvas.GetComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.sortingOrder = OrdemCanvas;
+        canvasControles = objetoCanvas.GetComponent<Canvas>();
+        canvasControles.renderMode = RenderMode.ScreenSpaceOverlay;
+        canvasControles.sortingOrder = OrdemCanvas;
 
         CanvasScaler scaler = objetoCanvas.GetComponent<CanvasScaler>();
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
@@ -131,6 +151,7 @@ public sealed class ControlesTouchscreen : MonoBehaviour
     private void CriarJoystick(Transform pai)
     {
         RectTransform baseRect = CriarRect(pai, "Joystick_Base", new Vector2(0.145f, 0.18f), Vector2.zero);
+        joystickBase = baseRect.gameObject;
         baseRect.anchorMax = baseRect.anchorMin;
         baseRect.sizeDelta = new Vector2(218f, 218f);
         Image fundo = baseRect.gameObject.AddComponent<Image>();
@@ -143,6 +164,7 @@ public sealed class ControlesTouchscreen : MonoBehaviour
         contorno.raycastTarget = false;
 
         RectTransform zonaToque = CriarRect(pai, "Joystick_Entrada", new Vector2(0.145f, 0.18f), Vector2.zero);
+        joystickEntrada = zonaToque.gameObject;
         zonaToque.anchorMax = zonaToque.anchorMin;
         zonaToque.sizeDelta = new Vector2(218f, 218f);
         Image imagemEntrada = zonaToque.gameObject.AddComponent<Image>();
@@ -207,6 +229,7 @@ public sealed class ControlesTouchscreen : MonoBehaviour
         button.navigation = new Navigation { mode = Navigation.Mode.None };
         button.colors = CriarCoresBotao();
         button.onClick.AddListener(menuPausa.ProcessarEscape);
+        botaoMenu = button;
 
         Image contorno = CriarImagem(rect, "Contorno", ObterSpriteContorno(), new Color(0.91f, 0.57f, 0.12f, 0.64f));
         Esticar(contorno.rectTransform);
@@ -234,6 +257,13 @@ public sealed class ControlesTouchscreen : MonoBehaviour
     {
         CriarTexto(pai, "LegendaJoystick", "MOVER", 26f, Vector2.zero, new Vector2(150f, 32f),
             new Vector2(0.145f, 0.045f), new Vector2(0.145f, 0.045f));
+        legendaJoystick = pai.Find("LegendaJoystick")?.gameObject;
+    }
+
+    private static void DefinirAtivo(GameObject objeto, bool ativo)
+    {
+        if (objeto != null && objeto.activeSelf != ativo)
+            objeto.SetActive(ativo);
     }
 
     private static RectTransform CriarRect(Transform pai, string nome, Vector2 ancora, Vector2 posicao)

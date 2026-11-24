@@ -163,35 +163,37 @@ public sealed class PauseMenuManager : MonoBehaviour
         painelOpcoes = CriarPainel(
             canvasOpcoes.transform,
             "Painel_Opções",
-            plataformaTouch ? new Vector2(800f, 820f) : new Vector2(700f, 520f));
-        CriarTexto(painelOpcoes.transform, "Título", "CONFIGURAÇÕES", plataformaTouch ? 50f : 38f,
-            new Vector2(0f, plataformaTouch ? 325f : 190f), new Vector2(680f, 70f));
-        CriarTexto(painelOpcoes.transform, "RótuloVolume", "Volume", plataformaTouch ? 32f : 23f,
-            new Vector2(-210f, plataformaTouch ? 155f : 75f), new Vector2(220f, 52f));
+            plataformaTouch ? new Vector2(720f, 700f) : new Vector2(700f, 520f));
+        CriarTexto(painelOpcoes.transform, "Título", "CONFIGURAÇÕES", plataformaTouch ? 42f : 38f,
+            new Vector2(0f, plataformaTouch ? 265f : 190f), new Vector2(620f, 60f));
+        CriarTexto(painelOpcoes.transform, "RótuloVolume", "Volume", plataformaTouch ? 28f : 23f,
+            new Vector2(-165f, plataformaTouch ? 110f : 75f), new Vector2(250f, 48f));
         float volumeAtual = PlayerPrefs.GetFloat("MasterVolume", AudioListener.volume);
         AudioListener.volume = volumeAtual;
         sliderVolume = CriarSlider(painelOpcoes.transform, "SliderVolume",
-            new Vector2(150f, plataformaTouch ? 155f : 75f), 340f, 0f, 1f, volumeAtual);
+            new Vector2(plataformaTouch ? 135f : 150f, plataformaTouch ? 110f : 75f),
+            plataformaTouch ? 270f : 340f, 0f, 1f, volumeAtual);
         sliderVolume.onValueChanged.AddListener(AtualizarVolume);
 
         TextMeshProUGUI rotuloSensibilidadeMouse = CriarTexto(painelOpcoes.transform, "RótuloSensibilidade", "Sensibilidade do mouse",
-            plataformaTouch ? 32f : 23f, new Vector2(-170f, plataformaTouch ? 0f : -25f), new Vector2(300f, 52f));
+            plataformaTouch ? 28f : 23f, new Vector2(-165f, plataformaTouch ? -45f : -25f), new Vector2(300f, 48f));
         float sensibilidadeAtual = jogador != null ? jogador.sensibilidade : 0.2f;
         sliderSensibilidade = CriarSlider(painelOpcoes.transform, "SliderSensibilidade",
-            new Vector2(150f, plataformaTouch ? 0f : -25f), 340f, 0.05f, 1f, sensibilidadeAtual);
+            new Vector2(plataformaTouch ? 135f : 150f, plataformaTouch ? -45f : -25f),
+            plataformaTouch ? 270f : 340f, 0.05f, 1f, sensibilidadeAtual);
         sliderSensibilidade.onValueChanged.AddListener(AtualizarSensibilidade);
         float posicaoVoltar = -180f;
         if (plataformaTouch)
         {
             rotuloSensibilidadeMouse.gameObject.SetActive(false);
             sliderSensibilidade.gameObject.SetActive(false);
-            CriarTexto(painelOpcoes.transform, "RótuloSensibilidadeToque", "Sensibilidade do toque", 32f,
-                new Vector2(-170f, 0f), new Vector2(300f, 52f));
+            CriarTexto(painelOpcoes.transform, "RótuloSensibilidadeToque", "Sensibilidade do toque", 28f,
+                new Vector2(-165f, -45f), new Vector2(300f, 48f));
             float sensibilidadeToqueAtual = jogador != null ? jogador.sensibilidadeToque : PlayerPrefs.GetFloat("TouchSensitivity", 1f);
             sliderSensibilidadeToque = CriarSlider(painelOpcoes.transform, "SliderSensibilidadeToque",
-                new Vector2(150f, 0f), 340f, 0.25f, 2f, sensibilidadeToqueAtual);
+                new Vector2(135f, -45f), 270f, 0.25f, 2f, sensibilidadeToqueAtual);
             sliderSensibilidadeToque.onValueChanged.AddListener(AtualizarSensibilidadeToque);
-            posicaoVoltar = -170f;
+            posicaoVoltar = -235f;
         }
         CriarBotao(painelOpcoes.transform, "Voltar", new Vector2(0f, posicaoVoltar), MostrarMenuPrincipal);
 
@@ -340,8 +342,8 @@ public sealed class PauseMenuManager : MonoBehaviour
             RectTransform trilhoRect = trilho.GetComponent<RectTransform>();
             trilhoRect.anchorMin = new Vector2(0f, 0.5f);
             trilhoRect.anchorMax = new Vector2(1f, 0.5f);
-            trilhoRect.offsetMin = new Vector2(0f, -9f);
-            trilhoRect.offsetMax = new Vector2(0f, 9f);
+            trilhoRect.offsetMin = new Vector2(0f, -7f);
+            trilhoRect.offsetMax = new Vector2(0f, 7f);
             trilho.GetComponent<Image>().raycastTarget = false;
         }
 
@@ -349,13 +351,13 @@ public sealed class PauseMenuManager : MonoBehaviour
         RectTransform preenchimentoRect = preenchimento.GetComponent<RectTransform>();
         preenchimentoRect.anchorMin = plataformaTouch ? new Vector2(0f, 0.5f) : Vector2.zero;
         preenchimentoRect.anchorMax = plataformaTouch ? new Vector2(1f, 0.5f) : Vector2.one;
-        preenchimentoRect.offsetMin = plataformaTouch ? new Vector2(0f, -9f) : Vector2.zero;
-        preenchimentoRect.offsetMax = plataformaTouch ? new Vector2(0f, 9f) : Vector2.zero;
+        preenchimentoRect.offsetMin = plataformaTouch ? new Vector2(0f, -7f) : Vector2.zero;
+        preenchimentoRect.offsetMax = plataformaTouch ? new Vector2(0f, 7f) : Vector2.zero;
         preenchimento.GetComponent<Image>().raycastTarget = false;
 
         GameObject alca = CriarImagemUI(raiz.transform, "Alça", Color.white);
         RectTransform alcaRect = alca.GetComponent<RectTransform>();
-        alcaRect.sizeDelta = plataformaTouch ? new Vector2(42f, 58f) : new Vector2(26f, 34f);
+        alcaRect.sizeDelta = plataformaTouch ? new Vector2(34f, 44f) : new Vector2(26f, 34f);
 
         Slider slider = raiz.GetComponent<Slider>();
         slider.minValue = minimo;
