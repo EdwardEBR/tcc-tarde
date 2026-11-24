@@ -139,8 +139,10 @@ public sealed class PauseMenuManager : MonoBehaviour
         painelOpcoes = CriarPainel(canvasOpcoes.transform, "Painel_Opções", new Vector2(700f, 520f));
         CriarTexto(painelOpcoes.transform, "Título", "CONFIGURAÇÕES", 38f, new Vector2(0f, 190f), new Vector2(620f, 60f));
         CriarTexto(painelOpcoes.transform, "RótuloVolume", "Volume", 23f, new Vector2(-210f, 75f), new Vector2(180f, 42f));
-        sliderVolume = CriarSlider(painelOpcoes.transform, "SliderVolume", new Vector2(100f, 75f), 380f, 0f, 1f, AudioListener.volume);
-        sliderVolume.onValueChanged.AddListener(valor => AudioListener.volume = valor);
+        float volumeAtual = PlayerPrefs.GetFloat("MasterVolume", AudioListener.volume);
+        AudioListener.volume = volumeAtual;
+        sliderVolume = CriarSlider(painelOpcoes.transform, "SliderVolume", new Vector2(100f, 75f), 380f, 0f, 1f, volumeAtual);
+        sliderVolume.onValueChanged.AddListener(AtualizarVolume);
 
         CriarTexto(painelOpcoes.transform, "RótuloSensibilidade", "Sensibilidade do mouse", 23f, new Vector2(-170f, -25f), new Vector2(260f, 42f));
         float sensibilidadeAtual = jogador != null ? jogador.sensibilidade : 0.2f;
@@ -487,9 +489,18 @@ public sealed class PauseMenuManager : MonoBehaviour
     {
         SaveGameDatabase.SaveData save = SaveGameDatabase.Load();
         if (save == null) return;
-        AudioListener.volume = save.volume;
-        if (jogador != null)
+        if (!PlayerPrefs.HasKey("MasterVolume"))
+        {
+            AudioListener.volume = save.volume;
+            PlayerPrefs.SetFloat("MasterVolume", save.volume);
+            if (sliderVolume != null) sliderVolume.SetValueWithoutNotify(save.volume);
+        }
+        if (jogador != null && !PlayerPrefs.HasKey("XSensitivity"))
+        {
             jogador.sensibilidade = save.sensitivity;
+            PlayerPrefs.SetFloat("XSensitivity", save.sensitivity);
+            if (sliderSensibilidade != null) sliderSensibilidade.SetValueWithoutNotify(save.sensitivity);
+        }
 
         if (jogador == null || !string.Equals(save.sceneName, SceneManager.GetActiveScene().name, System.StringComparison.Ordinal)) return;
 
@@ -502,7 +513,16 @@ public sealed class PauseMenuManager : MonoBehaviour
     private void AtualizarSensibilidade(float valor)
     {
         if (jogador != null) jogador.sensibilidade = valor;
+        PlayerPrefs.SetFloat("XSensitivity", valor);
         PlayerPrefs.SetFloat(PrefixoSave + "Sensibilidade", valor);
+        PlayerPrefs.Save();
+    }
+
+    private void AtualizarVolume(float valor)
+    {
+        AudioListener.volume = valor;
+        PlayerPrefs.SetFloat("MasterVolume", valor);
+        PlayerPrefs.Save();
     }
 
     private void SairParaOMenu()

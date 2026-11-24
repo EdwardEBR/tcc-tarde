@@ -79,6 +79,7 @@ public class PlayerFPS : MonoBehaviour
     private float rotacaoHorizontalBaseSentado;
     private float velocidadeRotacaoHorizontal;
     private float velocidadeRotacaoVertical;
+    private bool olharVerticalInvertido;
 
     private bool mouseLivre = false;
     private bool modoConversaAtivo = false;
@@ -109,8 +110,27 @@ public class PlayerFPS : MonoBehaviour
         modoConversaAtivo || sentadoNaCadeira || sentandoNaCadeira || itemNaMao != null
         || mouseLivre || cameraLivreAtiva;
 
+    public void DefinirInversaoVertical(bool invertida)
+    {
+        olharVerticalInvertido = invertida;
+    }
+
+    public void DefinirCampoVisao(float campoVisao)
+    {
+        campoVisaoOriginal = Mathf.Clamp(campoVisao, 60f, 100f);
+        if (cameraComponente != null)
+            cameraComponente.fieldOfView = campoVisaoOriginal;
+    }
+
     void Start()
     {
+        AudioListener.volume = PlayerPrefs.GetFloat("MasterVolume", AudioListener.volume);
+        sensibilidade = Mathf.Clamp(PlayerPrefs.GetFloat("XSensitivity", sensibilidade), 0.05f, 1f);
+        sensibilidadeControle = Mathf.Clamp(
+            PlayerPrefs.GetFloat("ControllerSensitivity", sensibilidadeControle), 40f, 320f);
+        suavidadeOlhar = Mathf.Clamp(PlayerPrefs.GetFloat("MouseSmoothing", suavidadeOlhar), 0f, 0.3f);
+        olharVerticalInvertido = PlayerPrefs.GetInt("Inverted", 0) == 1;
+
         controller = GetComponent<CharacterController>();
         corpoRigido = GetComponent<Rigidbody>();
         if (corpoRigido != null)
@@ -124,7 +144,8 @@ public class PlayerFPS : MonoBehaviour
             posicaoLocalCameraOriginal = cameraPlayer.localPosition;
             rotacaoLocalCameraOriginal = cameraPlayer.localRotation;
             cameraComponente = cameraPlayer.GetComponent<Camera>();
-            if (cameraComponente != null) campoVisaoOriginal = cameraComponente.fieldOfView;
+            if (cameraComponente != null)
+                DefinirCampoVisao(PlayerPrefs.GetFloat("FieldOfView", cameraComponente.fieldOfView));
             rotacaoCamera = cameraPlayer.localEulerAngles.x;
             if (rotacaoCamera > 180f) rotacaoCamera -= 360f;
         }
@@ -382,9 +403,13 @@ public class PlayerFPS : MonoBehaviour
         Vector2 olhar = ControleCompatibilidade.LerOlharGenerico();
         rotacaoHorizontalAlvo = Mathf.Repeat(
             rotacaoHorizontalAlvo + olhar.x * sensibilidadeControle * Time.deltaTime, 360f);
+        float multiplicadorVertical = olharVerticalInvertido ? -1f : 1f;
         rotacaoVerticalCameraLivre = Mathf.Clamp(
-            rotacaoVerticalCameraLivre - deltaMouse.y * sensibilidadeSegura
-            - olhar.y * sensibilidadeControle * Time.deltaTime, -85f, 85f);
+            rotacaoVerticalCameraLivre
+            - (deltaMouse.y * sensibilidadeSegura
+            + olhar.y * sensibilidadeControle * Time.deltaTime) * multiplicadorVertical,
+            -85f,
+            85f);
         cameraPlayer.rotation = Quaternion.Euler(rotacaoVerticalCameraLivre, rotacaoHorizontalAlvo, 0f);
 
         if (teclado != null && (controle != null || joystick != null))
@@ -622,7 +647,9 @@ public class PlayerFPS : MonoBehaviour
         }
 
         // Rotação vertical da câmara
-        float novaRotacaoCamera = rotacaoCamera - mouse.y * sensibilidade - olharControle.y;
+        float multiplicadorVertical = olharVerticalInvertido ? -1f : 1f;
+        float novaRotacaoCamera = rotacaoCamera
+            - (mouse.y * sensibilidade + olharControle.y) * multiplicadorVertical;
         if (!ValorFinito(novaRotacaoCamera)) return;
         float limiteVertical = sentadoNaCadeira ? limiteGiroVerticalSentado : 80f;
         rotacaoCamera = Mathf.Clamp(novaRotacaoCamera, -limiteVertical, limiteVertical);
