@@ -406,8 +406,8 @@ public class PlayerFPS : MonoBehaviour
         float multiplicadorVertical = olharVerticalInvertido ? -1f : 1f;
         rotacaoVerticalCameraLivre = Mathf.Clamp(
             rotacaoVerticalCameraLivre
-            - (deltaMouse.y * sensibilidadeSegura
-            + olhar.y * sensibilidadeControle * Time.deltaTime) * multiplicadorVertical,
+            + (deltaMouse.y * sensibilidadeSegura
+            - olhar.y * sensibilidadeControle * Time.deltaTime) * multiplicadorVertical,
             -85f,
             85f);
         cameraPlayer.rotation = Quaternion.Euler(rotacaoVerticalCameraLivre, rotacaoHorizontalAlvo, 0f);
@@ -649,7 +649,7 @@ public class PlayerFPS : MonoBehaviour
         // Rotação vertical da câmara
         float multiplicadorVertical = olharVerticalInvertido ? -1f : 1f;
         float novaRotacaoCamera = rotacaoCamera
-            - (mouse.y * sensibilidade + olharControle.y) * multiplicadorVertical;
+            + (mouse.y * sensibilidade - olharControle.y) * multiplicadorVertical;
         if (!ValorFinito(novaRotacaoCamera)) return;
         float limiteVertical = sentadoNaCadeira ? limiteGiroVerticalSentado : 80f;
         rotacaoCamera = Mathf.Clamp(novaRotacaoCamera, -limiteVertical, limiteVertical);
