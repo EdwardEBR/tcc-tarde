@@ -25,6 +25,7 @@ public sealed class PauseMenuManager : MonoBehaviour
     private TextMeshProUGUI textoStatus;
     private Slider sliderVolume;
     private Slider sliderSensibilidade;
+    private Slider sliderSensibilidadeToque;
     private float proximoStatus;
     private int framesForcarCursorBloqueado;
     private float timeScaleAntesDaPausa = 1f;
@@ -54,6 +55,11 @@ public sealed class PauseMenuManager : MonoBehaviour
         cancel |= JogoPausado && ControleCompatibilidade.BotaoJoystickPressionado(1);
         if (!escape && !start && !cancel) return;
 
+        ProcessarEscape();
+    }
+
+    public void ProcessarEscape()
+    {
         if (!JogoPausado)
             AbrirMenu();
         else if (canvasOpcoes != null && canvasOpcoes.activeSelf)
@@ -115,18 +121,36 @@ public sealed class PauseMenuManager : MonoBehaviour
         fundoRect.offsetMin = Vector2.zero;
         fundoRect.offsetMax = Vector2.zero;
 
-        painelPrincipal = CriarPainel(canvasMenu.transform, "Painel_Pausa", new Vector2(600f, 620f));
+        bool plataformaTouch = Application.isMobilePlatform;
+        painelPrincipal = CriarPainel(
+            canvasMenu.transform,
+            "Painel_Pausa",
+            plataformaTouch ? new Vector2(760f, 850f) : new Vector2(600f, 620f));
         painelPrincipal.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0f);
         painelPrincipal.GetComponent<Image>().raycastTarget = false;
-        painelPrincipal.GetComponent<RectTransform>().anchoredPosition = new Vector2(-570f, 0f);
-        TextMeshProUGUI tituloPausa = CriarTexto(painelPrincipal.transform, "Título", "PAUSADO", 42f, new Vector2(0f, 240f), new Vector2(500f, 70f));
+        painelPrincipal.GetComponent<RectTransform>().anchoredPosition = plataformaTouch
+            ? Vector2.zero
+            : new Vector2(-570f, 0f);
+        TextMeshProUGUI tituloPausa = CriarTexto(
+            painelPrincipal.transform,
+            "Título",
+            "PAUSADO",
+            plataformaTouch ? 56f : 42f,
+            new Vector2(0f, plataformaTouch ? 315f : 240f),
+            new Vector2(620f, 80f));
         tituloPausa.color = Color.white;
         tituloPausa.fontStyle = FontStyles.Normal;
-        CriarBotao(painelPrincipal.transform, "Continuar", new Vector2(0f, 130f), RetomarJogo);
-        CriarBotao(painelPrincipal.transform, "Salvar jogo", new Vector2(0f, 40f), SalvarJogo);
-        CriarBotao(painelPrincipal.transform, "Configurações", new Vector2(0f, -50f), MostrarOpcoes);
-        CriarBotao(painelPrincipal.transform, "Sair para o menu", new Vector2(0f, -140f), SairParaOMenu);
-        textoStatus = CriarTexto(painelPrincipal.transform, "Status", string.Empty, 20f, new Vector2(0f, -245f), new Vector2(500f, 38f));
+        CriarBotao(painelPrincipal.transform, "Continuar", new Vector2(0f, plataformaTouch ? 175f : 130f), RetomarJogo);
+        CriarBotao(painelPrincipal.transform, "Salvar jogo", new Vector2(0f, plataformaTouch ? 15f : 40f), SalvarJogo);
+        CriarBotao(painelPrincipal.transform, "Configurações", new Vector2(0f, plataformaTouch ? -145f : -50f), MostrarOpcoes);
+        CriarBotao(painelPrincipal.transform, "Sair para o menu", new Vector2(0f, plataformaTouch ? -305f : -140f), SairParaOMenu);
+        textoStatus = CriarTexto(
+            painelPrincipal.transform,
+            "Status",
+            string.Empty,
+            plataformaTouch ? 28f : 20f,
+            new Vector2(0f, plataformaTouch ? -390f : -245f),
+            new Vector2(620f, 46f));
 
         canvasOpcoes = new GameObject("Canv_Options", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
         Canvas canvasDeOpcoes = canvasOpcoes.GetComponent<Canvas>();
@@ -136,30 +160,56 @@ public sealed class PauseMenuManager : MonoBehaviour
         escaladorOpcoes.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         escaladorOpcoes.referenceResolution = new Vector2(1920f, 1080f);
         escaladorOpcoes.matchWidthOrHeight = 0.5f;
-        painelOpcoes = CriarPainel(canvasOpcoes.transform, "Painel_Opções", new Vector2(700f, 520f));
-        CriarTexto(painelOpcoes.transform, "Título", "CONFIGURAÇÕES", 38f, new Vector2(0f, 190f), new Vector2(620f, 60f));
-        CriarTexto(painelOpcoes.transform, "RótuloVolume", "Volume", 23f, new Vector2(-210f, 75f), new Vector2(180f, 42f));
+        painelOpcoes = CriarPainel(
+            canvasOpcoes.transform,
+            "Painel_Opções",
+            plataformaTouch ? new Vector2(800f, 820f) : new Vector2(700f, 520f));
+        CriarTexto(painelOpcoes.transform, "Título", "CONFIGURAÇÕES", plataformaTouch ? 50f : 38f,
+            new Vector2(0f, plataformaTouch ? 325f : 190f), new Vector2(680f, 70f));
+        CriarTexto(painelOpcoes.transform, "RótuloVolume", "Volume", plataformaTouch ? 32f : 23f,
+            new Vector2(-210f, plataformaTouch ? 155f : 75f), new Vector2(220f, 52f));
         float volumeAtual = PlayerPrefs.GetFloat("MasterVolume", AudioListener.volume);
         AudioListener.volume = volumeAtual;
-        sliderVolume = CriarSlider(painelOpcoes.transform, "SliderVolume", new Vector2(100f, 75f), 380f, 0f, 1f, volumeAtual);
+        sliderVolume = CriarSlider(painelOpcoes.transform, "SliderVolume",
+            new Vector2(150f, plataformaTouch ? 155f : 75f), 340f, 0f, 1f, volumeAtual);
         sliderVolume.onValueChanged.AddListener(AtualizarVolume);
 
-        CriarTexto(painelOpcoes.transform, "RótuloSensibilidade", "Sensibilidade do mouse", 23f, new Vector2(-170f, -25f), new Vector2(260f, 42f));
+        TextMeshProUGUI rotuloSensibilidadeMouse = CriarTexto(painelOpcoes.transform, "RótuloSensibilidade", "Sensibilidade do mouse",
+            plataformaTouch ? 32f : 23f, new Vector2(-170f, plataformaTouch ? 0f : -25f), new Vector2(300f, 52f));
         float sensibilidadeAtual = jogador != null ? jogador.sensibilidade : 0.2f;
-        sliderSensibilidade = CriarSlider(painelOpcoes.transform, "SliderSensibilidade", new Vector2(150f, -25f), 300f, 0.05f, 1f, sensibilidadeAtual);
+        sliderSensibilidade = CriarSlider(painelOpcoes.transform, "SliderSensibilidade",
+            new Vector2(150f, plataformaTouch ? 0f : -25f), 340f, 0.05f, 1f, sensibilidadeAtual);
         sliderSensibilidade.onValueChanged.AddListener(AtualizarSensibilidade);
-        CriarBotao(painelOpcoes.transform, "Voltar", new Vector2(0f, -180f), MostrarMenuPrincipal);
+        float posicaoVoltar = -180f;
+        if (plataformaTouch)
+        {
+            rotuloSensibilidadeMouse.gameObject.SetActive(false);
+            sliderSensibilidade.gameObject.SetActive(false);
+            CriarTexto(painelOpcoes.transform, "RótuloSensibilidadeToque", "Sensibilidade do toque", 32f,
+                new Vector2(-170f, 0f), new Vector2(300f, 52f));
+            float sensibilidadeToqueAtual = jogador != null ? jogador.sensibilidadeToque : PlayerPrefs.GetFloat("TouchSensitivity", 1f);
+            sliderSensibilidadeToque = CriarSlider(painelOpcoes.transform, "SliderSensibilidadeToque",
+                new Vector2(150f, 0f), 340f, 0.25f, 2f, sensibilidadeToqueAtual);
+            sliderSensibilidadeToque.onValueChanged.AddListener(AtualizarSensibilidadeToque);
+            posicaoVoltar = -170f;
+        }
+        CriarBotao(painelOpcoes.transform, "Voltar", new Vector2(0f, posicaoVoltar), MostrarMenuPrincipal);
 
-        painelConfirmacaoSaida = CriarPainel(canvasMenu.transform, "Painel_ConfirmarSaidaSemSalvar", new Vector2(680f, 390f));
+        painelConfirmacaoSaida = CriarPainel(
+            canvasMenu.transform,
+            "Painel_ConfirmarSaidaSemSalvar",
+            plataformaTouch ? new Vector2(800f, 620f) : new Vector2(680f, 390f));
         CriarTexto(
             painelConfirmacaoSaida.transform,
             "AvisoProgresso",
             "Lembre-se de salvar seu progresso antes de sair.\nDeseja voltar ao menu principal?",
-            26f,
-            new Vector2(0f, 105f),
-            new Vector2(600f, 115f));
-        CriarBotao(painelConfirmacaoSaida.transform, "Continuar jogando", new Vector2(0f, 5f), CancelarSaidaSemSalvar);
-        CriarBotao(painelConfirmacaoSaida.transform, "Voltar ao menu principal", new Vector2(0f, -85f), ConfirmarSaidaSemSalvar);
+            plataformaTouch ? 36f : 26f,
+            new Vector2(0f, plataformaTouch ? 205f : 105f),
+            new Vector2(680f, plataformaTouch ? 145f : 115f));
+        CriarBotao(painelConfirmacaoSaida.transform, "Continuar jogando",
+            new Vector2(0f, plataformaTouch ? 25f : 5f), CancelarSaidaSemSalvar);
+        CriarBotao(painelConfirmacaoSaida.transform, "Voltar ao menu principal",
+            new Vector2(0f, plataformaTouch ? -150f : -85f), ConfirmarSaidaSemSalvar);
         painelConfirmacaoSaida.SetActive(false);
 
         canvasOpcoes.SetActive(false);
@@ -212,7 +262,8 @@ public sealed class PauseMenuManager : MonoBehaviour
         rect.pivot = new Vector2(0.5f, 0.5f);
         rect.anchoredPosition = posicao;
         // Usa o mesmo sprite do Btn_MainMenu, ampliado para os rótulos em português.
-        rect.sizeDelta = new Vector2(520f, 82f);
+        bool plataformaTouch = Application.isMobilePlatform;
+        rect.sizeDelta = plataformaTouch ? new Vector2(620f, 144f) : new Vector2(520f, 82f);
         Image imagem = objeto.GetComponent<Image>();
         if (imagem != null) imagem.color = prefabSlimUI != null ? Color.white : CorDestaqueSlimUI;
         Button botao = objeto.GetComponent<Button>();
@@ -258,7 +309,7 @@ public sealed class PauseMenuManager : MonoBehaviour
                 fonteSlimUI = Resources.Load<TMP_FontAsset>("SlimUI/RUBIK-LIGHT-SDF");
             rotuloTexto.font = fonteSlimUI != null ? fonteSlimUI : TMP_Settings.defaultFontAsset;
             rotuloTexto.text = rotulo;
-            rotuloTexto.fontSize = 32f;
+            rotuloTexto.fontSize = plataformaTouch ? 42f : 32f;
             rotuloTexto.fontStyle = FontStyles.Normal;
             rotuloTexto.color = Color.white;
             rotuloTexto.alignment = TextAlignmentOptions.Center;
@@ -275,19 +326,36 @@ public sealed class PauseMenuManager : MonoBehaviour
         raizRect.anchorMin = raizRect.anchorMax = new Vector2(0.5f, 0.5f);
         raizRect.pivot = new Vector2(0.5f, 0.5f);
         raizRect.anchoredPosition = posicao;
-        raizRect.sizeDelta = new Vector2(largura, 24f);
-        raiz.GetComponent<Image>().color = new Color(0.12f, 0.15f, 0.2f, 1f);
+        bool plataformaTouch = Application.isMobilePlatform;
+        raizRect.sizeDelta = new Vector2(largura, plataformaTouch ? 144f : 24f);
+        Image imagemRaiz = raiz.GetComponent<Image>();
+        imagemRaiz.color = plataformaTouch
+            ? new Color(1f, 1f, 1f, 0.01f)
+            : new Color(0.12f, 0.15f, 0.2f, 1f);
+        imagemRaiz.raycastTarget = true;
+
+        if (plataformaTouch)
+        {
+            GameObject trilho = CriarImagemUI(raiz.transform, "Trilho", new Color(0.12f, 0.15f, 0.2f, 1f));
+            RectTransform trilhoRect = trilho.GetComponent<RectTransform>();
+            trilhoRect.anchorMin = new Vector2(0f, 0.5f);
+            trilhoRect.anchorMax = new Vector2(1f, 0.5f);
+            trilhoRect.offsetMin = new Vector2(0f, -9f);
+            trilhoRect.offsetMax = new Vector2(0f, 9f);
+            trilho.GetComponent<Image>().raycastTarget = false;
+        }
 
         GameObject preenchimento = CriarImagemUI(raiz.transform, "Preenchimento", CorDestaqueSlimUI);
         RectTransform preenchimentoRect = preenchimento.GetComponent<RectTransform>();
-        preenchimentoRect.anchorMin = Vector2.zero;
-        preenchimentoRect.anchorMax = Vector2.one;
-        preenchimentoRect.offsetMin = Vector2.zero;
-        preenchimentoRect.offsetMax = Vector2.zero;
+        preenchimentoRect.anchorMin = plataformaTouch ? new Vector2(0f, 0.5f) : Vector2.zero;
+        preenchimentoRect.anchorMax = plataformaTouch ? new Vector2(1f, 0.5f) : Vector2.one;
+        preenchimentoRect.offsetMin = plataformaTouch ? new Vector2(0f, -9f) : Vector2.zero;
+        preenchimentoRect.offsetMax = plataformaTouch ? new Vector2(0f, 9f) : Vector2.zero;
+        preenchimento.GetComponent<Image>().raycastTarget = false;
 
         GameObject alca = CriarImagemUI(raiz.transform, "Alça", Color.white);
         RectTransform alcaRect = alca.GetComponent<RectTransform>();
-        alcaRect.sizeDelta = new Vector2(26f, 34f);
+        alcaRect.sizeDelta = plataformaTouch ? new Vector2(42f, 58f) : new Vector2(26f, 34f);
 
         Slider slider = raiz.GetComponent<Slider>();
         slider.minValue = minimo;
@@ -515,6 +583,13 @@ public sealed class PauseMenuManager : MonoBehaviour
         if (jogador != null) jogador.sensibilidade = valor;
         PlayerPrefs.SetFloat("XSensitivity", valor);
         PlayerPrefs.SetFloat(PrefixoSave + "Sensibilidade", valor);
+        PlayerPrefs.Save();
+    }
+
+    private void AtualizarSensibilidadeToque(float valor)
+    {
+        if (jogador != null) jogador.sensibilidadeToque = valor;
+        PlayerPrefs.SetFloat("TouchSensitivity", valor);
         PlayerPrefs.Save();
     }
 

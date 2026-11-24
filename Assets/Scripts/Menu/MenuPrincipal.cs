@@ -53,18 +53,20 @@ public class MenuPrincipalManager : MonoBehaviour
     {
         Canvas canvas = GetComponentInParent<Canvas>();
         Transform pai = canvas != null ? canvas.transform : transform;
+        bool plataformaTouch = Application.isMobilePlatform;
         painelEscolhaJogo = new GameObject("Painel_ContinuarOuNovo", typeof(RectTransform), typeof(Image));
         painelEscolhaJogo.transform.SetParent(pai, false);
         RectTransform painel = painelEscolhaJogo.GetComponent<RectTransform>();
         painel.anchorMin = painel.anchorMax = new Vector2(0.5f, 0.5f);
-        painel.sizeDelta = new Vector2(520f, 430f);
+        painel.sizeDelta = plataformaTouch ? new Vector2(760f, 900f) : new Vector2(520f, 430f);
         painelEscolhaJogo.GetComponent<Image>().color = new Color(0.035f, 0.045f, 0.065f, 0.97f);
 
-        CriarTexto(painelEscolhaJogo.transform, "JOGAR", 34f, new Vector2(0f, 145f));
-        CriarBotao(painelEscolhaJogo.transform, "Continuar", new Vector2(0f, 65f), ContinuarJogo);
-        CriarBotao(painelEscolhaJogo.transform, "Carregar Jogo", new Vector2(0f, -15f), CarregarJogo);
-        CriarBotao(painelEscolhaJogo.transform, "Novo Jogo", new Vector2(0f, -95f), NovoJogo);
-        CriarBotao(painelEscolhaJogo.transform, "Voltar", new Vector2(0f, -175f), VoltarAoMenu);
+        CriarTexto(painelEscolhaJogo.transform, "JOGAR", plataformaTouch ? 50f : 34f,
+            new Vector2(0f, plataformaTouch ? 340f : 145f));
+        CriarBotao(painelEscolhaJogo.transform, "Continuar", new Vector2(0f, plataformaTouch ? 200f : 65f), ContinuarJogo);
+        CriarBotao(painelEscolhaJogo.transform, "Carregar Jogo", new Vector2(0f, plataformaTouch ? 20f : -15f), CarregarJogo);
+        CriarBotao(painelEscolhaJogo.transform, "Novo Jogo", new Vector2(0f, plataformaTouch ? -160f : -95f), NovoJogo);
+        CriarBotao(painelEscolhaJogo.transform, "Voltar", new Vector2(0f, plataformaTouch ? -340f : -175f), VoltarAoMenu);
         painelEscolhaJogo.SetActive(false);
     }
 
@@ -91,13 +93,14 @@ public class MenuPrincipalManager : MonoBehaviour
         RectTransform rect = objeto.GetComponent<RectTransform>();
         rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
         rect.anchoredPosition = posicao;
-        rect.sizeDelta = new Vector2(390f, 58f);
+        bool plataformaTouch = Application.isMobilePlatform;
+        rect.sizeDelta = plataformaTouch ? new Vector2(620f, 144f) : new Vector2(390f, 58f);
         Image imagem = objeto.GetComponent<Image>();
         imagem.color = new Color(0.16f, 0.24f, 0.34f, 1f);
         Button botao = objeto.GetComponent<Button>();
         botao.targetGraphic = imagem;
         botao.onClick.AddListener(() => acao());
-        CriarTexto(objeto.transform, rotulo, 22f, Vector2.zero);
+        CriarTexto(objeto.transform, rotulo, plataformaTouch ? 36f : 22f, Vector2.zero);
     }
 
     public void ContinuarJogo() => CarregarJogo();

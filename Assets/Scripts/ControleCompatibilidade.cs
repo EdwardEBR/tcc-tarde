@@ -3,12 +3,118 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.UI;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 /// <summary>Leitura comum para gamepads padronizados e controles HID genéricos.</summary>
 public static class ControleCompatibilidade
 {
     private static float proximoMovimentoUI;
+    private const float TamanhoMinimoAlvoTouchDp = 48f;
+    private const float DensidadeFallbackDp = 3f;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void RegistrarPreparacaoDaInterface()
+    {
+        SceneManager.sceneLoaded -= PrepararInterfaceDaCena;
+        SceneManager.sceneLoaded += PrepararInterfaceDaCena;
+    }
+
+    private static void PrepararInterfaceDaCena(Scene cena, LoadSceneMode modo)
+    {
+        EventSystem[] sistemas = Object.FindObjectsByType<EventSystem>(FindObjectsInactive.Include);
+        EventSystem sistemaPrincipal = EventSystem.current;
+        if (sistemaPrincipal == null || !sistemaPrincipal.isActiveAndEnabled)
+        {
+            for (int i = 0; i < sistemas.Length; i++)
+            {
+                if (sistemas[i] != null && sistemas[i].isActiveAndEnabled)
+                {
+                    sistemaPrincipal = sistemas[i];
+                    break;
+                }
+            }
+        }
+
+        if (sistemaPrincipal == null)
+        {
+            GameObject objeto = new GameObject("EventSystem (Compatibilidade)", typeof(EventSystem));
+            sistemaPrincipal = objeto.GetComponent<EventSystem>();
+            System.Array.Resize(ref sistemas, sistemas.Length + 1);
+            sistemas[sistemas.Length - 1] = sistemaPrincipal;
+        }
+
+        for (int i = 0; i < sistemas.Length; i++)
+        {
+            EventSystem sistema = sistemas[i];
+            if (sistema == null || sistema == sistemaPrincipal) continue;
+
+            StandaloneInputModule legado = sistema.GetComponent<StandaloneInputModule>();
+            if (legado != null) legado.enabled = false;
+            InputSystemUIInputModule moderno = sistema.GetComponent<InputSystemUIInputModule>();
+            if (moderno != null) moderno.enabled = false;
+            sistema.enabled = false;
+        }
+
+        GarantirModuloUI(sistemaPrincipal);
+        if (Application.isMobilePlatform)
+            AjustarAlvosTouchEmLayouts();
+    }
+
+    private static void AjustarAlvosTouchEmLayouts()
+    {
+        Selectable[] elementos = Object.FindObjectsByType<Selectable>(FindObjectsInactive.Include);
+        for (int i = 0; i < elementos.Length; i++)
+        {
+            Selectable elemento = elementos[i];
+            if (elemento == null) continue;
+
+            VerticalLayoutGroup grupo = elemento.transform.parent != null
+                ? elemento.transform.parent.GetComponent<VerticalLayoutGroup>()
+                : null;
+            RectTransform alvo = elemento.transform as RectTransform;
+            if (grupo == null || alvo == null) continue;
+
+            Canvas canvas = elemento.GetComponentInParent<Canvas>();
+            float densidadeDp = Screen.dpi > 0f ? Screen.dpi / 160f : DensidadeFallbackDp;
+            float escalaCanvas = canvas != null ? Mathf.Max(0.01f, canvas.scaleFactor) : 1f;
+            float tamanhoMinimo = TamanhoMinimoAlvoTouchDp * densidadeDp / escalaCanvas;
+
+            Vector2 tamanho = alvo.sizeDelta;
+            bool alterado = false;
+            bool larguraInsuficiente = tamanho.x < tamanhoMinimo;
+            bool alturaInsuficiente = tamanho.y < tamanhoMinimo;
+            if (larguraInsuficiente)
+            {
+                tamanho.x = tamanhoMinimo;
+                alterado = true;
+            }
+            if (alturaInsuficiente)
+            {
+                tamanho.y = tamanhoMinimo;
+                alterado = true;
+            }
+
+            if (grupo.childControlWidth || grupo.childControlHeight)
+            {
+                LayoutElement metricas = elemento.GetComponent<LayoutElement>();
+                if (metricas == null) metricas = elemento.gameObject.AddComponent<LayoutElement>();
+                if (grupo.childControlWidth && larguraInsuficiente)
+                    metricas.minWidth = Mathf.Max(metricas.minWidth, tamanhoMinimo);
+                if (grupo.childControlHeight && alturaInsuficiente)
+                {
+                    metricas.minHeight = Mathf.Max(metricas.minHeight, tamanhoMinimo);
+                    metricas.preferredHeight = Mathf.Max(metricas.preferredHeight, tamanhoMinimo);
+                }
+            }
+
+            if (alterado)
+            {
+                alvo.sizeDelta = tamanho;
+                LayoutRebuilder.MarkLayoutForRebuild(grupo.GetComponent<RectTransform>());
+            }
+        }
+    }
 
     public static Vector2 LerMovimento()
     {
@@ -223,21 +329,27 @@ public static class ControleCompatibilidade
     {
         if (sistema == null) return;
 
-        // O EventSystem serializado nas cenas aponta para um asset removido.
-        // Usa o módulo legado, já mapeado para Horizontal/Vertical/Submit no Input Manager.
-        InputSystemUIInputModule moduloInputSystem = sistema.GetComponent<InputSystemUIInputModule>();
-        if (moduloInputSystem != null)
-            moduloInputSystem.enabled = false;
-
+        // As cenas têm referências antigas para um asset de ações que já não existe.
+        // Recupera as ações padrão do pacote atual para manter mouse, teclado, toque e multitouch.
         StandaloneInputModule moduloLegado = sistema.GetComponent<StandaloneInputModule>();
-        if (moduloLegado == null)
-            moduloLegado = sistema.gameObject.AddComponent<StandaloneInputModule>();
+        if (moduloLegado != null)
+            moduloLegado.enabled = false;
 
-        moduloLegado.horizontalAxis = "UIKeyboardHorizontal";
-        moduloLegado.verticalAxis = "UIKeyboardVertical";
-        moduloLegado.submitButton = "UIKeyboardSubmit";
-        moduloLegado.cancelButton = "UIKeyboardCancel";
-        moduloLegado.enabled = true;
+        InputSystemUIInputModule moduloInputSystem = sistema.GetComponent<InputSystemUIInputModule>();
+        if (moduloInputSystem == null)
+            moduloInputSystem = sistema.gameObject.AddComponent<InputSystemUIInputModule>();
+
+        if (moduloInputSystem.actionsAsset == null
+            || moduloInputSystem.point == null || moduloInputSystem.point.action == null
+            || moduloInputSystem.leftClick == null || moduloInputSystem.leftClick.action == null
+            || moduloInputSystem.move == null || moduloInputSystem.move.action == null
+            || moduloInputSystem.submit == null || moduloInputSystem.submit.action == null)
+        {
+            moduloInputSystem.AssignDefaultActions();
+        }
+
+        moduloInputSystem.pointerBehavior = UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack;
+        moduloInputSystem.enabled = true;
         sistema.sendNavigationEvents = true;
     }
 

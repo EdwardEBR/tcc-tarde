@@ -15,6 +15,8 @@ public class PlayerFPS : MonoBehaviour
     [Header("Camera")]
     public Transform cameraPlayer;
     public float sensibilidade = 0.15f;
+    [Tooltip("Multiplicador independente da sensibilidade do olhar por toque.")]
+    [Range(0.25f, 2f)] public float sensibilidadeToque = 1f;
     [Tooltip("Velocidade de rotação da câmera pelo analógico direito, em graus por segundo.")]
     [Min(1f)] public float sensibilidadeControle = 140f;
     [Tooltip("Tempo de suavização do movimento do olhar. Valores menores respondem mais rápido.")]
@@ -84,6 +86,7 @@ public class PlayerFPS : MonoBehaviour
     private bool mouseLivre = false;
     private bool modoConversaAtivo = false;
     private bool descartarDeltaMouse;
+    private Vector2 deltaOlharToque;
     private bool cameraLivreAtiva;
     private string bufferCheatCamera = string.Empty;
     private Keyboard tecladoCheatCamera;
@@ -106,6 +109,17 @@ public class PlayerFPS : MonoBehaviour
         ? controller.bounds.extents.y
         : Mathf.Max(0.5f, transform.lossyScale.y);
     public bool CameraLivreAtiva => cameraLivreAtiva;
+    public bool ConversaAtiva => modoConversaAtivo;
+    public bool PodeInteragirPelaMira =>
+        !PauseMenuManager.JogoPausado && !modoConversaAtivo && !cameraLivreAtiva && !mouseLivre
+        && !sentandoNaCadeira
+        && !string.Equals(
+            UnityEngine.SceneManagement.SceneManager.GetActiveScene().name,
+            "Nivel4",
+            System.StringComparison.OrdinalIgnoreCase)
+        && (objetoAtual != null || cafeteiraAtual != null || carregadorAtual != null
+            || cadeiraAtual != null || itemDestacadoAtual != null || slotDestacadoAtual != null
+            || mecanicaColagemAtual != null || outlinePiaPratoAtual != null || itemNaMao != null);
     public bool InteracaoEmAndamento =>
         modoConversaAtivo || sentadoNaCadeira || sentandoNaCadeira || itemNaMao != null
         || mouseLivre || cameraLivreAtiva;
@@ -126,6 +140,7 @@ public class PlayerFPS : MonoBehaviour
     {
         AudioListener.volume = PlayerPrefs.GetFloat("MasterVolume", AudioListener.volume);
         sensibilidade = Mathf.Clamp(PlayerPrefs.GetFloat("XSensitivity", sensibilidade), 0.05f, 1f);
+        sensibilidadeToque = Mathf.Clamp(PlayerPrefs.GetFloat("TouchSensitivity", sensibilidadeToque), 0.25f, 2f);
         sensibilidadeControle = Mathf.Clamp(
             PlayerPrefs.GetFloat("ControllerSensitivity", sensibilidadeControle), 40f, 320f);
         suavidadeOlhar = Mathf.Clamp(PlayerPrefs.GetFloat("MouseSmoothing", suavidadeOlhar), 0f, 0.3f);
@@ -178,6 +193,9 @@ public class PlayerFPS : MonoBehaviour
         TravarMouse();
         if (GetComponent<PauseMenuManager>() == null)
             gameObject.AddComponent<PauseMenuManager>();
+
+        if (Application.isMobilePlatform && GetComponent<ControlesTouchscreen>() == null)
+            gameObject.AddComponent<ControlesTouchscreen>();
     }
 
     private void DesativarSombrasDoJogador()
@@ -248,7 +266,11 @@ public class PlayerFPS : MonoBehaviour
 
     void Update()
     {
-        if (PauseMenuManager.JogoPausado) return;
+        if (PauseMenuManager.JogoPausado)
+        {
+            deltaOlharToque = Vector2.zero;
+            return;
+        }
 
         AtualizarTecladoCheatCamera();
 
@@ -432,7 +454,12 @@ public class PlayerFPS : MonoBehaviour
 
     private void OnApplicationFocus(bool ganhouFoco)
     {
-        if (!ganhouFoco || mouseLivre || modoConversaAtivo) return;
+        if (!ganhouFoco)
+        {
+            deltaOlharToque = Vector2.zero;
+            return;
+        }
+        if (mouseLivre || modoConversaAtivo) return;
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
@@ -619,6 +646,9 @@ public class PlayerFPS : MonoBehaviour
 
         AtualizarZoom();
 
+        Vector2 deltaToque = deltaOlharToque;
+        deltaOlharToque = Vector2.zero;
+
         // Depois de voltar o foco para o jogo, o Input System pode entregar
         // um delta acumulado que deixa a mira em um estado inesperado.
         if (descartarDeltaMouse)
@@ -638,7 +668,9 @@ public class PlayerFPS : MonoBehaviour
             ? Gamepad.current.rightStick.ReadValue() * sensibilidadeControle * Time.deltaTime
             : ControleCompatibilidade.LerOlharGenerico() * sensibilidadeControle * Time.deltaTime;
 
-        rotacaoHorizontalAlvo += mouse.x * sensibilidade + olharControle.x;
+        rotacaoHorizontalAlvo += mouse.x * sensibilidade
+            + deltaToque.x * sensibilidade * sensibilidadeToque
+            + olharControle.x;
         if (sentadoNaCadeira)
         {
             float deslocamentoHorizontal = Mathf.DeltaAngle(rotacaoHorizontalBaseSentado, rotacaoHorizontalAlvo);
@@ -649,7 +681,9 @@ public class PlayerFPS : MonoBehaviour
         // Rotação vertical da câmara
         float multiplicadorVertical = olharVerticalInvertido ? -1f : 1f;
         float novaRotacaoCamera = rotacaoCamera
-            - (mouse.y * sensibilidade + olharControle.y) * multiplicadorVertical;
+            - (mouse.y * sensibilidade
+            + deltaToque.y * sensibilidade * sensibilidadeToque
+            + olharControle.y) * multiplicadorVertical;
         if (!ValorFinito(novaRotacaoCamera)) return;
         float limiteVertical = sentadoNaCadeira ? limiteGiroVerticalSentado : 80f;
         rotacaoCamera = Mathf.Clamp(novaRotacaoCamera, -limiteVertical, limiteVertical);
@@ -677,6 +711,20 @@ public class PlayerFPS : MonoBehaviour
         if (ValorFinito(rotacao.x) && ValorFinito(rotacao.y)
             && ValorFinito(rotacao.z) && ValorFinito(rotacao.w))
             cameraPlayer.localRotation = rotacao;
+    }
+
+    public void AdicionarDeltaOlharToque(Vector2 delta)
+    {
+        if (PauseMenuManager.JogoPausado || mouseLivre || cameraLivreAtiva
+            || !ValorFinito(delta.x) || !ValorFinito(delta.y))
+            return;
+
+        deltaOlharToque = Vector2.ClampMagnitude(deltaOlharToque + delta, 240f);
+    }
+
+    public void CancelarOlharToque()
+    {
+        deltaOlharToque = Vector2.zero;
     }
 
     private static bool ValorFinito(float valor)

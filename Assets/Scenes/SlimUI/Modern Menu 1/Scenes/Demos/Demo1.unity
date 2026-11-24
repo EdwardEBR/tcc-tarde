@@ -4029,6 +4029,7 @@ PrefabInstance:
     - {fileID: 352524196122411584, guid: 0a68be1bd13d8694e8d8fe85574ac075, type: 3}
     - {fileID: 353281064282664114, guid: 0a68be1bd13d8694e8d8fe85574ac075, type: 3}
     - {fileID: 352497884387282330, guid: 0a68be1bd13d8694e8d8fe85574ac075, type: 3}
+    - {fileID: 352660491432420634, guid: 0a68be1bd13d8694e8d8fe85574ac075, type: 3}
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 351642387804204860, guid: 0a68be1bd13d8694e8d8fe85574ac075, type: 3}
       insertIndex: 2

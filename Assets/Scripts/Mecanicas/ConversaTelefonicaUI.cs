@@ -567,8 +567,12 @@ public class ConversaTelefonicaUI : MonoBehaviour
         painelRespostas = CriarPainel(painel.transform, "PainelRespostas", new Vector2(0.56f, 0.20f), new Vector2(0.96f, 0.51f), new Color(0.02f, 0.025f, 0.035f, 0.78f));
         botaoResposta1 = CriarBotaoResposta(painelRespostas.transform, "Resposta1", new Vector2(0.04f, 0.53f), new Vector2(0.96f, 0.94f), "1. ", out textoResposta1);
         botaoResposta2 = CriarBotaoResposta(painelRespostas.transform, "Resposta2", new Vector2(0.04f, 0.06f), new Vector2(0.96f, 0.47f), "2. ", out textoResposta2);
+        botaoResposta1.onClick.AddListener(() => EscolherResposta(0));
+        botaoResposta2.onClick.AddListener(() => EscolherResposta(1));
         textoInstrucao = CriarTexto(painel.transform, "InstrucaoTeclas", new Vector2(0.56f, 0.12f), new Vector2(0.96f, 0.18f), 21f, TextAlignmentOptions.MidlineLeft);
-        textoInstrucao.text = "Escolha uma resposta: 1/A ou 2/B";
+        textoInstrucao.text = Application.isMobilePlatform
+            ? "Toque em uma resposta"
+            : "Escolha uma resposta: 1/A ou 2/B";
         textoInstrucao.gameObject.SetActive(false);
         painelRespostas.SetActive(false);
     }
@@ -618,10 +622,17 @@ public class ConversaTelefonicaUI : MonoBehaviour
         rect.offsetMax = Vector2.zero;
         Image imagem = objeto.GetComponent<Image>();
         imagem.color = new Color(1f, 1f, 1f, 0.08f);
-        imagem.raycastTarget = false;
+        imagem.raycastTarget = true;
         Button botao = objeto.GetComponent<Button>();
-        botao.transition = Selectable.Transition.None;
-        botao.interactable = false; // As escolhas são feitas com as teclas 1 e 2.
+        botao.targetGraphic = imagem;
+        botao.transition = Selectable.Transition.ColorTint;
+        botao.interactable = true;
+        ColorBlock cores = botao.colors;
+        cores.normalColor = Color.white;
+        cores.highlightedColor = new Color(1f, 0.82f, 0.53f, 1f);
+        cores.pressedColor = new Color(0.91f, 0.62f, 0.25f, 1f);
+        cores.selectedColor = cores.highlightedColor;
+        botao.colors = cores;
         textoResposta = CriarTexto(objeto.transform, "Texto", new Vector2(0.04f, 0.04f), new Vector2(0.96f, 0.96f), 25f, TextAlignmentOptions.MidlineLeft);
         textoResposta.text = prefixo;
         return botao;
@@ -1027,8 +1038,15 @@ public class ConversaTelefonicaUI : MonoBehaviour
     private static void ConfigurarResposta(Button botao, TMP_Text texto, string resposta, int tecla)
     {
         bool disponivel = !string.IsNullOrWhiteSpace(resposta);
-        if (texto != null) texto.text = disponivel ? $"[{tecla}]  {resposta}" : string.Empty;
-        if (botao != null) botao.gameObject.SetActive(disponivel);
+        if (texto != null)
+            texto.text = disponivel
+                ? (Application.isMobilePlatform ? resposta : $"[{tecla}]  {resposta}")
+                : string.Empty;
+        if (botao != null)
+        {
+            botao.interactable = disponivel;
+            botao.gameObject.SetActive(disponivel);
+        }
     }
 
     private void EscolherResposta(int indiceResposta)
