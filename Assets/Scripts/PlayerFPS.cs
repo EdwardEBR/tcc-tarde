@@ -85,6 +85,7 @@ public class PlayerFPS : MonoBehaviour
 
     private bool mouseLivre = false;
     private bool modoConversaAtivo = false;
+    private bool interacaoToquePendente;
     private bool descartarDeltaMouse;
     private Vector2 deltaOlharToque;
     private bool cameraLivreAtiva;
@@ -111,6 +112,14 @@ public class PlayerFPS : MonoBehaviour
     public bool CameraLivreAtiva => cameraLivreAtiva;
     public bool ConversaAtiva => modoConversaAtivo;
     public bool EstaSentadoNaCadeira => sentadoNaCadeira;
+
+    public void SolicitarInteracaoToque()
+    {
+        if (PauseMenuManager.JogoPausado || modoConversaAtivo || sentandoNaCadeira || sentadoNaCadeira)
+            return;
+        interacaoToquePendente = true;
+    }
+
     public bool PodeInteragirPelaMira =>
         !PauseMenuManager.JogoPausado && !modoConversaAtivo && !cameraLivreAtiva && !mouseLivre
         && !sentandoNaCadeira
@@ -269,6 +278,7 @@ public class PlayerFPS : MonoBehaviour
     {
         if (PauseMenuManager.JogoPausado)
         {
+            interacaoToquePendente = false;
             deltaOlharToque = Vector2.zero;
             return;
         }
@@ -1267,8 +1277,10 @@ public class PlayerFPS : MonoBehaviour
         }
     }
 
-    private static bool AcaoDeInteracaoPressionada()
+    private bool AcaoDeInteracaoPressionada()
     {
+        bool toque = interacaoToquePendente;
+        interacaoToquePendente = false;
         bool mouse = Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame;
         bool teclado = Keyboard.current != null
             && (Keyboard.current.eKey.wasPressedThisFrame || Keyboard.current.enterKey.wasPressedThisFrame);
@@ -1278,7 +1290,7 @@ public class PlayerFPS : MonoBehaviour
         bool joystick = ControleCompatibilidade.BotaoJoystickPressionado(0)
             || ControleCompatibilidade.BotaoJoystickPressionado(2)
             || ControleCompatibilidade.BotaoJoystickPressionado(3);
-        return mouse || teclado || controle || joystick;
+        return toque || mouse || teclado || controle || joystick;
     }
 
     private bool TentarColocarLivroNaEstante(Ray ray)

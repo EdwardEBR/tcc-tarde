@@ -48,6 +48,10 @@ public class ConversaTelefonicaUI : MonoBehaviour
     private int repeticoesAnalogicoParaBaixo;
     private int repeticoesAnalogicoParaCima;
     private bool aguardarSoltarAnalogicos;
+    private float inicioSequenciaAnalogicoParaBaixo;
+    private float inicioSequenciaAnalogicoParaCima;
+    private const int RepeticoesCheatAnalogico = 10;
+    private const float JanelaCheatAnalogico = 6f;
     public bool ConversaConcluida { get; private set; }
     [SerializeField, HideInInspector] private int versaoDoRoteiroExemplo;
     private const int VersaoAtualDoRoteiroExemplo = 6;
@@ -662,32 +666,42 @@ public class ConversaTelefonicaUI : MonoBehaviour
 
     private void AtualizarCheatPorAnalogicos()
     {
-        ControleCompatibilidade.LerAnalogicos(out Vector2 esquerdo, out Vector2 direito);
-        bool analogicosNeutros = Mathf.Abs(esquerdo.y) < 0.3f && Mathf.Abs(direito.y) < 0.3f;
+        Vector2 esquerdo = ControleCompatibilidade.LerMovimento();
+        bool analogicoNeutro = Mathf.Abs(esquerdo.y) < 0.3f;
         if (aguardarSoltarAnalogicos)
         {
-            if (analogicosNeutros) aguardarSoltarAnalogicos = false;
+            if (analogicoNeutro) aguardarSoltarAnalogicos = false;
             return;
         }
 
-        bool ambosParaBaixo = esquerdo.y <= -0.8f && direito.y <= -0.8f;
-        bool ambosParaCima = esquerdo.y >= 0.8f && direito.y >= 0.8f;
-        if (!ambosParaBaixo && !ambosParaCima) return;
+        bool puxouParaBaixo = esquerdo.y <= -0.8f;
+        bool puxouParaCima = esquerdo.y >= 0.8f;
+        if (!puxouParaBaixo && !puxouParaCima) return;
 
         aguardarSoltarAnalogicos = true;
-        if (ambosParaBaixo)
+        float agora = Time.unscaledTime;
+        if (puxouParaBaixo)
         {
             repeticoesAnalogicoParaCima = 0;
+            inicioSequenciaAnalogicoParaCima = 0f;
             if (!conversaAtiva)
             {
                 repeticoesAnalogicoParaBaixo = 0;
+                inicioSequenciaAnalogicoParaBaixo = 0f;
                 return;
             }
 
-            repeticoesAnalogicoParaBaixo++;
-            if (repeticoesAnalogicoParaBaixo >= 5)
+            if (repeticoesAnalogicoParaBaixo == 0
+                || agora - inicioSequenciaAnalogicoParaBaixo > JanelaCheatAnalogico)
             {
                 repeticoesAnalogicoParaBaixo = 0;
+                inicioSequenciaAnalogicoParaBaixo = agora;
+            }
+            repeticoesAnalogicoParaBaixo++;
+            if (repeticoesAnalogicoParaBaixo >= RepeticoesCheatAnalogico)
+            {
+                repeticoesAnalogicoParaBaixo = 0;
+                inicioSequenciaAnalogicoParaBaixo = 0f;
                 bufferComandoAdmin = string.Empty;
                 PularParaUltimaFala();
             }
@@ -695,18 +709,27 @@ public class ConversaTelefonicaUI : MonoBehaviour
         }
 
         repeticoesAnalogicoParaBaixo = 0;
+        inicioSequenciaAnalogicoParaBaixo = 0f;
         TaskManager gerenciadorTarefas = FindAnyObjectByType<TaskManager>();
         if (gerenciadorTarefas == null || gerenciadorTarefas.dailyTasks == null
             || gerenciadorTarefas.dailyTasks.Count == 0)
         {
             repeticoesAnalogicoParaCima = 0;
+            inicioSequenciaAnalogicoParaCima = 0f;
             return;
         }
 
-        repeticoesAnalogicoParaCima++;
-        if (repeticoesAnalogicoParaCima >= 5)
+        if (repeticoesAnalogicoParaCima == 0
+            || agora - inicioSequenciaAnalogicoParaCima > JanelaCheatAnalogico)
         {
             repeticoesAnalogicoParaCima = 0;
+            inicioSequenciaAnalogicoParaCima = agora;
+        }
+        repeticoesAnalogicoParaCima++;
+        if (repeticoesAnalogicoParaCima >= RepeticoesCheatAnalogico)
+        {
+            repeticoesAnalogicoParaCima = 0;
+            inicioSequenciaAnalogicoParaCima = 0f;
             bufferComandoTarefas = string.Empty;
             CompletarTodasAsTarefas();
         }
@@ -1150,7 +1173,15 @@ public class ConversaTelefonicaUI : MonoBehaviour
 
     private void PularParaUltimaFala()
     {
-        if (!conversaAtiva || aguardandoSentarParaContinuar || conversa == null || conversa.Count == 0) return;
+        if (!conversaAtiva || conversa == null || conversa.Count == 0) return;
+
+        if (aguardandoSentarParaContinuar)
+        {
+            aguardandoSentarParaContinuar = false;
+            indiceDoNoAposSentar = -1;
+            TaskManager tarefas = FindAnyObjectByType<TaskManager>();
+            if (tarefas != null) tarefas.LiberarEsperaDoDialogoPulado();
+        }
 
         // Busca de trás para frente a última fala terminal do roteiro configurado.
         for (int indice = conversa.Count - 1; indice >= 0; indice--)

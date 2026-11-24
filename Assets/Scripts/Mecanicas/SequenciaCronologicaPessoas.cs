@@ -84,6 +84,10 @@ public class SequenciaCronologicaPessoas : MonoBehaviour
     {
         MusicaNivel5.ManterSomApenasDaTrilhaFinal();
 
+        ControlesTouchscreen controlesTouch = FindAnyObjectByType<ControlesTouchscreen>();
+        if (controlesTouch != null)
+            controlesTouch.OcultarParaCreditos();
+
         PauseMenuManager menuPausa = FindAnyObjectByType<PauseMenuManager>();
         if (menuPausa != null) menuPausa.enabled = false;
         MiraCircularUI mira = FindAnyObjectByType<MiraCircularUI>();

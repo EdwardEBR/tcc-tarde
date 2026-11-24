@@ -21,10 +21,10 @@ public sealed class ControlesTouchscreen : MonoBehaviour
     private GameObject joystickBase;
     private GameObject joystickEntrada;
     private GameObject legendaJoystick;
-    private OnScreenButton botaoInteracaoNaTela;
     private Button botaoInteracao;
     private Button botaoMenu;
     private bool aplicativoAtivo = true;
+    private bool ocultosParaCreditos;
     private Rect ultimaAreaSegura;
     private int ultimaLargura;
     private int ultimaAltura;
@@ -52,7 +52,7 @@ public sealed class ControlesTouchscreen : MonoBehaviour
         if (areaSegura == null) return;
 
         AtualizarAreaSegura(false);
-        bool jogoAtivo = aplicativoAtivo && !PauseMenuManager.JogoPausado;
+        bool jogoAtivo = aplicativoAtivo && !PauseMenuManager.JogoPausado && !ocultosParaCreditos;
         bool dialogoAtivo = jogador.ConversaAtiva;
         if (raizControles.activeSelf != jogoAtivo)
         {
@@ -70,18 +70,16 @@ public sealed class ControlesTouchscreen : MonoBehaviour
         DefinirAtivo(joystickEntrada, controlesDeMovimentoAtivos);
         DefinirAtivo(legendaJoystick, controlesDeMovimentoAtivos);
 
-        bool exibirBotaoInteracao = !dialogoAtivo && !sentado;
+        bool exibirBotaoInteracao = !sentado;
         bool exibirBotaoMenu = !dialogoAtivo;
         DefinirAtivo(botaoInteracao != null ? botaoInteracao.gameObject : null, exibirBotaoInteracao);
         DefinirAtivo(botaoMenu != null ? botaoMenu.gameObject : null, exibirBotaoMenu);
 
-        if (botaoInteracao != null && botaoInteracaoNaTela != null)
+        if (botaoInteracao != null)
         {
             bool podeInteragir = jogoAtivo && exibirBotaoInteracao && jogador.PodeInteragirPelaMira;
             if (botaoInteracao.interactable != podeInteragir)
                 botaoInteracao.interactable = podeInteragir;
-            if (botaoInteracaoNaTela.enabled != podeInteragir)
-                botaoInteracaoNaTela.enabled = podeInteragir;
         }
     }
 
@@ -107,6 +105,15 @@ public sealed class ControlesTouchscreen : MonoBehaviour
     {
         if (jogador != null)
             jogador.CancelarOlharToque();
+    }
+
+    public void OcultarParaCreditos()
+    {
+        ocultosParaCreditos = true;
+        if (jogador != null)
+            jogador.CancelarOlharToque();
+        if (raizControles != null)
+            raizControles.SetActive(false);
     }
 
     private void CriarHUD()
@@ -168,7 +175,7 @@ public sealed class ControlesTouchscreen : MonoBehaviour
         zonaToque.anchorMax = zonaToque.anchorMin;
         zonaToque.sizeDelta = new Vector2(218f, 218f);
         Image imagemEntrada = zonaToque.gameObject.AddComponent<Image>();
-        imagemEntrada.color = new Color(1f, 1f, 1f, 0.01f);
+        imagemEntrada.color = Color.clear;
         imagemEntrada.raycastTarget = true;
 
         RectTransform alca = CriarRect(zonaToque, "Alca", new Vector2(0.5f, 0.5f), Vector2.zero);
@@ -200,6 +207,7 @@ public sealed class ControlesTouchscreen : MonoBehaviour
         button.targetGraphic = fundo;
         button.navigation = new Navigation { mode = Navigation.Mode.None };
         button.colors = CriarCoresBotao();
+        button.onClick.AddListener(jogador.SolicitarInteracaoToque);
         botaoInteracao = button;
 
         Image contorno = CriarImagem(rect, "Contorno", ObterSpriteContorno(), Color.white);
@@ -210,10 +218,7 @@ public sealed class ControlesTouchscreen : MonoBehaviour
         CriarIconeMao(rect);
         CriarTexto(rect, "Legenda", "MÃO", 30f, new Vector2(0f, -54f), new Vector2(136f, 30f));
 
-        botaoInteracaoNaTela = rect.gameObject.AddComponent<OnScreenButton>();
-        botaoInteracaoNaTela.controlPath = "<Gamepad>/buttonSouth";
-        botaoInteracaoNaTela.enabled = jogador.PodeInteragirPelaMira;
-        button.interactable = botaoInteracaoNaTela.enabled;
+        button.interactable = jogador.PodeInteragirPelaMira;
     }
 
     private void CriarBotaoMenu(Transform pai)

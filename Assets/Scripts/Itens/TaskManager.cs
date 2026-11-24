@@ -495,6 +495,11 @@ public class TaskManager : MonoBehaviour
         dialogoAguardandoSentar = true;
     }
 
+    public void LiberarEsperaDoDialogoPulado()
+    {
+        dialogoAguardandoSentar = false;
+    }
+
     private IEnumerator AguardarFimDoDialogoAposRegar()
     {
         while (conversaAposRegar != null && !conversaAposRegar.ConversaConcluida)
