@@ -12,6 +12,7 @@ public sealed class ControlesTouchscreen : MonoBehaviour
     private const int OrdemCanvas = 50;
     private static Sprite spriteCirculo;
     private static Sprite spriteContorno;
+    private static Sprite spriteMaoInteracao;
 
     private PlayerFPS jogador;
     private PauseMenuManager menuPausa;
@@ -249,13 +250,50 @@ public sealed class ControlesTouchscreen : MonoBehaviour
     private void CriarIconeMao(Transform pai)
     {
         Color ouro = new Color(0.97f, 0.68f, 0.26f, 1f);
-        CriarImagemRetangulo(pai, "Mao_Palma", new Vector2(0f, 10f), new Vector2(48f, 32f), ouro);
-        CriarImagemRetangulo(pai, "Mao_Dedo1", new Vector2(-18f, 28f), new Vector2(10f, 32f), ouro);
-        CriarImagemRetangulo(pai, "Mao_Dedo2", new Vector2(-6f, 33f), new Vector2(10f, 42f), ouro);
-        CriarImagemRetangulo(pai, "Mao_Dedo3", new Vector2(6f, 33f), new Vector2(10f, 42f), ouro);
-        CriarImagemRetangulo(pai, "Mao_Dedo4", new Vector2(18f, 27f), new Vector2(10f, 31f), ouro);
-        RectTransform polegar = CriarImagemRetangulo(pai, "Mao_Polegar", new Vector2(-26f, 1f), new Vector2(24f, 11f), ouro);
-        polegar.localRotation = Quaternion.Euler(0f, 0f, -38f);
+        RectTransform rect = CriarRect(pai, "IconeMao", new Vector2(0.5f, 0.5f), new Vector2(0f, 16f));
+        rect.sizeDelta = new Vector2(82f, 82f);
+
+        Image icone = rect.gameObject.AddComponent<Image>();
+        icone.sprite = ObterSpriteMaoInteracao();
+        icone.color = ouro;
+        icone.preserveAspect = true;
+        icone.raycastTarget = false;
+    }
+
+    private static Sprite ObterSpriteMaoInteracao()
+    {
+        if (spriteMaoInteracao != null) return spriteMaoInteracao;
+
+        Texture2D original = Resources.Load<Texture2D>("UI/MaoInteracaoIcons8");
+        if (original == null)
+        {
+            Debug.LogWarning("ControlesTouchscreen: não encontrou o ícone de interação em Resources/UI.");
+            return null;
+        }
+
+        Color32[] pixels = original.GetPixels32();
+        for (int i = 0; i < pixels.Length; i++)
+            pixels[i] = new Color32(255, 255, 255, pixels[i].a);
+
+        Texture2D texturaTingivel = new Texture2D(
+            original.width, original.height, TextureFormat.RGBA32, false, true)
+        {
+            name = "MaoInteracaoHUD",
+            filterMode = FilterMode.Bilinear,
+            wrapMode = TextureWrapMode.Clamp,
+            hideFlags = HideFlags.HideAndDontSave
+        };
+        texturaTingivel.SetPixels32(pixels);
+        texturaTingivel.Apply(false, true);
+
+        spriteMaoInteracao = Sprite.Create(
+            texturaTingivel,
+            new Rect(0f, 0f, texturaTingivel.width, texturaTingivel.height),
+            new Vector2(0.5f, 0.5f),
+            100f);
+        spriteMaoInteracao.name = "MaoInteracaoHUDSprite";
+        spriteMaoInteracao.hideFlags = HideFlags.HideAndDontSave;
+        return spriteMaoInteracao;
     }
 
     private void CriarLegendaMover(Transform pai)
