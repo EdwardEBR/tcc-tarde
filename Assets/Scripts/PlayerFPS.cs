@@ -580,7 +580,7 @@ public class PlayerFPS : MonoBehaviour
                     velocidadeMovimento * Mathf.Clamp01(input.magnitude) / VelocidadePadraoPassos,
                     0.5f, 1.5f);
                 audioPassos.pitch = fatorVelocidadePassos;
-                audioPassos.volume = 1f;
+                audioPassos.volume = 0.35f;
                 audioPassos.clip = passo;
                 audioPassos.Play();
                 float duracaoMaisLonga = Mathf.Max(
